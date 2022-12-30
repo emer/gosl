@@ -1,3 +1,9 @@
+// Copyright (c) 2022, The GoKi Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// copied and heavily edited from go src/cmd/gofmt/gofmt.go:
+
 // Copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
