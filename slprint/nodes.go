@@ -569,14 +569,15 @@ func (p *printer) fieldList(fields *ast.FieldList, isStruct, isIncomplete bool) 
 				p.expr(f.Type)
 				extraTabs = 2
 			}
-			if f.Tag != nil {
-				if len(f.Names) > 0 && sep == vtab {
-					p.print(sep)
-				}
-				p.print(sep)
-				p.expr(f.Tag)
-				extraTabs = 0
-			}
+			p.print(";")
+			// if f.Tag != nil {
+			// 	if len(f.Names) > 0 && sep == vtab {
+			// 		p.print(sep)
+			// 	}
+			// 	p.print(sep)
+			// 	p.expr(f.Tag)
+			// 	extraTabs = 0
+			// }
 			if f.Comment != nil {
 				for ; extraTabs > 0; extraTabs-- {
 					p.print(sep)
@@ -1341,6 +1342,7 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace bool) {
 	case *ast.ExprStmt:
 		const depth = 1
 		p.expr0(s.X, depth)
+		p.print(";")
 
 	case *ast.SendStmt:
 		const depth = 1
@@ -1361,6 +1363,7 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace bool) {
 		p.exprList(s.Pos(), s.Lhs, depth, 0, s.TokPos, false)
 		p.print(blank, s.TokPos, s.Tok, blank)
 		p.exprList(s.TokPos, s.Rhs, depth, 0, token.NoPos, false)
+		p.print(";")
 
 	case *ast.GoStmt:
 		p.print(token.GO, blank)
@@ -1389,6 +1392,7 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace bool) {
 				p.exprList(token.NoPos, s.Results, 1, 0, token.NoPos, false)
 			}
 		}
+		p.print(";")
 
 	case *ast.BranchStmt:
 		p.print(s.Tok)
@@ -1660,16 +1664,11 @@ func (p *printer) spec(spec ast.Spec, n int, doIndent bool) {
 
 	case *ast.TypeSpec:
 		p.setComment(s.Doc)
-		// if s.Doc != nil {
-		// 	p.cindex++ // skip current comments
-		// 	p.commentOffset = 0
-		// }
-		// p.flush(p.pos, token.TYPE) // get rid of any comments
 		p.print("struct", blank)
 		p.expr(s.Name)
-		// if s.TypeParams != nil {
-		// 	p.parameters(s.TypeParams, typeTParam)
-		// }
+		if s.TypeParams != nil {
+			p.parameters(s.TypeParams, typeTParam)
+		}
 		if n == 1 {
 			p.print(blank)
 		} else {
@@ -1692,7 +1691,8 @@ func (p *printer) spec(spec ast.Spec, n int, doIndent bool) {
 
 func (p *printer) genDecl(d *ast.GenDecl) {
 	p.setComment(d.Doc)
-	// p.print(d.Pos(), d.Tok, blank) // don't print import, var, type
+	// note: critical to print here to trigger comment generation in right place
+	p.print(d.Pos(), ignore) // don't print import, var, type
 
 	if d.Lparen.IsValid() || len(d.Specs) > 1 {
 		// group of parenthesized declarations

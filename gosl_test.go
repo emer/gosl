@@ -11,48 +11,11 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"text/scanner"
 
 	"github.com/goki/gosl/diff"
 )
 
 var update = flag.Bool("update", false, "update .golden files")
-
-// goslFlags looks for a comment of the form
-//
-//	//gosl flags
-//
-// within the first maxLines lines of the given file,
-// and returns the flags string, if any. Otherwise it
-// returns the empty string.
-func goslFlags(filename string, maxLines int) string {
-	f, err := os.Open(filename)
-	if err != nil {
-		return "" // ignore errors - they will be found later
-	}
-	defer f.Close()
-
-	// initialize scanner
-	var s scanner.Scanner
-	s.Init(f)
-	s.Error = func(*scanner.Scanner, string) {}       // ignore errors
-	s.Mode = scanner.GoTokens &^ scanner.SkipComments // want comments
-
-	// look for //gosl comment
-	for s.Line <= maxLines {
-		switch s.Scan() {
-		case scanner.Comment:
-			const prefix = "//gosl "
-			if t := s.TokenText(); strings.HasPrefix(t, prefix) {
-				return strings.TrimSpace(t[len(prefix):])
-			}
-		case scanner.EOF:
-			return ""
-		}
-	}
-
-	return ""
-}
 
 func runTest(t *testing.T, in, out string) {
 	// process flags
@@ -62,27 +25,6 @@ func runTest(t *testing.T, in, out string) {
 	if err != nil {
 		t.Error(err)
 		return
-	}
-	for _, flag := range strings.Split(goslFlags(in, 20), " ") {
-		elts := strings.SplitN(flag, "=", 2)
-		name := elts[0]
-		value := ""
-		if len(elts) == 2 {
-			value = elts[1]
-		}
-		switch name {
-		case "":
-			// no flags
-		case "-r":
-			*rewriteRule = value
-		case "-s":
-			*simplifyAST = true
-		case "-stdin":
-			// fake flag - pretend input is from stdin
-			info = nil
-		default:
-			t.Errorf("unrecognized flag name: %s", name)
-		}
 	}
 
 	initParserMode()
@@ -142,7 +84,7 @@ func TestRewrite(t *testing.T) {
 	}
 
 	// add larger examples
-	match = append(match, "gosl.go", "gosl_test.go")
+	// match = append(match, "gosl.go", "gosl_test.go")
 
 	for _, in := range match {
 		name := filepath.Base(in)
@@ -152,10 +94,10 @@ func TestRewrite(t *testing.T) {
 				out = in[:len(in)-len(".input")] + ".golden"
 			}
 			runTest(t, in, out)
-			if in != out && !t.Failed() {
-				// Check idempotence.
-				runTest(t, out, out)
-			}
+			// if in != out && !t.Failed() {
+			// 	// Check idempotence.
+			// 	runTest(t, out, out)
+			// }
 		})
 	}
 }
