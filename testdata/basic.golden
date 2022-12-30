@@ -1,0 +1,29 @@
+package test
+
+struct DataStruct {
+	
+	// DataStruct has the test data
+
+	Raw   float32 // `desc:"raw value"`
+	Integ float32 // `desc:"integrated value"`
+}
+
+// ParamStruct has the test params
+struct ParamStruct {
+	Tau float32 // `desc:"rate constant in msec"`
+	Dt  float32 // `desc:"1/Tau"`
+	
+// IntegFmRaw computes integrated value from current raw value
+	IntegFmRaw(ds *DataStruct) {
+		ds.Integ += this.Dt * (ds.Raw - ds.Integ)
+	}
+}
+
+[[vk::binding(0, 0)]] uniform ParamStruct Params;
+[[vk::binding(0, 1)]] RWStructuredBuffer<DataStruct> In;
+[numthreads(1, 1, 1)]
+void main(uint3 idx : SV_DispatchThreadID) {
+    Params.IntegFmRaw(&In[idx.x]);
+}
+
+

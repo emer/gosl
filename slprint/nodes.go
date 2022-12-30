@@ -10,6 +10,7 @@ package slprint
 
 import (
 	"bytes"
+	"fmt"
 	"go/ast"
 	"go/token"
 	"math"
@@ -1018,7 +1019,7 @@ func (p *printer) expr1(expr ast.Expr, prec1, depth int) {
 		p.expr(x.Elt)
 
 	case *ast.StructType:
-		p.print(token.STRUCT)
+		// p.print(token.STRUCT)
 		p.fieldList(x.Fields, true, x.Incomplete)
 
 	case *ast.FuncType:
@@ -1659,10 +1660,16 @@ func (p *printer) spec(spec ast.Spec, n int, doIndent bool) {
 
 	case *ast.TypeSpec:
 		p.setComment(s.Doc)
+		// if s.Doc != nil {
+		// 	p.cindex++ // skip current comments
+		// 	p.commentOffset = 0
+		// }
+		// p.flush(p.pos, token.TYPE) // get rid of any comments
+		p.print("struct", blank)
 		p.expr(s.Name)
-		if s.TypeParams != nil {
-			p.parameters(s.TypeParams, typeTParam)
-		}
+		// if s.TypeParams != nil {
+		// 	p.parameters(s.TypeParams, typeTParam)
+		// }
 		if n == 1 {
 			p.print(blank)
 		} else {
@@ -1672,6 +1679,10 @@ func (p *printer) spec(spec ast.Spec, n int, doIndent bool) {
 			p.print(token.ASSIGN, blank)
 		}
 		p.expr(s.Type)
+		p.print(newline)
+		p.print("<<<<EndClass: ")
+		p.expr(s.Name)
+		p.print(">>>>", newline)
 		p.setComment(s.Comment)
 
 	default:
@@ -1681,7 +1692,7 @@ func (p *printer) spec(spec ast.Spec, n int, doIndent bool) {
 
 func (p *printer) genDecl(d *ast.GenDecl) {
 	p.setComment(d.Doc)
-	p.print(d.Pos(), d.Tok, blank)
+	// p.print(d.Pos(), d.Tok, blank) // don't print import, var, type
 
 	if d.Lparen.IsValid() || len(d.Specs) > 1 {
 		// group of parenthesized declarations
@@ -1842,20 +1853,38 @@ func (p *printer) distanceFrom(startPos token.Pos, startOutCol int) int {
 	return infinity
 }
 
+func (p *printer) printMethRecvType(typ ast.Expr) {
+	switch x := typ.(type) {
+	case *ast.StarExpr:
+		p.print(x.X)
+	case *ast.Ident:
+		p.print(x)
+	default:
+		p.print(fmt.Sprintf("recv type unknown: %+T\n", x))
+	}
+}
+
 func (p *printer) funcDecl(d *ast.FuncDecl) {
 	p.setComment(d.Doc)
-	p.print(d.Pos(), token.FUNC, blank)
+	// p.print(d.Pos(), token.FUNC, blank)
 	// We have to save startCol only after emitting FUNC; otherwise it can be on a
 	// different line (all whitespace preceding the FUNC is emitted only when the
 	// FUNC is emitted).
 	startCol := p.out.Column - len("func ")
 	if d.Recv != nil {
-		p.parameters(d.Recv, funcParam) // method: print receiver
-		p.print(blank)
+		p.print("<<<<Method: ")
+		p.printMethRecvType(d.Recv.List[0].Type)
+		p.print(">>>>", newline)
+		// p.parameters(d.Recv, funcParam) // method: print receiver
+		p.print(indent)
 	}
 	p.expr(d.Name)
 	p.signature(d.Type)
 	p.funcBody(p.distanceFrom(d.Pos(), startCol), vtab, d.Body)
+	if d.Recv != nil {
+		p.print(unindent)
+		p.print(newline, "<<<<EndMethod>>>>", newline)
+	}
 }
 
 func (p *printer) decl(decl ast.Decl) {

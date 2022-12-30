@@ -7,12 +7,13 @@ package main
 import (
 	"bytes"
 	"flag"
-	"internal/diff"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"text/scanner"
+
+	"github.com/goki/gosl/diff"
 )
 
 var update = flag.Bool("update", false, "update .golden files")
@@ -157,39 +158,4 @@ func TestRewrite(t *testing.T) {
 			}
 		})
 	}
-}
-
-// Test case for issue 3961.
-func TestCRLF(t *testing.T) {
-	const input = "testdata/crlf.input"   // must contain CR/LF's
-	const golden = "testdata/crlf.golden" // must not contain any CR's
-
-	data, err := os.ReadFile(input)
-	if err != nil {
-		t.Error(err)
-	}
-	if !bytes.Contains(data, []byte("\r\n")) {
-		t.Errorf("%s contains no CR/LF's", input)
-	}
-
-	data, err = os.ReadFile(golden)
-	if err != nil {
-		t.Error(err)
-	}
-	if bytes.Contains(data, []byte("\r")) {
-		t.Errorf("%s contains CR's", golden)
-	}
-}
-
-func TestBackupFile(t *testing.T) {
-	dir, err := os.MkdirTemp("", "gosl_test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
-	name, err := backupFile(filepath.Join(dir, "foo.go"), []byte("  package main"), 0644)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Logf("Created: %s", name)
 }

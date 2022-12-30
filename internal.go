@@ -107,7 +107,9 @@ func format(
 		if err != nil {
 			return nil, err
 		}
-		return buf.Bytes(), nil
+		slfix := slEdits(buf.Bytes())
+		return slfix, nil
+		// return buf.Bytes(), nil
 	}
 
 	// Partial source file.
@@ -150,7 +152,10 @@ func format(
 	if err != nil {
 		return nil, err
 	}
-	out := sourceAdj(buf.Bytes(), cfg.Indent)
+
+	slfix := slEdits(buf.Bytes())
+
+	out := sourceAdj(slfix, cfg.Indent)
 
 	// If the adjusted output is empty, the source
 	// was empty but (possibly) for white space.
