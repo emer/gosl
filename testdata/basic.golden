@@ -31,3 +31,5 @@ struct ParamStruct  {
 // {
 //     Params.IntegFmRaw(&In[idx.x]);
 // }
+//gosl: end basic
+

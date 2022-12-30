@@ -19,8 +19,6 @@ var update = flag.Bool("update", false, "update .golden files")
 
 func runTest(t *testing.T, in, out string) {
 	// process flags
-	*simplifyAST = false
-	*rewriteRule = ""
 	info, err := os.Lstat(in)
 	if err != nil {
 		t.Error(err)
@@ -28,19 +26,11 @@ func runTest(t *testing.T, in, out string) {
 	}
 
 	initParserMode()
-	initRewrite()
 
-	const maxWeight = 2 << 20
-	var buf, errBuf bytes.Buffer
-	s := newSequencer(maxWeight, &buf, &errBuf)
-	s.Add(fileWeight(in, info), func(r *reporter) error {
-		return processFile(in, info, nil, r)
-	})
-	if errBuf.Len() > 0 {
-		t.Logf("%q", errBuf.Bytes())
-	}
-	if s.GetExitCode() != 0 {
-		t.Fail()
+	outfn, err := processFile(in, info)
+	if err != nil {
+		t.Error(err)
+		return
 	}
 
 	expected, err := os.ReadFile(out)
@@ -49,7 +39,13 @@ func runTest(t *testing.T, in, out string) {
 		return
 	}
 
-	if got := buf.Bytes(); !bytes.Equal(got, expected) {
+	got, err := os.ReadFile(outfn)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if !bytes.Equal(got, expected) {
 		if *update {
 			if in != out {
 				if err := os.WriteFile(out, got, 0666); err != nil {
@@ -83,8 +79,9 @@ func TestRewrite(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// add larger examples
-	// match = append(match, "gosl.go", "gosl_test.go")
+	if *outDir != "" {
+		os.MkdirAll(*outDir, 0755)
+	}
 
 	for _, in := range match {
 		name := filepath.Base(in)
@@ -94,10 +91,8 @@ func TestRewrite(t *testing.T) {
 				out = in[:len(in)-len(".input")] + ".golden"
 			}
 			runTest(t, in, out)
-			// if in != out && !t.Failed() {
-			// 	// Check idempotence.
-			// 	runTest(t, out, out)
-			// }
 		})
 	}
+
+	extractFiles(outFiles)
 }

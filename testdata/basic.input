@@ -29,5 +29,6 @@ func (ps *ParamStruct) IntegFmRaw(ds *DataStruct) {
 // {
 //     Params.IntegFmRaw(&In[idx.x]);
 // }
+//gosl: end basic
 
 
