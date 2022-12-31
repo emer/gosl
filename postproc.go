@@ -6,7 +6,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -16,9 +15,9 @@ func extractFiles(files []string) {
 
 	sls := make(map[string][][]byte)
 
-	dir := []byte("//gosl: ")
+	key := []byte("//gosl: ")
 	start := []byte("start")
-	main := []byte("main")
+	hlsl := []byte("hlsl")
 	end := []byte("end")
 	nl := []byte("\n")
 
@@ -30,23 +29,23 @@ func extractFiles(files []string) {
 		lines := bytes.Split(buf, nl)
 
 		inReg := false
-		inMain := false
+		inHlsl := false
 		var outLns [][]byte
 		slFn := ""
 		for _, ln := range lines {
-			isDir := bytes.HasPrefix(ln, dir)
-			var dirStr []byte
-			if isDir {
-				dirStr = ln[len(dir):]
-				fmt.Printf("dir: %s\n", string(dirStr))
+			isKey := bytes.HasPrefix(ln, key)
+			var keyStr []byte
+			if isKey {
+				keyStr = ln[len(key):]
+				// fmt.Printf("key: %s\n", string(keyStr))
 			}
 			switch {
-			case inReg && isDir && bytes.HasPrefix(dirStr, end):
+			case inReg && isKey && bytes.HasPrefix(keyStr, end):
 				sls[slFn] = outLns
 				inReg = false
-				inMain = false
+				inHlsl = false
 			case inReg:
-				if inMain {
+				if inHlsl {
 					if len(ln) > 3 {
 						outLns = append(outLns, ln[3:])
 					} else {
@@ -55,14 +54,14 @@ func extractFiles(files []string) {
 				} else {
 					outLns = append(outLns, ln)
 				}
-			case isDir && bytes.HasPrefix(dirStr, start):
+			case isKey && bytes.HasPrefix(keyStr, start):
 				inReg = true
-				slFn = string(dirStr[len(start)+1:])
+				slFn = string(keyStr[len(start)+1:])
 				outLns = sls[slFn]
-			case isDir && bytes.HasPrefix(dirStr, main):
+			case isKey && bytes.HasPrefix(keyStr, hlsl):
 				inReg = true
-				inMain = true
-				slFn = string(dirStr[len(main)+1:])
+				inHlsl = true
+				slFn = string(keyStr[len(hlsl)+1:])
 				outLns = sls[slFn]
 			}
 		}

@@ -4,7 +4,7 @@
 
 package main
 
-import "math"
+import "github.com/goki/mat32"
 
 //gosl: start basic
 
@@ -13,7 +13,7 @@ type DataStruct struct {
 	Raw   float32 `desc:"raw value"`
 	Integ float32 `desc:"integrated value"`
 	Exp   float32 `desc:"exp of integ"`
-	Pad2  float32 `desc:"must pad to 4 floats"`
+	Pad2  float32 `desc:"must pad to multiple of 4 floats for arrays"`
 }
 
 // ParamStruct has the test params
@@ -25,7 +25,7 @@ type ParamStruct struct {
 // IntegFmRaw computes integrated value from current raw value
 func (ps *ParamStruct) IntegFmRaw(ds *DataStruct) {
 	ds.Integ += ps.Dt * (ds.Raw - ds.Integ)
-	ds.Exp = float32(math.Exp(-float64(ds.Integ)))
+	ds.Exp = mat32.Exp(-ds.Integ)
 }
 
 //gosl: end basic
@@ -41,12 +41,12 @@ func (ps *ParamStruct) Update() {
 	ps.Dt = 1.0 / ps.Tau
 }
 
-//gosl: main basic
+//gosl: hlsl basic
 // [[vk::binding(0, 0)]] uniform ParamStruct Params;
-// [[vk::binding(0, 1)]] RWStructuredBuffer<DataStruct> In;
+// [[vk::binding(0, 1)]] RWStructuredBuffer<DataStruct> Data;
 // [numthreads(1, 1, 1)]
 // void main(uint3 idx : SV_DispatchThreadID)
 // {
-//     Params.IntegFmRaw(&In[idx.x]);
+//     Params.IntegFmRaw(Data[idx.x]);
 // }
 //gosl: end basic

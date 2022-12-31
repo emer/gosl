@@ -4,18 +4,18 @@ package test
 
 // DataStruct has the test data
 struct DataStruct  {
-    Raw   float32;
-    Integ float32;
+    float Raw;
+    float Integ;
 }
 
 // ParamStruct has the test params
 struct ParamStruct  {
-    Tau float32;
-    Dt  float32;
+    float Tau;
+    float Dt;
 
 // IntegFmRaw computes integrated value from current raw value
     IntegFmRaw(ds *DataStruct) {
-        ds.Integ += ps.Dt * (ds.Raw - ds.Integ);
+        ds.Integ += this.Dt * (ds.Raw - ds.Integ);
     }
 
 }

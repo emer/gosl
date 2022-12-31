@@ -566,9 +566,9 @@ func (p *printer) fieldList(fields *ast.FieldList, isStruct, isIncomplete bool) 
 			p.recordLine(&line)
 			if len(f.Names) > 0 {
 				// named fields
-				p.identList(f.Names, false)
-				p.print(sep)
 				p.expr(f.Type)
+				p.print(sep)
+				p.identList(f.Names, false)
 				extraTabs = 1
 			} else {
 				// anonymous field

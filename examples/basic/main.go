@@ -35,7 +35,7 @@ func main() {
 
 	// gp.PropsString(true) // print
 
-	n := 1000000
+	n := 10000000
 
 	pars := &ParamStruct{}
 	pars.Defaults()
@@ -73,10 +73,14 @@ func main() {
 	gpuFullTmr := timer.Time{}
 	gpuFullTmr.Start()
 
+	// this copy is pretty fast -- most of time is below
 	pvl, _ := parsv.Vals.ValByIdxTry(0)
 	pvl.CopyFromBytes(unsafe.Pointer(pars))
 	dvl, _ := datav.Vals.ValByIdxTry(0)
 	dvl.CopyFromBytes(unsafe.Pointer(&data[0]))
+
+	// gpuFullTmr := timer.Time{}
+	// gpuFullTmr.Start()
 
 	sy.Mem.SyncToGPU()
 
@@ -84,6 +88,9 @@ func main() {
 	vars.BindDynValIdx(1, "Data", 0)
 
 	sy.CmdResetBindVars(sy.CmdPool.Buff, 0)
+
+	// gpuFullTmr := timer.Time{}
+	// gpuFullTmr.Start()
 
 	gpuTmr := timer.Time{}
 	gpuTmr.Start()
@@ -93,7 +100,7 @@ func main() {
 
 	gpuTmr.Stop()
 
-	sy.Mem.SyncValIdxFmGPU(1, "Data", 0)
+	sy.Mem.SyncValIdxFmGPU(1, "Data", 0) // this is about same as SyncToGPU
 	dvl.CopyToBytes(unsafe.Pointer(&data[0]))
 
 	gpuFullTmr.Stop()

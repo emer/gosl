@@ -31,10 +31,46 @@ func slEdits(src []byte) []byte {
 	nl := []byte("\n")
 	lines := bytes.Split(src, nl)
 
+	lines = filterGoSL(lines)
+
 	lines = slEditsMethMove(lines)
 	slEditsReplace(lines)
 
 	return bytes.Join(lines, nl)
+}
+
+// filterGoSL includes only regions marked as //gosl:
+func filterGoSL(lines [][]byte) [][]byte {
+	key := []byte("//gosl: ")
+	start := []byte("start")
+	hlsl := []byte("hlsl")
+	end := []byte("end")
+
+	inReg := false
+	var outLns [][]byte
+
+	for _, ln := range lines {
+		isKey := bytes.HasPrefix(ln, key)
+		var keyStr []byte
+		if isKey {
+			keyStr = ln[len(key):]
+			// fmt.Printf("key: %s\n", string(keyStr))
+		}
+		switch {
+		case inReg && isKey && bytes.HasPrefix(keyStr, end):
+			outLns = append(outLns, ln)
+			inReg = false
+		case inReg:
+			outLns = append(outLns, ln)
+		case isKey && bytes.HasPrefix(keyStr, start):
+			inReg = true
+			outLns = append(outLns, ln)
+		case isKey && bytes.HasPrefix(keyStr, hlsl):
+			inReg = true
+			outLns = append(outLns, ln)
+		}
+	}
+	return outLns
 }
 
 // slEditsMethMove moves slthon segments around, e.g., methods
@@ -129,114 +165,29 @@ func slEditsMethMove(lines [][]byte) [][]byte {
 	return lines
 }
 
+type Replace struct {
+	From, To []byte
+}
+
+var Replaces = []Replace{
+	{[]byte("float32"), []byte("float")},
+	{[]byte("float64"), []byte("double")},
+	{[]byte("uint32"), []byte("uint")},
+	{[]byte("int32"), []byte("int")},
+	{[]byte("math.Exp"), []byte("exp")},
+	{[]byte("mat32.Exp"), []byte("exp")},
+	{[]byte("mat32.FastExp"), []byte("fastexp")},
+	// {[]byte(""), []byte("")},
+	// {[]byte(""), []byte("")},
+	// {[]byte(""), []byte("")},
+}
+
 // slEditsReplace replaces Go with equivalent HLSL code
 func slEditsReplace(lines [][]byte) {
-	fmtPrintf := []byte("fmt.Printf")
-	fmtSprintf := []byte("fmt.Sprintf(")
-	prints := []byte("print")
-	eqappend := []byte("= append(")
-	elseif := []byte("else if")
-	elif := []byte("elif")
-	forblank := []byte("for _, ")
-	fornoblank := []byte("for ")
-	itoa := []byte("strconv.Itoa")
-	float64p := []byte("float64(")
-	float32p := []byte("float32(")
-	floatp := []byte("float(")
-	stringp := []byte("string(")
-	strp := []byte("str(")
-	stringsdot := []byte("strings.")
-	copyp := []byte("copy(")
-	eqgonil := []byte(" == go.nil")
-	eqgonil0 := []byte(" == 0")
-	negonil := []byte(" != go.nil")
-	negonil0 := []byte(" != 0")
-
 	for li, ln := range lines {
-		ln = bytes.Replace(ln, float64p, floatp, -1)
-		ln = bytes.Replace(ln, float32p, floatp, -1)
-		ln = bytes.Replace(ln, stringp, strp, -1)
-		ln = bytes.Replace(ln, forblank, fornoblank, -1)
-		ln = bytes.Replace(ln, eqgonil, eqgonil0, -1)
-		ln = bytes.Replace(ln, negonil, negonil0, -1)
-
-		if bytes.Contains(ln, fmtSprintf) {
-			if bytes.Contains(ln, []byte("%")) {
-				ln = bytes.Replace(ln, []byte(`", `), []byte(`" % (`), -1)
-			}
-			ln = bytes.Replace(ln, fmtSprintf, []byte{}, -1)
+		for _, r := range Replaces {
+			ln = bytes.Replace(ln, r.From, r.To, -1)
 		}
-
-		if bytes.Contains(ln, fmtPrintf) {
-			if bytes.Contains(ln, []byte("%")) {
-				ln = bytes.Replace(ln, []byte(`", `), []byte(`" % `), -1)
-			}
-			ln = bytes.Replace(ln, fmtPrintf, prints, -1)
-		}
-
-		if bytes.Contains(ln, eqappend) {
-			idx := bytes.Index(ln, eqappend)
-			comi := bytes.Index(ln[idx+len(eqappend):], []byte(","))
-			nln := make([]byte, idx-1)
-			copy(nln, ln[:idx-1])
-			nln = append(nln, []byte(".append(")...)
-			nln = append(nln, ln[idx+len(eqappend)+comi+1:]...)
-			ln = nln
-		}
-
-		for {
-			if bytes.Contains(ln, stringsdot) {
-				idx := bytes.Index(ln, stringsdot)
-				pi := idx + len(stringsdot) + bytes.Index(ln[idx+len(stringsdot):], []byte("("))
-				comi := bytes.Index(ln[pi:], []byte(","))
-				nln := make([]byte, idx)
-				copy(nln, ln[:idx])
-				if comi < 0 {
-					comi = bytes.Index(ln[pi:], []byte(")"))
-					nln = append(nln, ln[pi+1:pi+comi]...)
-					nln = append(nln, '.')
-					meth := bytes.ToLower(ln[idx+len(stringsdot) : pi+1])
-					if bytes.Equal(meth, []byte("fields(")) {
-						meth = []byte("split(")
-					}
-					nln = append(nln, meth...)
-					nln = append(nln, ln[pi+comi:]...)
-				} else {
-					nln = append(nln, ln[pi+1:pi+comi]...)
-					nln = append(nln, '.')
-					meth := bytes.ToLower(ln[idx+len(stringsdot) : pi+1])
-					nln = append(nln, meth...)
-					nln = append(nln, ln[pi+comi+1:]...)
-				}
-				ln = nln
-			} else {
-				break
-			}
-		}
-
-		if bytes.Contains(ln, copyp) {
-			idx := bytes.Index(ln, copyp)
-			pi := idx + len(copyp) + bytes.Index(ln[idx+len(stringsdot):], []byte("("))
-			comi := bytes.Index(ln[pi:], []byte(","))
-			nln := make([]byte, idx)
-			copy(nln, ln[:idx])
-			nln = append(nln, ln[pi+1:pi+comi]...)
-			nln = append(nln, '.')
-			nln = append(nln, copyp...)
-			nln = append(nln, ln[pi+comi+1:]...)
-			ln = nln
-		}
-
-		if bytes.Contains(ln, itoa) {
-			ln = bytes.Replace(ln, itoa, []byte(`str`), -1)
-		}
-
-		if bytes.Contains(ln, elseif) {
-			ln = bytes.Replace(ln, elseif, elif, -1)
-		}
-
-		ln = bytes.Replace(ln, []byte("\t"), []byte("    "), -1)
-
 		lines[li] = ln
 	}
 }
