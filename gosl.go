@@ -26,8 +26,10 @@ import (
 	"github.com/goki/gosl/slprint"
 )
 
+// flags
 var (
-	outDir = flag.String("out", "shaders", "output directory for shader code, relative to where gosl is invoked")
+	outDir  = flag.String("out", "shaders", "output directory for shader code, relative to where gosl is invoked")
+	keepTmp = flag.Bool("keep", false, "keep temporary converted versions of the source files, for debugging")
 )
 
 // Keep these in sync with go/format/format.go.
@@ -94,6 +96,9 @@ func processFile(filename string, info fs.FileInfo) (string, error) {
 	ast.SortImports(fileSet, file)
 
 	res, err := format(fileSet, file, sourceAdj, indentAdj, src, slprint.Config{Mode: printerMode, Tabwidth: tabWidth})
+	if res == nil {
+		return "", nil
+	}
 
 	if err != nil {
 		return "", err

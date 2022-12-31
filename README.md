@@ -1,8 +1,12 @@
 # gosl
 
-Go as a shader language: converts Go code to HLSL.  See `examples/basic` for a working basic example, using the [vgpu](https://github.com/goki/vgpu) Vulkan-based GPU compute shader system.
+`gosl` implements Go as a shader language for GPU compute shaders: converts Go code to HLSL, and then uses the [glslc](https://github.com/google/shaderc) compiler (e.g., from a vulkan package) to compile into an `.spv` SPIR-V file that can be loaded into a vulkan compute shader.
 
-use:
+Thus, `gosl` enables the same CPU-based Go code to also be run on the GPU.  The relevant subsets of Go code to use are specifically marked using `//gosl:` comment directives, and this code must only use basic expressions and concrete types that will compile correctly in a shader.  Method functions and pass-by-reference pointer arguments to `struct` types are supported and incur no additional compute cost due to inlining (see notes below for more detail).
+
+See `examples/basic` for a working basic example, using the [vgpu](https://github.com/goki/vgpu) Vulkan-based GPU compute shader system.
+
+Use these comment directives:
 
 ```
 //gosl: start <filename>
@@ -12,9 +16,9 @@ use:
 //gosl: end <filename>
 ```
 
-to bracket code to be processed.  Everything is copied into `shaders` subdirectory created under the current directory where the command is run, using the filenames specified in the comment directives.  Each such filename should correspond to a complete shader program, or a file that can be included into other shader programs.
+to bracket code to be processed.  The resulting converted code is copied into a `shaders` subdirectory created under the current directory where the `gosl` command is run, using the filenames specified in the comment directives.  Each such filename should correspond to a complete shader program, or a file that can be included into other shader programs.  Code is appended to the target file names in the order of the source .go files on the command line, so multiple .go files can be combined into one resulting HLSL file.
 
-use:
+For the `main` HLSL function, global variables, to `#include` another `.hlsl` file, or other HLSL specific code, use the following comment directives:
 ```
 //gosl: hlsl <filename>
 
@@ -23,10 +27,9 @@ use:
 //gosl: end <filename>
 ```
 
-for shader code that is commented out in the .go file, which will be copied into the filename
-and uncommented.  This is used e.g., for the main function and global variables.
+where the HLSL shader code is commented out in the .go file -- it will be copied into the target filename and uncommented.  The HLSL code can be surrounded by `/*` `*/` comment blocks (each on a separate line) for multi-line code, 
 
-Pass filenames or directory names to `gosl` command for files to process.
+Pass filenames or directory names to `gosl` command for files to process -- files without any `//gosl:` comment directives will be skipped.
 
 Usage:
 
@@ -34,18 +37,21 @@ Usage:
 
 The flags are:
 
-	-out string
-	  	output directory for shader code, relative to where gosl is invoked (default "shaders")
+  -out string
+    	output directory for shader code, relative to where gosl is invoked (default "shaders")
+  -keep
+    	keep temporary converted versions of the source files, for debugging
 
 
+# Implementation / Design Notes
+
+HLSL is very C-like and provides a much better target for Go conversion than glsl.  See `examples/basic/shaders/basic_nouse.glsl` vs the .hlsl version there for the difference.  Only HLSL supports methods in a struct, and performance is the same as writing the expression directly -- it is suitably [inlined](https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-function-syntax).
+
+While there aren't any pointers allowed in HLSL, the inlining of methods, along with the use of the `inout` [InputModifier](https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-function-parameters), effectively supports pass-by-reference.  The [stackoverflow](https://stackoverflow.com/questions/28527622/shaders-function-parameters-performance/28577878#28577878) on this is a bit unclear but the basic example demonstrates that it all goes through.
+
+    
 # TODO
 
-* float32 -> float
-* order of type, name reversed
-* no pointers 
-
-* arguments for methods / functions are tricky -- no reference args: https://stackoverflow.com/questions/28527622/shaders-function-parameters-performance/28577878#28577878
-
-so everything will have to be rewritten in the original source -- best to access the data directly from global variables??  a bit unclear what the compiler does..
+* full axon compute unit example
 
 

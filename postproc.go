@@ -7,7 +7,9 @@ package main
 import (
 	"bytes"
 	"io/ioutil"
+	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
@@ -20,6 +22,9 @@ func extractFiles(files []string) {
 	hlsl := []byte("hlsl")
 	end := []byte("end")
 	nl := []byte("\n")
+	stComment := []byte("/*")
+	edComment := []byte("*/")
+	comment := []byte("// ")
 
 	for _, fn := range files {
 		buf, err := os.ReadFile(fn)
@@ -46,9 +51,12 @@ func extractFiles(files []string) {
 				inHlsl = false
 			case inReg:
 				if inHlsl {
-					if len(ln) > 3 {
+					switch {
+					case bytes.HasPrefix(ln, stComment) || bytes.HasPrefix(ln, edComment):
+						// skip
+					case bytes.HasPrefix(ln, comment):
 						outLns = append(outLns, ln[3:])
-					} else {
+					default:
 						outLns = append(outLns, ln)
 					}
 				} else {
@@ -65,6 +73,9 @@ func extractFiles(files []string) {
 				outLns = sls[slFn]
 			}
 		}
+		if !*keepTmp {
+			os.Remove(fn)
+		}
 	}
 
 	for fn, lns := range sls {
@@ -72,5 +83,18 @@ func extractFiles(files []string) {
 		outfn := filepath.Join(*outDir, fn)
 		res := bytes.Join(lns, nl)
 		ioutil.WriteFile(outfn, res, 0644)
+		compileFile(fn)
 	}
+}
+
+func compileFile(fn string) error {
+	ext := filepath.Ext(fn)
+	ofn := fn[:len(fn)-len(ext)] + ".spv"
+	cmd := exec.Command("glslc", "-fshader-stage=compute", "-o", ofn, fn)
+	cmd.Dir, _ = filepath.Abs(*outDir)
+	if err := cmd.Run(); err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
 }

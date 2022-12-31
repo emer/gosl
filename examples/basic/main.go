@@ -15,6 +15,10 @@ import (
 	"github.com/goki/vgpu/vgpu"
 )
 
+// note: standard one to use is plain "gosl" which should be go install'd
+
+//go:generate ../../gosl compute.go
+
 func init() {
 	// must lock main thread for gpu!  this also means that vulkan must be used
 	// for gogi/oswin eventually if we want gui and compute

@@ -1,32 +1,30 @@
 
 // DataStruct has the test data
 struct DataStruct  {
-    float Raw;
-    float Integ;
-    float Exp;
-    float Pad2;
+	float Raw;
+	float Integ;
+	float Exp;
+	float Pad2;
 };
 
 // ParamStruct has the test params
 struct ParamStruct  {
-    float Tau;
-    float Dt;
+	float Tau;
+	float Dt;
 
 // IntegFmRaw computes integrated value from current raw value
-  void IntegFmRaw(inout DataStruct ds) {
-       ds.Integ += this.Dt * (ds.Raw - ds.Integ);
+	void IntegFmRaw(inout DataStruct ds) {
+		ds.Integ += this.Dt * (ds.Raw - ds.Integ);
 		ds.Exp = exp(-ds.Integ);
-  }
+	}
+
 };
 
-// important: order is var, set
+
+// note: double-commented lines required here -- binding is set, var
 [[vk::binding(0, 0)]] uniform ParamStruct Params;
 [[vk::binding(0, 1)]] RWStructuredBuffer<DataStruct> Data;
 [numthreads(1, 1, 1)]
-void main(uint3 idx : SV_DispatchThreadID)
-{
-	Params.IntegFmRaw(Data[idx.x]);
-	// note: no diff for method vs direct below:
-	// Data[idx.x].Integ += Params.Dt * (Data[idx.x].Raw - Data[idx.x].Integ);
+void main(uint3 idx : SV_DispatchThreadID) {
+    Params.IntegFmRaw(Data[idx.x]);
 }
-

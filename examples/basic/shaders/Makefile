@@ -4,7 +4,4 @@ all: basic.spv
 
 %.spv : %.hlsl
 	glslc -fshader-stage=compute -o $@ $<
-
-%.spv : %.glsl
-	glslc -fshader-stage=compute -o $@ $<
 	

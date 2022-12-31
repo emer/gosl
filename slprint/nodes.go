@@ -367,6 +367,9 @@ func (p *printer) parameters(fields *ast.FieldList, mode paramMode) {
 			} else if i > 0 {
 				p.print(blank)
 			}
+			// parameter type -- gosl = type first, replace ptr star with `inout`
+			p.expr(p.inoutPtr(stripParensAlways(par.Type)))
+			p.print(blank)
 			// parameter names
 			if len(par.Names) > 0 {
 				// Very subtle: If we indented before (ws == ignore), identList
@@ -376,10 +379,7 @@ func (p *printer) parameters(fields *ast.FieldList, mode paramMode) {
 				// by a linebreak call after a type, or in the next multi-line identList
 				// will do the right thing.
 				p.identList(par.Names, ws == indent)
-				p.print(blank)
 			}
-			// parameter type
-			p.expr(stripParensAlways(par.Type))
 			prevLine = parLineEnd
 		}
 
@@ -461,6 +461,36 @@ func (p *printer) signature(sig *ast.FuncType) {
 			return
 		}
 		p.parameters(res, funcParam)
+	}
+}
+
+// gosl: for declarations -- C ordering
+func (p *printer) signatureDecl(d *ast.FuncDecl) {
+	p.print(d.Pos(), ignore) // trigger comment generation
+	sig := d.Type
+	res := sig.Results
+	n := res.NumFields()
+	if n > 0 {
+		// res != nil
+		if n == 1 && res.List[0].Names == nil {
+			// single anonymous res; no ()'s
+			p.expr(stripParensAlways(res.List[0].Type))
+			return
+		}
+		p.parameters(res, funcParam)
+	} else {
+		p.print("void")
+	}
+	p.print(blank)
+	p.expr(d.Name)
+
+	if sig.TypeParams != nil {
+		p.parameters(sig.TypeParams, funcTParam)
+	}
+	if sig.Params != nil {
+		p.parameters(sig.Params, funcParam)
+	} else {
+		p.print(token.LPAREN, token.RPAREN)
 	}
 }
 
@@ -641,7 +671,7 @@ func (p *printer) fieldList(fields *ast.FieldList, isStruct, isIncomplete bool) 
 		}
 
 	}
-	p.print(unindent, formfeed, rbrace, token.RBRACE)
+	p.print(unindent, formfeed, rbrace, token.RBRACE, ";")
 }
 
 // ----------------------------------------------------------------------------
@@ -1131,7 +1161,12 @@ func (p *printer) possibleSelectorExpr(expr ast.Expr, prec1, depth int) bool {
 // selectorExpr handles an *ast.SelectorExpr node and reports whether x spans
 // multiple lines.
 func (p *printer) selectorExpr(x *ast.SelectorExpr, depth int, isMethod bool) bool {
-	p.expr1(x.X, token.HighestPrec, depth)
+	// gosl: replace receiver with this.
+	if id, ok := x.X.(*ast.Ident); ok && id.Name == p.curFuncRecv.Name {
+		p.print("this")
+	} else {
+		p.expr1(x.X, token.HighestPrec, depth)
+	}
 	p.print(token.PERIOD)
 	if line := p.lineFor(x.Sel.Pos()); p.pos.IsValid() && p.pos.Line < line {
 		p.print(indent, newline, x.Sel.Pos(), x.Sel)
@@ -1243,6 +1278,15 @@ func stripParens(x ast.Expr) ast.Expr {
 func stripParensAlways(x ast.Expr) ast.Expr {
 	if x, ok := x.(*ast.ParenExpr); ok {
 		return stripParensAlways(x.X)
+	}
+	return x
+}
+
+// gosl: replace pointer type with `inout`
+func (p *printer) inoutPtr(x ast.Expr) ast.Expr {
+	if sx, ok := x.(*ast.StarExpr); ok {
+		p.print("inout", blank)
+		return sx.X
 	}
 	return x
 }
@@ -1878,16 +1922,21 @@ func (p *printer) funcDecl(d *ast.FuncDecl) {
 	// FUNC is emitted).
 	startCol := p.out.Column - len("func ")
 	if d.Recv != nil {
+		if d.Recv.List[0].Names != nil {
+			p.curFuncRecv = d.Recv.List[0].Names[0]
+			// fmt.Printf("cur func recv: %v\n", p.curFuncRecv)
+		}
 		p.print("<<<<Method: ")
 		p.printMethRecvType(d.Recv.List[0].Type)
 		p.print(">>>>", newline)
 		// p.parameters(d.Recv, funcParam) // method: print receiver
 		p.print(indent)
 	}
-	p.expr(d.Name)
-	p.signature(d.Type)
+	// p.expr(d.Name) // gosl -- done below
+	p.signatureDecl(d)
 	p.funcBody(p.distanceFrom(d.Pos(), startCol), vtab, d.Body)
 	if d.Recv != nil {
+		p.curFuncRecv = nil
 		p.print(unindent)
 		p.print(newline, "<<<<EndMethod>>>>", newline)
 	}

@@ -22,8 +22,8 @@ func moveLines(lines *[][]byte, to, st, ed int) {
 	*lines = nln
 }
 
-// slEdits performs post-generation edits for python
-// * moves python segments around, e.g., methods
+// slEdits performs post-generation edits for hlsl
+// * moves hlsl segments around, e.g., methods
 // into their proper classes
 // * fixes printf, slice other common code
 func slEdits(src []byte) []byte {
@@ -32,6 +32,9 @@ func slEdits(src []byte) []byte {
 	lines := bytes.Split(src, nl)
 
 	lines = filterGoSL(lines)
+	if len(lines) == 0 {
+		return nil
+	}
 
 	lines = slEditsMethMove(lines)
 	slEditsReplace(lines)
@@ -73,7 +76,7 @@ func filterGoSL(lines [][]byte) [][]byte {
 	return outLns
 }
 
-// slEditsMethMove moves slthon segments around, e.g., methods
+// slEditsMethMove moves hlsl segments around, e.g., methods
 // into their proper classes
 func slEditsMethMove(lines [][]byte) [][]byte {
 	type sted struct {
@@ -114,9 +117,6 @@ func slEditsMethMove(lines [][]byte) [][]byte {
 		}
 
 		switch {
-		// case bytes.Equal(ln, []byte("	:")) || bytes.Equal(ln, []byte(":")):
-		// 	lines = append(lines[:li], lines[li+1:]...) // delete marker
-		// 	li--
 		case bytes.HasPrefix(ln, class):
 			cl := string(ln[len(class):])
 			if idx := strings.Index(cl, "("); idx > 0 {

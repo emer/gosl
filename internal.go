@@ -160,6 +160,9 @@ func format(
 	}
 
 	slfix := slEdits(buf.Bytes())
+	if slfix == nil {
+		return nil, nil
+	}
 
 	out := sourceAdj(slfix, cfg.Indent)
 
