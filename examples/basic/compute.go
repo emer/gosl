@@ -4,13 +4,15 @@
 
 package main
 
+import "math"
+
 //gosl: start basic
 
 // DataStruct has the test data
 type DataStruct struct {
 	Raw   float32 `desc:"raw value"`
 	Integ float32 `desc:"integrated value"`
-	Pad1  float32 `desc:"must pad to 4 floats"`
+	Exp   float32 `desc:"exp of integ"`
 	Pad2  float32 `desc:"must pad to 4 floats"`
 }
 
@@ -23,6 +25,7 @@ type ParamStruct struct {
 // IntegFmRaw computes integrated value from current raw value
 func (ps *ParamStruct) IntegFmRaw(ds *DataStruct) {
 	ds.Integ += ps.Dt * (ds.Raw - ds.Integ)
+	ds.Exp = float32(math.Exp(-float64(ds.Integ)))
 }
 
 //gosl: end basic

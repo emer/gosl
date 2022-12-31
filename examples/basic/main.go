@@ -10,6 +10,8 @@ import (
 	"runtime"
 	"unsafe"
 
+	"github.com/emer/emergent/timer"
+	"github.com/goki/ki/ints"
 	"github.com/goki/vgpu/vgpu"
 )
 
@@ -27,13 +29,13 @@ func main() {
 	}
 
 	gp := vgpu.NewComputeGPU()
-	gp.Debug = true
+	// gp.Debug = true
 	gp.Config("basic")
 	TheGPU = gp
 
 	// gp.PropsString(true) // print
 
-	n := 32
+	n := 1000000
 
 	pars := &ParamStruct{}
 	pars.Defaults()
@@ -44,6 +46,14 @@ func main() {
 		d.Raw = rand.Float32()
 		d.Integ = 0
 	}
+
+	cpuTmr := timer.Time{}
+	cpuTmr.Start()
+	for i := range data {
+		d := &data[i]
+		pars.IntegFmRaw(d)
+	}
+	cpuTmr.Stop()
 
 	sy := gp.NewComputeSystem("basic")
 	pl := sy.NewPipeline("basic")
@@ -60,6 +70,9 @@ func main() {
 	setd.ConfigVals(1) // one val per var
 	sy.Config()        // configures vars, allocates vals, configs pipelines..
 
+	gpuFullTmr := timer.Time{}
+	gpuFullTmr.Start()
+
 	pvl, _ := parsv.Vals.ValByIdxTry(0)
 	pvl.CopyFromBytes(unsafe.Pointer(pars))
 	dvl, _ := datav.Vals.ValByIdxTry(0)
@@ -71,17 +84,28 @@ func main() {
 	vars.BindDynValIdx(1, "Data", 0)
 
 	sy.CmdResetBindVars(sy.CmdPool.Buff, 0)
+
+	gpuTmr := timer.Time{}
+	gpuTmr.Start()
+
 	pl.RunComputeWait(sy.CmdPool.Buff, n, 1, 1)
 	// note: could use semaphore here instead of waiting on the compute
+
+	gpuTmr.Stop()
 
 	sy.Mem.SyncValIdxFmGPU(1, "Data", 0)
 	dvl.CopyToBytes(unsafe.Pointer(&data[0]))
 
-	for i := range data {
+	gpuFullTmr.Stop()
+
+	mx := ints.MinInt(n, 5)
+	for i := 0; i < mx; i++ {
 		d := &data[i]
-		fmt.Printf("%d\tRaw: %g\tInteg: %g\n", i, d.Raw, d.Integ)
+		fmt.Printf("%d\tRaw: %g\tInteg: %g\tExp: %g\n", i, d.Raw, d.Integ, d.Exp)
 	}
 	fmt.Printf("\n")
+
+	fmt.Printf("N: %d\t CPU: %6.4g\t GPU: %6.4g\t Full: %6.4g\n", n, cpuTmr.TotalSecs(), gpuTmr.TotalSecs(), gpuFullTmr.TotalSecs())
 
 	sy.Destroy()
 	gp.Destroy()

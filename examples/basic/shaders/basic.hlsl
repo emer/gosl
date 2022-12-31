@@ -3,7 +3,7 @@
 struct DataStruct  {
     float Raw;
     float Integ;
-    float Pad1;
+    float Exp;
     float Pad2;
 };
 
@@ -15,6 +15,7 @@ struct ParamStruct  {
 // IntegFmRaw computes integrated value from current raw value
   void IntegFmRaw(inout DataStruct ds) {
        ds.Integ += this.Dt * (ds.Raw - ds.Integ);
+		ds.Exp = exp(-ds.Integ);
   }
 };
 
