@@ -27,7 +27,7 @@ For the `main` HLSL function, global variables, to `#include` another `.hlsl` fi
 //gosl: end <filename>
 ```
 
-where the HLSL shader code is commented out in the .go file -- it will be copied into the target filename and uncommented.  The HLSL code can be surrounded by `/*` `*/` comment blocks (each on a separate line) for multi-line code, 
+where the HLSL shader code is commented out in the .go file -- it will be copied into the target filename and uncommented.  The HLSL code can be surrounded by `/*` `*/` comment blocks (each on a separate line) for multi-line code. 
 
 Pass filenames or directory names to `gosl` command for files to process -- files without any `//gosl:` comment directives will be skipped.
 
@@ -37,9 +37,9 @@ Usage:
 
 The flags are:
 
-  -out string
+    -out string
     	output directory for shader code, relative to where gosl is invoked (default "shaders")
-  -keep
+    -keep
     	keep temporary converted versions of the source files, for debugging
 
 
