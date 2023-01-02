@@ -2,7 +2,7 @@
 
 `gosl` implements Go as a shader language for GPU compute shaders: converts Go code to HLSL, and then uses the [glslc](https://github.com/google/shaderc) compiler (e.g., from a vulkan package) to compile into an `.spv` SPIR-V file that can be loaded into a vulkan compute shader.
 
-Thus, `gosl` enables the same CPU-based Go code to also be run on the GPU.  The relevant subsets of Go code to use are specifically marked using `//gosl:` comment directives, and this code must only use basic expressions and concrete types that will compile correctly in a shader.  Method functions and pass-by-reference pointer arguments to `struct` types are supported and incur no additional compute cost due to inlining (see notes below for more detail).
+Thus, `gosl` enables the same CPU-based Go code to also be run on the GPU.  The relevant subsets of Go code to use are specifically marked using `//gosl:` comment directives, and this code must only use basic expressions and concrete types that will compile correctly in a shader (see [Restrictions](#restrictions) below).  Method functions and pass-by-reference pointer arguments to `struct` types are supported and incur no additional compute cost due to inlining (see notes below for more detail).
 
 See `examples/basic` for a working basic example, using the [vgpu](https://github.com/goki/vgpu) Vulkan-based GPU compute shader system.
 
@@ -42,6 +42,22 @@ The flags are:
     -keep
     	keep temporary converted versions of the source files, for debugging
 
+# Restrictions    
+
+In general shader code should be simple mathematical expressions and data types, with minimal control logic via `if`, `for` statements, and only using the subset of Go that is consistent with C.  Here are specific restrictions:
+
+* Cannot use any of the non-elemental Go types except `struct` (i.e., `map`, slices, etc are not available), and also no `string` types.  In general float32 and int32 are good.
+
+* todo: bool32 type?
+
+* Cannot use the Go variable define operator `:=`  -- you will get an error in the glslc compiler stage.  It is possible in the future to support this, but it requires a more elaborate form of file processing.  Use `var <name> <type>` to define new local variables instead.
+
+* Cannot use multiple return values, or multiple assignment of variables in a single `=` expression.
+
+* *Can* use multiple variable names with the same type (e.g., `min, max float32`) -- this will be properly converted to the more redundant C form with the type repeated.
+
+* HLSL does not support enum types, but standard go const decl will be converted -- but you cannot use `iota` -- value must be present in the Go source.  Also, for bitflags, define explicitly, not using `bitflags` package.
+
 
 # Implementation / Design Notes
 
@@ -52,6 +68,34 @@ While there aren't any pointers allowed in HLSL, the inlining of methods, along 
     
 # TODO
 
-* full axon compute unit example
+* enums -- do not exist in HLSL -- just use consts:
+
+```
+// NeuronFlags are bit-flags encoding relevant binary state for neurons
+typedef int NeuronFlags;
+
+	// NeuronOff flag indicates that this neuron has been turned off (i.e., lesioned)
+const NeuronFlags NeuronOff = 0;
+
+	// NeuronHasExt means the neuron has external input in its Ext field
+const NeuronFlags NeuronHasExt = 1;
+
+	// NeuronHasTarg means the neuron has external target input in its Target field
+const NeuronFlags NeuronHasTarg = 2;
+
+	// NeuronHasCmpr means the neuron has external comparison input in its Target field -- used for computing
+	// comparison statistics but does not drive neural activity ever
+const NeuronFlags NeuronHasCmpr = 3;
+
+const NeuronFlags NeuronFlagsNum = 4;
+```
+
+* exclude methods by name: Defaults, Update
+
+* fastexp and restore in sledits
+
+* better math / mat32 function replacement: trim prefix and downcase
+
+* full axon compute unit example -- in process
 
 

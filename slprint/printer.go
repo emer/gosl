@@ -1164,7 +1164,7 @@ func (p *printer) printNode(node any) error {
 		if _, ok := n.(*ast.LabeledStmt); ok {
 			p.indent = 1
 		}
-		p.stmt(n, false)
+		p.stmt(n, false, false)
 	case ast.Decl:
 		p.decl(n)
 	case ast.Spec:

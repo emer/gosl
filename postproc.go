@@ -6,6 +6,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -92,7 +93,9 @@ func compileFile(fn string) error {
 	ofn := fn[:len(fn)-len(ext)] + ".spv"
 	cmd := exec.Command("glslc", "-fshader-stage=compute", "-o", ofn, fn)
 	cmd.Dir, _ = filepath.Abs(*outDir)
-	if err := cmd.Run(); err != nil {
+	out, err := cmd.CombinedOutput()
+	fmt.Printf("\n################\nglslc output for: %s\n%s\n", fn, out)
+	if err != nil {
 		log.Println(err)
 		return err
 	}

@@ -371,7 +371,16 @@ func (p *printer) parameters(fields *ast.FieldList, mode paramMode) {
 			p.expr(p.inoutPtr(stripParensAlways(par.Type)))
 			p.print(blank)
 			// parameter names
-			if len(par.Names) > 0 {
+			if len(par.Names) > 1 {
+				for ni, nm := range par.Names {
+					if ni > 0 {
+						p.print(token.COMMA, blank)
+						p.expr(p.inoutPtr(stripParensAlways(par.Type)))
+						p.print(blank)
+					}
+					p.expr0(nm, 1)
+				}
+			} else {
 				// Very subtle: If we indented before (ws == ignore), identList
 				// won't indent again. If we didn't (ws == indent), identList will
 				// indent if the identList spans multiple lines, and it will outdent
@@ -475,9 +484,9 @@ func (p *printer) signatureDecl(d *ast.FuncDecl) {
 		if n == 1 && res.List[0].Names == nil {
 			// single anonymous res; no ()'s
 			p.expr(stripParensAlways(res.List[0].Type))
-			return
+		} else {
+			p.parameters(res, funcParam)
 		}
-		p.parameters(res, funcParam)
 	} else {
 		p.print("void")
 	}
@@ -877,7 +886,8 @@ func (p *printer) expr1(expr ast.Expr, prec1, depth int) {
 			p.print(token.RPAREN)
 		} else {
 			// no parenthesis needed
-			p.print(token.MUL)
+			// gosl: don't de-reference pointers
+			// p.print(token.MUL)
 			p.expr(x.X)
 		}
 
@@ -890,7 +900,9 @@ func (p *printer) expr1(expr ast.Expr, prec1, depth int) {
 			p.print(token.RPAREN)
 		} else {
 			// no parenthesis needed
-			p.print(x.Op)
+			if x.Op != token.AND { // no & addr-of
+				p.print(x.Op)
+			}
 			if x.Op == token.RANGE {
 				// TODO(gri) Remove this code if it cannot be reached.
 				p.print(blank)
@@ -1162,7 +1174,7 @@ func (p *printer) possibleSelectorExpr(expr ast.Expr, prec1, depth int) bool {
 // multiple lines.
 func (p *printer) selectorExpr(x *ast.SelectorExpr, depth int, isMethod bool) bool {
 	// gosl: replace receiver with this.
-	if id, ok := x.X.(*ast.Ident); ok && id.Name == p.curFuncRecv.Name {
+	if id, ok := x.X.(*ast.Ident); ok && p.curFuncRecv != nil && id.Name == p.curFuncRecv.Name {
 		p.print("this")
 	} else {
 		p.expr1(x.X, token.HighestPrec, depth)
@@ -1211,7 +1223,7 @@ func (p *printer) stmtList(list []ast.Stmt, nindent int, nextIsRBrace bool) {
 				p.linebreak(p.lineFor(s.Pos()), 1, ignore, i == 0 || nindent == 0 || p.linesFrom(line) > 0)
 			}
 			p.recordLine(&line)
-			p.stmt(s, nextIsRBrace && i == len(list)-1)
+			p.stmt(s, nextIsRBrace && i == len(list)-1, false)
 			// labeled statements put labels on a separate line, but here
 			// we only care about the start line of the actual statement
 			// without label - correct line for each label
@@ -1293,6 +1305,7 @@ func (p *printer) inoutPtr(x ast.Expr) ast.Expr {
 
 func (p *printer) controlClause(isForStmt bool, init ast.Stmt, expr ast.Expr, post ast.Stmt) {
 	p.print(blank)
+	p.print(token.LPAREN)
 	needsBlank := false
 	if init == nil && post == nil {
 		// no semicolons required
@@ -1304,9 +1317,11 @@ func (p *printer) controlClause(isForStmt bool, init ast.Stmt, expr ast.Expr, po
 		// all semicolons required
 		// (they are not separators, print them explicitly)
 		if init != nil {
-			p.stmt(init, false)
+			p.stmt(init, false, false) // false = generate own semi
+			p.print(blank)
+		} else {
+			p.print(token.SEMICOLON, blank) // not this one --
 		}
-		p.print(token.SEMICOLON, blank)
 		if expr != nil {
 			p.expr(stripParens(expr))
 			needsBlank = true
@@ -1315,11 +1330,12 @@ func (p *printer) controlClause(isForStmt bool, init ast.Stmt, expr ast.Expr, po
 			p.print(token.SEMICOLON, blank)
 			needsBlank = false
 			if post != nil {
-				p.stmt(post, false)
+				p.stmt(post, false, true) // nosemi!
 				needsBlank = true
 			}
 		}
 	}
+	p.print(token.RPAREN)
 	if needsBlank {
 		p.print(blank)
 	}
@@ -1359,7 +1375,7 @@ func (p *printer) indentList(list []ast.Expr) bool {
 	return false
 }
 
-func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace bool) {
+func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace, nosemi bool) {
 	p.print(stmt.Pos())
 
 	switch s := stmt.(type) {
@@ -1387,12 +1403,14 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace bool) {
 		} else {
 			p.linebreak(p.lineFor(s.Stmt.Pos()), 1, ignore, true)
 		}
-		p.stmt(s.Stmt, nextIsRBrace)
+		p.stmt(s.Stmt, nextIsRBrace, nosemi)
 
 	case *ast.ExprStmt:
 		const depth = 1
 		p.expr0(s.X, depth)
-		p.print(";")
+		if !nosemi {
+			p.print(";")
+		}
 
 	case *ast.SendStmt:
 		const depth = 1
@@ -1404,16 +1422,28 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace bool) {
 		const depth = 1
 		p.expr0(s.X, depth+1)
 		p.print(s.TokPos, s.Tok)
+		if !nosemi {
+			p.print(";")
+		}
 
 	case *ast.AssignStmt:
 		var depth = 1
 		if len(s.Lhs) > 1 && len(s.Rhs) > 1 {
 			depth++
 		}
+		if s.Tok == token.DEFINE {
+			// note: type analysis is generally very expensive and must operate
+			// on the entire package.  We don't need it except in this one case..
+			// ps := p.fset.PositionFor(s.Pos(), true)
+			// fmt.Printf("%s  -- cannot use the Go := expression in shader code\n", ps)
+			// fmt.Printf("lhs of define: %+t %+v\n", s.Lhs, s.Lhs)
+		}
 		p.exprList(s.Pos(), s.Lhs, depth, 0, s.TokPos, false)
 		p.print(blank, s.TokPos, s.Tok, blank)
 		p.exprList(s.TokPos, s.Rhs, depth, 0, token.NoPos, false)
-		p.print(";")
+		if !nosemi {
+			p.print(";")
+		}
 
 	case *ast.GoStmt:
 		p.print(token.GO, blank)
@@ -1442,7 +1472,9 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace bool) {
 				p.exprList(token.NoPos, s.Results, 1, 0, token.NoPos, false)
 			}
 		}
-		p.print(";")
+		if !nosemi {
+			p.print(";")
+		}
 
 	case *ast.BranchStmt:
 		p.print(s.Tok)
@@ -1462,13 +1494,13 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace bool) {
 			p.print(blank, token.ELSE, blank)
 			switch s.Else.(type) {
 			case *ast.BlockStmt, *ast.IfStmt:
-				p.stmt(s.Else, nextIsRBrace)
+				p.stmt(s.Else, nextIsRBrace, false)
 			default:
 				// This can only happen with an incorrectly
 				// constructed AST. Permit it but print so
 				// that it can be parsed without errors.
 				p.print(token.LBRACE, indent, formfeed)
-				p.stmt(s.Else, true)
+				p.stmt(s.Else, true, false)
 				p.print(unindent, formfeed, token.RBRACE)
 			}
 		}
@@ -1492,18 +1524,18 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace bool) {
 		p.print(token.SWITCH)
 		if s.Init != nil {
 			p.print(blank)
-			p.stmt(s.Init, false)
+			p.stmt(s.Init, false, false)
 			p.print(token.SEMICOLON)
 		}
 		p.print(blank)
-		p.stmt(s.Assign, false)
+		p.stmt(s.Assign, false, false)
 		p.print(blank)
 		p.block(s.Body, 0)
 
 	case *ast.CommClause:
 		if s.Comm != nil {
 			p.print(token.CASE, blank)
-			p.stmt(s.Comm, false)
+			p.stmt(s.Comm, false, false)
 		} else {
 			p.print(token.DEFAULT)
 		}
@@ -1701,15 +1733,16 @@ func (p *printer) spec(spec ast.Spec, n int, doIndent bool) {
 			p.internalError("expected n = 1; got", n)
 		}
 		p.setComment(s.Doc)
-		p.identList(s.Names, doIndent) // always present
 		if s.Type != nil {
-			p.print(blank)
 			p.expr(s.Type)
+			p.print(blank)
 		}
+		p.identList(s.Names, doIndent) // always present
 		if s.Values != nil {
 			p.print(blank, token.ASSIGN, blank)
 			p.exprList(token.NoPos, s.Values, 1, 0, token.NoPos, false)
 		}
+		p.print(";")
 		p.setComment(s.Comment)
 
 	case *ast.TypeSpec:
@@ -1879,7 +1912,7 @@ func (p *printer) funcBody(headerSize int, sep whiteSpace, b *ast.BlockStmt) {
 				if i > 0 {
 					p.print(token.SEMICOLON, blank)
 				}
-				p.stmt(s, i == len(b.List)-1)
+				p.stmt(s, i == len(b.List)-1, false)
 			}
 			p.print(blank)
 		}

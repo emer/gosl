@@ -55,7 +55,8 @@ const (
 var fdSem = make(chan bool, 200)
 
 var (
-	outFiles   []string // list of all output files saved
+	outFiles   []string            // list of all output files saved
+	filesProcd = map[string]bool{} // prevent redundancies
 	parserMode parser.Mode
 )
 
@@ -65,7 +66,7 @@ func usage() {
 }
 
 func initParserMode() {
-	parserMode = parser.ParseComments | parser.SkipObjectResolution
+	parserMode = parser.ParseComments
 }
 
 func isGoFile(f fs.DirEntry) bool {
@@ -76,6 +77,11 @@ func isGoFile(f fs.DirEntry) bool {
 
 // returns name of output file
 func processFile(filename string, info fs.FileInfo) (string, error) {
+	if _, exists := filesProcd[filename]; exists {
+		return "", nil
+	}
+	filesProcd[filename] = true
+
 	src, err := readFile(filename, info)
 	if err != nil {
 		return "", err

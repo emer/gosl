@@ -19,8 +19,18 @@ type ParamStruct struct {
 }
 
 // IntegFmRaw computes integrated value from current raw value
-func (ps *ParamStruct) IntegFmRaw(ds *DataStruct) {
-	ds.Integ += ps.Dt * (ds.Raw - ds.Integ)
+func (ps *ParamStruct) IntegFmRaw(ds *DataStruct, modArg *float) {
+	// note: the following are just to test basic control structures
+	var newVal float32 // note: cannot use newVal := to define vars
+	newVal = ps.Dt * (ds.Raw - ds.Integ) + *modArg
+	if newVal < -10 {
+		newVal = -10
+		var i int
+		for i = 0; i < 10; i++ {
+			newVal *= 0.99
+		}
+	}
+	ds.Integ += newVal
 	ds.Exp = mat32.Exp(-ds.Integ)
 }
 
@@ -43,7 +53,7 @@ func (ps *ParamStruct) Update() {
 [[vk::binding(0, 1)]] RWStructuredBuffer<DataStruct> Data;
 [numthreads(1, 1, 1)]
 void main(uint3 idx : SV_DispatchThreadID) {
-    Params.IntegFmRaw(Data[idx.x]);
+    Params.IntegFmRaw(Data[idx.x], Data[idx.x].Pad2);
 }
 */
 //gosl: end basic

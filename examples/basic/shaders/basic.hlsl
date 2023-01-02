@@ -21,7 +21,7 @@ struct ParamStruct  {
 };
 
 
-// note: double-commented lines required here -- binding is set, var
+// note: double-commented lines required here -- binding is var, set
 [[vk::binding(0, 0)]] uniform ParamStruct Params;
 [[vk::binding(0, 1)]] RWStructuredBuffer<DataStruct> Data;
 [numthreads(1, 1, 1)]
