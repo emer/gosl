@@ -41,9 +41,10 @@ const (
 )
 
 var (
-	inFiles    []string            // list of all output files saved
+	inFiles    []string            // list of all input files processed
+	packProcd  = map[string]bool{} // list of all package paths in inFiles -- remove these
 	filesProcd = map[string]bool{} // prevent redundancies
-	slFiles    = map[string][][]byte{}
+	slFiles    map[string][]byte   // output files
 )
 
 func usage() {
@@ -69,6 +70,20 @@ func addFile(fn string) bool {
 	}
 	inFiles = append(inFiles, fn)
 	filesProcd[fn] = true
+	dir, _ := filepath.Split(fn)
+	if dir != "" {
+		dir = dir[:len(dir)-1]
+		pd, sd := filepath.Split(dir)
+		if pd != "" {
+			dir = sd
+		}
+		if !(dir == "mat32") {
+			if _, has := packProcd[dir]; !has {
+				packProcd[dir] = true
+				// fmt.Printf("package: %s\n", dir)
+			}
+		}
+	}
 	return true
 }
 

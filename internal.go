@@ -30,26 +30,28 @@ import (
 )
 
 // does all the file processing
-func processFiles(fls []string) error {
-	extractFiles(fls) // extract files to shader/*.go in slFiles
+func processFiles(fls []string) (map[string][]byte, error) {
+	sls := extractFiles(fls) // extract files to shader/*.go in slFiles
 
-	for fn := range slFiles {
+	for fn := range sls {
 		gofn := filepath.Join(*outDir, fn+".go")
 
 		pkgs, err := packages.Load(&packages.Config{Mode: packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedTypes | packages.NeedSyntax | packages.NeedTypesInfo | packages.NeedTypesSizes}, gofn)
 		if err != nil {
 			log.Println(err)
-			return nil
+			return nil, err
 		}
 		if len(pkgs) != 1 {
-			fmt.Printf("More than one package for path: %v\n", gofn)
-			return nil
+			err := fmt.Errorf("More than one package for path: %v", gofn)
+			log.Println(err)
+			return nil, err
 		}
 		pkg := pkgs[0]
 
 		if len(pkg.GoFiles) == 0 {
-			fmt.Printf("No Go files found in package: %v\n", gofn)
-			return nil
+			err := fmt.Errorf("No Go files found in package: %v", gofn)
+			log.Println(err)
+			return nil, err
 		}
 		// files = pkg.GoFiles
 		// fgo := pkg.GoFiles[0]
@@ -59,6 +61,7 @@ func processFiles(fls []string) error {
 		cfg.Fprint(&buf, pkg.Fset, pkg.Syntax[0])
 		slfix := slEdits(buf.Bytes())
 		exsl := extractHLSL(slfix)
+		sls[fn] = exsl
 
 		if !*keepTmp {
 			os.Remove(gofn)
@@ -68,10 +71,12 @@ func processFiles(fls []string) error {
 		ioutil.WriteFile(slfn, exsl, 0644)
 		compileFile(fn + ".hlsl")
 	}
-	return nil
+	slFiles = sls // save global
+	return sls, nil
 }
 
-func extractFiles(files []string) {
+func extractFiles(files []string) map[string][]byte {
+	sls := map[string][][]byte{}
 	key := []byte("//gosl: ")
 	start := []byte("start")
 	hlsl := []byte("hlsl")
@@ -101,34 +106,40 @@ func extractFiles(files []string) {
 				if inHlsl {
 					outLns = append(outLns, ln)
 				}
-				slFiles[slFn] = outLns
+				sls[slFn] = outLns
 				inReg = false
 				inHlsl = false
 			case inReg:
+				for pkg := range packProcd { // remove package prefixes
+					ln = bytes.ReplaceAll(ln, []byte(pkg+"."), []byte{})
+				}
 				outLns = append(outLns, ln)
 			case isKey && bytes.HasPrefix(keyStr, start):
 				inReg = true
 				slFn = string(keyStr[len(start)+1:])
-				outLns = slFiles[slFn]
+				outLns = sls[slFn]
 			case isKey && bytes.HasPrefix(keyStr, hlsl):
 				inReg = true
 				inHlsl = true
 				slFn = string(keyStr[len(hlsl)+1:])
-				outLns = slFiles[slFn]
+				outLns = sls[slFn]
 				outLns = append(outLns, ln)
 			}
 		}
 	}
 
-	for fn, lns := range slFiles {
-		fn += ".go"
-		outfn := filepath.Join(*outDir, fn)
+	rsls := make(map[string][]byte)
+	for fn, lns := range sls {
+		outfn := filepath.Join(*outDir, fn+".go")
 		olns := [][]byte{}
 		olns = append(olns, []byte("package main"))
 		olns = append(olns, lns...)
 		res := bytes.Join(olns, nl)
 		ioutil.WriteFile(outfn, res, 0644)
+		rsls[fn] = bytes.Join(lns, nl)
 	}
+
+	return rsls
 }
 
 func extractHLSL(buf []byte) []byte {

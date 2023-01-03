@@ -79,11 +79,11 @@ While there aren't any pointers allowed in HLSL, the inlining of methods, along 
     
 # TODO
 
-* reorganize flow: first extract gosl code into a .go file, then do parsing on that using package system to get type analysis -- needed for offset computation.
+* use types to do := properly
+
+* fix method comments issue
 
 * parse go package paths for files on commandline
-
-* selectorExpr requires type info to know if selecting expr is a package path (exclude) or struct type (include)
 
 * exclude methods by name: Defaults, Update
 
@@ -91,4 +91,4 @@ While there aren't any pointers allowed in HLSL, the inlining of methods, along 
 
 * full axon compute unit example -- in process
 
-https://mines.zoom.us/j/92474241061?pwd=U2ZoMmM5UXV6MjRwUGYvckFFeUpWZz09#success
+

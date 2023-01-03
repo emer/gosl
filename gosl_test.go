@@ -25,7 +25,7 @@ func runTest(t *testing.T, in, out string) {
 		return
 	}
 
-	err = processFiles([]string{in})
+	sls, err := processFiles([]string{in})
 	if err != nil {
 		t.Error(err)
 		return
@@ -38,15 +38,11 @@ func runTest(t *testing.T, in, out string) {
 	}
 
 	outfn := ""
-	for fn := range slFiles {
+	var got []byte
+	for fn, b := range sls {
 		outfn = filepath.Join(*outDir, fn+".hlsl")
+		got = b
 		break
-	}
-
-	got, err := os.ReadFile(outfn)
-	if err != nil {
-		t.Error(err)
-		return
 	}
 
 	if !bytes.Equal(got, expected) {

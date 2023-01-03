@@ -16,107 +16,6 @@ import (
 
 //gosl: start axon
 
-// axon.LearnNeurParams manages learning-related parameters at the neuron-level.
-// This is mainly the running average activations that drive learning
-type LearnNeurParams struct {
-	CaLrn CaLrnParams `view:"inline" desc:"parameterizes the neuron-level calcium signals driving learning: CaLrn = NMDA + VGCC Ca sources, where VGCC can be simulated from spiking or use the more complex and dynamic VGCC channel directly.  CaLrn is then integrated in a cascading manner at multiple time scales:
-CaM (as in calmodulin), CaP (ltP, CaMKII, plus phase), CaD (ltD, DAPK1, minus phase)."`
-	CaSpk     CaSpkParams      `view:"inline" desc:"parameterizes the neuron-level spike-driven calcium signals, starting with CaSyn that is integrated at the neuron level, and drives synapse-level, pre * post Ca integration, which provides the Tr trace that multiplies error signals, and drives learning directly for Target layers. CaSpk* values are integrated separately at the Neuron level and used for UpdtThr and RLRate as a proxy for the activation (spiking) based learning signal."`
-	LrnNMDA   chans.NMDAParams `view:"inline" desc:"NMDA channel parameters used for learning, vs. the ones driving activation -- allows exploration of learning parameters independent of their effects on active maintenance contributions of NMDA, and may be supported by different receptor subtypes"`
-	TrgAvgAct TrgAvgActParams  `view:"inline" desc:"synaptic scaling parameters for regulating overall average activity compared to neuron's own target level"`
-	RLRate    RLRateParams     `view:"inline" desc:"recv neuron learning rate modulation params -- an additional error-based modulation of learning for receiver side: RLRate = |SpkCaP - SpkCaD| / Max(SpkCaP, SpkCaD)"`
-}
-
-func (ln *LearnNeurParams) Update() {
-	ln.CaLrn.Update()
-	ln.CaSpk.Update()
-	ln.LrnNMDA.Update()
-	ln.TrgAvgAct.Update()
-	ln.RLRate.Update()
-}
-
-func (ln *LearnNeurParams) Defaults() {
-	ln.CaLrn.Defaults()
-	ln.CaSpk.Defaults()
-	ln.LrnNMDA.Defaults()
-	ln.LrnNMDA.ITau = 1
-	ln.LrnNMDA.Update()
-	ln.TrgAvgAct.Defaults()
-	ln.RLRate.Defaults()
-}
-
-// InitCaLrnSpk initializes the neuron-level calcium learning and spking variables.
-// Called by InitWts (at start of learning).
-func (ln *LearnNeurParams) InitNeurCa(nrn *Neuron) {
-	nrn.GnmdaLrn = 0
-	nrn.NmdaCa = 0
-	nrn.SnmdaO = 0
-	nrn.SnmdaI = 0
-
-	nrn.VgccCa = 0
-	nrn.VgccCaInt = 0
-
-	nrn.CaLrn = 0
-
-	nrn.CaSyn = 0
-	nrn.CaSpkM = 0
-	nrn.CaSpkP = 0
-	nrn.CaSpkD = 0
-	nrn.CaSpkPM = 0
-
-	nrn.CaM = 0
-	nrn.CaP = 0
-	nrn.CaD = 0
-	nrn.CaDiff = 0
-}
-
-// DecayNeurCa decays neuron-level calcium learning and spiking variables
-// by given factor.  Note: this is NOT called by default and is generally
-// not useful, causing variability in these learning factors as a function
-// of the decay parameter that then has impacts on learning rates etc.
-// It is only here for reference or optional testing.
-func (ln *LearnNeurParams) DecayCaLrnSpk(nrn *Neuron, decay float32) {
-	nrn.GnmdaLrn -= decay * nrn.GnmdaLrn
-	nrn.NmdaCa -= decay * nrn.NmdaCa
-	nrn.SnmdaO -= decay * nrn.SnmdaO
-	nrn.SnmdaI -= decay * nrn.SnmdaI
-
-	nrn.VgccCa -= decay * nrn.VgccCa
-	nrn.VgccCaInt -= decay * nrn.VgccCaInt
-
-	nrn.CaLrn -= decay * nrn.CaLrn
-
-	nrn.CaSyn -= decay * nrn.CaSyn
-	nrn.CaSpkM -= decay * nrn.CaSpkM
-	nrn.CaSpkP -= decay * nrn.CaSpkP
-	nrn.CaSpkD -= decay * nrn.CaSpkD
-
-	nrn.CaM -= decay * nrn.CaM
-	nrn.CaP -= decay * nrn.CaP
-	nrn.CaD -= decay * nrn.CaD
-}
-
-// LrnNMDAFmRaw updates the separate NMDA conductance and calcium values
-// based on GeTot = GeRaw + external ge conductance.  These are the variables
-// that drive learning -- can be the same as activation but also can be different
-// for testing learning Ca effects independent of activation effects.
-func (ln *LearnNeurParams) LrnNMDAFmRaw(nrn *Neuron, geTot float32) {
-	if geTot < 0 {
-		geTot = 0
-	}
-	nrn.GnmdaLrn = ln.LrnNMDA.NMDASyn(nrn.GnmdaLrn, geTot)
-	gnmda := ln.LrnNMDA.Gnmda(nrn.GnmdaLrn, nrn.VmDend)
-	nrn.NmdaCa = gnmda * ln.LrnNMDA.CaFmV(nrn.VmDend)
-	ln.LrnNMDA.SnmdaFmSpike(nrn.Spike, &nrn.SnmdaO, &nrn.SnmdaI)
-}
-
-// CaFmSpike updates all spike-driven calcium variables, including CaLrn and CaSpk.
-// Computed after new activation for current cycle is updated.
-func (ln *LearnNeurParams) CaFmSpike(nrn *Neuron) {
-	ln.CaSpk.CaFmSpike(nrn)
-	ln.CaLrn.CaLrn(nrn)
-}
-
 // CaLrnParams parameterizes the neuron-level calcium signals driving learning:
 // CaLrn = NMDA + VGCC Ca sources, where VGCC can be simulated from spiking or
 // use the more complex and dynamic VGCC channel directly.
@@ -297,6 +196,107 @@ func (rl *RLRateParams) RLRateDiff(scap, scad float32) float32 {
 		return (dif / max)
 	}
 	return rl.Min
+}
+
+// axon.LearnNeurParams manages learning-related parameters at the neuron-level.
+// This is mainly the running average activations that drive learning
+type LearnNeurParams struct {
+	CaLrn CaLrnParams `view:"inline" desc:"parameterizes the neuron-level calcium signals driving learning: CaLrn = NMDA + VGCC Ca sources, where VGCC can be simulated from spiking or use the more complex and dynamic VGCC channel directly.  CaLrn is then integrated in a cascading manner at multiple time scales:
+CaM (as in calmodulin), CaP (ltP, CaMKII, plus phase), CaD (ltD, DAPK1, minus phase)."`
+	CaSpk     CaSpkParams      `view:"inline" desc:"parameterizes the neuron-level spike-driven calcium signals, starting with CaSyn that is integrated at the neuron level, and drives synapse-level, pre * post Ca integration, which provides the Tr trace that multiplies error signals, and drives learning directly for Target layers. CaSpk* values are integrated separately at the Neuron level and used for UpdtThr and RLRate as a proxy for the activation (spiking) based learning signal."`
+	LrnNMDA   chans.NMDAParams `view:"inline" desc:"NMDA channel parameters used for learning, vs. the ones driving activation -- allows exploration of learning parameters independent of their effects on active maintenance contributions of NMDA, and may be supported by different receptor subtypes"`
+	TrgAvgAct TrgAvgActParams  `view:"inline" desc:"synaptic scaling parameters for regulating overall average activity compared to neuron's own target level"`
+	RLRate    RLRateParams     `view:"inline" desc:"recv neuron learning rate modulation params -- an additional error-based modulation of learning for receiver side: RLRate = |SpkCaP - SpkCaD| / Max(SpkCaP, SpkCaD)"`
+}
+
+func (ln *LearnNeurParams) Update() {
+	ln.CaLrn.Update()
+	ln.CaSpk.Update()
+	ln.LrnNMDA.Update()
+	ln.TrgAvgAct.Update()
+	ln.RLRate.Update()
+}
+
+func (ln *LearnNeurParams) Defaults() {
+	ln.CaLrn.Defaults()
+	ln.CaSpk.Defaults()
+	ln.LrnNMDA.Defaults()
+	ln.LrnNMDA.ITau = 1
+	ln.LrnNMDA.Update()
+	ln.TrgAvgAct.Defaults()
+	ln.RLRate.Defaults()
+}
+
+// InitCaLrnSpk initializes the neuron-level calcium learning and spking variables.
+// Called by InitWts (at start of learning).
+func (ln *LearnNeurParams) InitNeurCa(nrn *Neuron) {
+	nrn.GnmdaLrn = 0
+	nrn.NmdaCa = 0
+	nrn.SnmdaO = 0
+	nrn.SnmdaI = 0
+
+	nrn.VgccCa = 0
+	nrn.VgccCaInt = 0
+
+	nrn.CaLrn = 0
+
+	nrn.CaSyn = 0
+	nrn.CaSpkM = 0
+	nrn.CaSpkP = 0
+	nrn.CaSpkD = 0
+	nrn.CaSpkPM = 0
+
+	nrn.CaM = 0
+	nrn.CaP = 0
+	nrn.CaD = 0
+	nrn.CaDiff = 0
+}
+
+// DecayNeurCa decays neuron-level calcium learning and spiking variables
+// by given factor.  Note: this is NOT called by default and is generally
+// not useful, causing variability in these learning factors as a function
+// of the decay parameter that then has impacts on learning rates etc.
+// It is only here for reference or optional testing.
+func (ln *LearnNeurParams) DecayCaLrnSpk(nrn *Neuron, decay float32) {
+	nrn.GnmdaLrn -= decay * nrn.GnmdaLrn
+	nrn.NmdaCa -= decay * nrn.NmdaCa
+	nrn.SnmdaO -= decay * nrn.SnmdaO
+	nrn.SnmdaI -= decay * nrn.SnmdaI
+
+	nrn.VgccCa -= decay * nrn.VgccCa
+	nrn.VgccCaInt -= decay * nrn.VgccCaInt
+
+	nrn.CaLrn -= decay * nrn.CaLrn
+
+	nrn.CaSyn -= decay * nrn.CaSyn
+	nrn.CaSpkM -= decay * nrn.CaSpkM
+	nrn.CaSpkP -= decay * nrn.CaSpkP
+	nrn.CaSpkD -= decay * nrn.CaSpkD
+
+	nrn.CaM -= decay * nrn.CaM
+	nrn.CaP -= decay * nrn.CaP
+	nrn.CaD -= decay * nrn.CaD
+}
+
+// LrnNMDAFmRaw updates the separate NMDA conductance and calcium values
+// based on GeTot = GeRaw + external ge conductance.  These are the variables
+// that drive learning -- can be the same as activation but also can be different
+// for testing learning Ca effects independent of activation effects.
+func (ln *LearnNeurParams) LrnNMDAFmRaw(nrn *Neuron, geTot float32) {
+	if geTot < 0 {
+		geTot = 0
+	}
+	nrn.GnmdaLrn = ln.LrnNMDA.NMDASyn(nrn.GnmdaLrn, geTot)
+	gnmda := ln.LrnNMDA.Gnmda(nrn.GnmdaLrn, nrn.VmDend)
+	nrn.NmdaCa = gnmda * ln.LrnNMDA.CaFmV(nrn.VmDend)
+	ln.LrnNMDA.SnmdaFmSpike(nrn.Spike, &nrn.SnmdaO, &nrn.SnmdaI)
+}
+
+// CaFmSpike updates all spike-driven calcium variables, including CaLrn and CaSpk.
+// Computed after new activation for current cycle is updated.
+func (ln *LearnNeurParams) CaFmSpike(nrn *Neuron) {
+	ln.CaSpk.CaFmSpike(nrn)
+	ln.CaLrn.CaLrn(nrn)
 }
 
 //gosl: end axon

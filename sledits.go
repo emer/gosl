@@ -142,6 +142,7 @@ var Replaces = []Replace{
 	{[]byte("mat32.Cos("), []byte("cos(")},
 	{[]byte("mat32.Sin("), []byte("sin(")},
 	{[]byte("mat32.Abs("), []byte("abs(")},
+	{[]byte("mat32.Sqrt("), []byte("sqrt(")},
 	{[]byte("mat32.FastExp("), []byte("FastExp(")},
 	{[]byte("math.Float32frombits("), []byte("asfloat(")},
 	// {[]byte(""), []byte("")},
