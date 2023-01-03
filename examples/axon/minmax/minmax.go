@@ -4,6 +4,10 @@
 
 package minmax
 
+//gosl: hlsl axon
+// #include "fastexp.hlsl"
+//gosl: end axon
+
 //gosl: start axon
 
 // F32 represents a min / max range for float32 values.

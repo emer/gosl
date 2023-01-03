@@ -4,10 +4,6 @@
 
 package main
 
-import (
-	"github.com/goki/ki/bitflag"
-)
-
 //gosl: start axon
 
 // NeuronFlags are bit-flags encoding relevant binary state for neurons
@@ -16,19 +12,17 @@ type NeuronFlags int32
 // The neuron flags
 const (
 	// NeuronOff flag indicates that this neuron has been turned off (i.e., lesioned)
-	NeuronOff NeuronFlags = iota
+	NeuronOff NeuronFlags = 1
 
 	// NeuronHasExt means the neuron has external input in its Ext field
-	NeuronHasExt
+	NeuronHasExt NeuronFlags = 1 << 2
 
 	// NeuronHasTarg means the neuron has external target input in its Target field
-	NeuronHasTarg
+	NeuronHasTarg NeuronFlags = 1 << 3
 
 	// NeuronHasCmpr means the neuron has external comparison input in its Target field -- used for computing
 	// comparison statistics but does not drive neural activity ever
-	NeuronHasCmpr
-
-	NeuronFlagsNum
+	NeuronHasCmpr NeuronFlags = 1 << 4
 )
 
 // axon.Neuron holds all of the neuron (unit) level variables.
@@ -126,23 +120,15 @@ type Neuron struct {
 }
 
 func (nrn *Neuron) HasFlag(flag NeuronFlags) bool {
-	return bitflag.Has32(int32(nrn.Flags), int(flag))
+	return nrn.Flags&flag != 0
 }
 
 func (nrn *Neuron) SetFlag(flag NeuronFlags) {
-	bitflag.Set32((*int32)(&nrn.Flags), int(flag))
+	nrn.Flags |= flag
 }
 
 func (nrn *Neuron) ClearFlag(flag NeuronFlags) {
-	bitflag.Clear32((*int32)(&nrn.Flags), int(flag))
-}
-
-func (nrn *Neuron) SetMask(mask int32) {
-	bitflag.SetMask32((*int32)(&nrn.Flags), mask)
-}
-
-func (nrn *Neuron) ClearMask(mask int32) {
-	bitflag.ClearMask32((*int32)(&nrn.Flags), mask)
+	nrn.Flags &^= flag
 }
 
 // IsOff returns true if the neuron has been turned off (lesioned)

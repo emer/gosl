@@ -680,7 +680,7 @@ func (p *printer) fieldList(fields *ast.FieldList, isStruct, isIncomplete bool) 
 		}
 
 	}
-	p.print(unindent, formfeed, rbrace, token.RBRACE, ";")
+	p.print(unindent, formfeed, rbrace, token.RBRACE)
 }
 
 // ----------------------------------------------------------------------------
@@ -831,7 +831,15 @@ func (p *printer) binaryExpr(x *ast.BinaryExpr, prec1, cutoff, depth int) {
 	}
 	xline := p.pos.Line // before the operator (it may be on the next line!)
 	yline := p.lineFor(x.Y.Pos())
-	p.print(x.OpPos, x.Op)
+	switch x.Op {
+	case token.AND_NOT_ASSIGN:
+		p.print(x.OpPos, token.AND_ASSIGN, "~")
+	case token.AND_NOT:
+		p.print(x.OpPos, token.AND, "~")
+	default:
+		p.print(x.OpPos, x.Op)
+	}
+
 	if xline != yline && xline > 0 && yline > 0 {
 		// at least one line break, but respect an extra empty line
 		// in the source
@@ -1174,6 +1182,8 @@ func (p *printer) possibleSelectorExpr(expr ast.Expr, prec1, depth int) bool {
 // multiple lines.
 func (p *printer) selectorExpr(x *ast.SelectorExpr, depth int, isMethod bool) bool {
 	// gosl: replace receiver with this.
+	// gosl: todo: need type information on x.Sel to know if it is a type
+	// if styp, isType := x.Sel.(*)
 	if id, ok := x.X.(*ast.Ident); ok && p.curFuncRecv != nil && id.Name == p.curFuncRecv.Name {
 		p.print("this")
 	} else {
@@ -1439,7 +1449,12 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace, nosemi bool) {
 			// fmt.Printf("lhs of define: %+t %+v\n", s.Lhs, s.Lhs)
 		}
 		p.exprList(s.Pos(), s.Lhs, depth, 0, s.TokPos, false)
-		p.print(blank, s.TokPos, s.Tok, blank)
+		switch s.Tok {
+		case token.AND_NOT_ASSIGN:
+			p.print(blank, s.TokPos, token.AND_ASSIGN, "~")
+		default:
+			p.print(blank, s.TokPos, s.Tok, blank)
+		}
 		p.exprList(s.TokPos, s.Rhs, depth, 0, token.NoPos, false)
 		if !nosemi {
 			p.print(";")
@@ -1646,22 +1661,27 @@ func keepTypeColumn(specs []ast.Spec) []bool {
 	return m
 }
 
-func (p *printer) valueSpec(s *ast.ValueSpec, keepType bool) {
+func (p *printer) valueSpec(s *ast.ValueSpec, keepType bool, tok token.Token) {
 	p.setComment(s.Doc)
-	p.identList(s.Names, false) // always present
-	extraTabs := 3
-	if s.Type != nil || keepType {
-		p.print(vtab)
-		extraTabs--
+	extraTabs := 2
+	// gosl: key to use Pos() as first arg to trigger emitting of comments!
+	switch tok {
+	case token.CONST:
+		p.print(s.Pos(), tok, blank)
+	case token.TYPE:
+		p.print(s.Pos(), "typedef", blank)
 	}
 	if s.Type != nil {
 		p.expr(s.Type)
 	}
+	p.print(vtab)
+	p.identList(s.Names, false) // always present
 	if s.Values != nil {
 		p.print(vtab, token.ASSIGN, blank)
 		p.exprList(token.NoPos, s.Values, 1, 0, token.NoPos, false)
 		extraTabs--
 	}
+	p.print(";")
 	if s.Comment != nil {
 		for ; extraTabs > 0; extraTabs-- {
 			p.print(vtab)
@@ -1716,7 +1736,7 @@ func sanitizeImportPath(lit *ast.BasicLit) *ast.BasicLit {
 // The parameter n is the number of specs in the group. If doIndent is set,
 // multi-line identifier lists in the spec are indented when the first
 // linebreak is encountered.
-func (p *printer) spec(spec ast.Spec, n int, doIndent bool) {
+func (p *printer) spec(spec ast.Spec, n int, doIndent bool, tok token.Token) {
 	switch s := spec.(type) {
 	case *ast.ImportSpec:
 		p.setComment(s.Doc)
@@ -1733,6 +1753,11 @@ func (p *printer) spec(spec ast.Spec, n int, doIndent bool) {
 			p.internalError("expected n = 1; got", n)
 		}
 		p.setComment(s.Doc)
+		if tok == token.CONST {
+			p.print(s.Pos(), tok, blank)
+		} else {
+			p.print(s.Pos(), ignore)
+		}
 		if s.Type != nil {
 			p.expr(s.Type)
 			p.print(blank)
@@ -1747,24 +1772,34 @@ func (p *printer) spec(spec ast.Spec, n int, doIndent bool) {
 
 	case *ast.TypeSpec:
 		p.setComment(s.Doc)
-		p.print("struct", blank)
+		st, isStruct := s.Type.(*ast.StructType)
+		if isStruct {
+			p.print(st.Pos(), token.STRUCT, blank)
+		} else {
+			p.print(s.Pos(), "typedef", blank, s.Type, blank)
+		}
 		p.expr(s.Name)
 		if s.TypeParams != nil {
 			p.parameters(s.TypeParams, typeTParam)
 		}
-		if n == 1 {
-			p.print(blank)
-		} else {
-			p.print(vtab)
-		}
+		// if n == 1 {
+		// 	p.print(blank)
+		// } else {
+		// 	p.print(vtab)
+		// }
 		if s.Assign.IsValid() {
 			p.print(token.ASSIGN, blank)
 		}
-		p.expr(s.Type)
+		if isStruct {
+			p.expr(s.Type)
+		}
+		p.print(";")
 		p.print(newline)
-		p.print("<<<<EndClass: ")
-		p.expr(s.Name)
-		p.print(">>>>", newline)
+		if isStruct {
+			p.print("<<<<EndClass: ")
+			p.expr(s.Name)
+			p.print(">>>>", newline)
+		}
 		p.setComment(s.Comment)
 
 	default:
@@ -1779,9 +1814,9 @@ func (p *printer) genDecl(d *ast.GenDecl) {
 
 	if d.Lparen.IsValid() || len(d.Specs) > 1 {
 		// group of parenthesized declarations
-		p.print(d.Lparen, token.LPAREN)
+		// p.print(d.Lparen, token.LPAREN)
 		if n := len(d.Specs); n > 0 {
-			p.print(indent, formfeed)
+			// p.print(indent, formfeed)
 			if n > 1 && (d.Tok == token.CONST || d.Tok == token.VAR) {
 				// two or more grouped const/var declarations:
 				// determine if the type column must be kept
@@ -1792,7 +1827,7 @@ func (p *printer) genDecl(d *ast.GenDecl) {
 						p.linebreak(p.lineFor(s.Pos()), 1, ignore, p.linesFrom(line) > 0)
 					}
 					p.recordLine(&line)
-					p.valueSpec(s.(*ast.ValueSpec), keepType[i])
+					p.valueSpec(s.(*ast.ValueSpec), keepType[i], d.Tok)
 				}
 			} else {
 				var line int
@@ -1801,16 +1836,16 @@ func (p *printer) genDecl(d *ast.GenDecl) {
 						p.linebreak(p.lineFor(s.Pos()), 1, ignore, p.linesFrom(line) > 0)
 					}
 					p.recordLine(&line)
-					p.spec(s, n, false)
+					p.spec(s, n, false, d.Tok)
 				}
 			}
-			p.print(unindent, formfeed)
+			// p.print(unindent, formfeed)
 		}
-		p.print(d.Rparen, token.RPAREN)
+		// p.print(d.Rparen, token.RPAREN)
 
 	} else if len(d.Specs) > 0 {
 		// single declaration
-		p.spec(d.Specs[0], 1, true)
+		p.spec(d.Specs[0], 1, true, d.Tok)
 	}
 }
 
@@ -1949,7 +1984,6 @@ func (p *printer) printMethRecvType(typ ast.Expr) {
 
 func (p *printer) funcDecl(d *ast.FuncDecl) {
 	p.setComment(d.Doc)
-	// p.print(d.Pos(), token.FUNC, blank)
 	// We have to save startCol only after emitting FUNC; otherwise it can be on a
 	// different line (all whitespace preceding the FUNC is emitted only when the
 	// FUNC is emitted).
@@ -1964,6 +1998,9 @@ func (p *printer) funcDecl(d *ast.FuncDecl) {
 		p.print(">>>>", newline)
 		// p.parameters(d.Recv, funcParam) // method: print receiver
 		p.print(indent)
+		p.print(d.Pos(), ignore) // trigger emission of comments!
+	} else {
+		p.print(d.Pos(), ignore) // trigger emission of comments!
 	}
 	// p.expr(d.Name) // gosl -- done below
 	p.signatureDecl(d)

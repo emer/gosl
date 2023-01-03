@@ -17,171 +17,176 @@ package main
 
 import (
 	"bytes"
-	"go/ast"
-	"go/parser"
-	"go/token"
-	"strings"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"os/exec"
+	"path/filepath"
 
 	"github.com/goki/gosl/slprint"
+	"golang.org/x/exp/slices"
+	"golang.org/x/tools/go/packages"
 )
 
-// parse parses src, which was read from the named file,
-// as a Go source file, declaration, or statement list.
-func parse(fset *token.FileSet, filename string, src []byte, fragmentOk bool) (
-	file *ast.File,
-	sourceAdj func(src []byte, indent int) []byte,
-	indentAdj int,
-	err error,
-) {
-	// Try as whole source file.
-	file, err = parser.ParseFile(fset, filename, src, parserMode)
-	// If there's no error, return. If the error is that the source file didn't begin with a
-	// package line and source fragments are ok, fall through to
-	// try as a source fragment. Stop and return on any other error.
-	if err == nil || !fragmentOk || !strings.Contains(err.Error(), "expected 'package'") {
-		return
-	}
+// does all the file processing
+func processFiles(fls []string) error {
+	extractFiles(fls) // extract files to shader/*.go in slFiles
 
-	// If this is a declaration list, make it a source file
-	// by inserting a package clause.
-	// Insert using a ';', not a newline, so that the line numbers
-	// in psrc match the ones in src.
-	psrc := append([]byte("package p;"), src...)
-	file, err = parser.ParseFile(fset, filename, psrc, parserMode)
-	if err == nil {
-		sourceAdj = func(src []byte, indent int) []byte {
-			// Remove the package clause.
-			// gosl has turned the ';' into a '\n'.
-			src = src[indent+len("package p\n"):]
-			return bytes.TrimSpace(src)
+	for fn := range slFiles {
+		gofn := filepath.Join(*outDir, fn+".go")
+
+		pkgs, err := packages.Load(&packages.Config{Mode: packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedTypes | packages.NeedSyntax | packages.NeedTypesInfo | packages.NeedTypesSizes}, gofn)
+		if err != nil {
+			log.Println(err)
+			return nil
 		}
-		return
-	}
-	// If the error is that the source file didn't begin with a
-	// declaration, fall through to try as a statement list.
-	// Stop and return on any other error.
-	if !strings.Contains(err.Error(), "expected declaration") {
-		return
-	}
-
-	// If this is a statement list, make it a source file
-	// by inserting a package clause and turning the list
-	// into a function body. This handles expressions too.
-	// Insert using a ';', not a newline, so that the line numbers
-	// in fsrc match the ones in src. Add an extra '\n' before the '}'
-	// to make sure comments are flushed before the '}'.
-	fsrc := append(append([]byte("package p; func _() {"), src...), '\n', '\n', '}')
-	file, err = parser.ParseFile(fset, filename, fsrc, parserMode)
-	if err == nil {
-		sourceAdj = func(src []byte, indent int) []byte {
-			// Cap adjusted indent to zero.
-			if indent < 0 {
-				indent = 0
-			}
-			// Remove the wrapping.
-			// gosl has turned the "; " into a "\n\n".
-			// There will be two non-blank lines with indent, hence 2*indent.
-			src = src[2*indent+len("package p\n\nfunc _() {"):]
-			// Remove only the "}\n" suffix: remaining whitespaces will be trimmed anyway
-			src = src[:len(src)-len("}\n")]
-			return bytes.TrimSpace(src)
+		if len(pkgs) != 1 {
+			fmt.Printf("More than one package for path: %v\n", gofn)
+			return nil
 		}
-		// gosl has also indented the function body one level.
-		// Adjust that with indentAdj.
-		indentAdj = -1
-	}
+		pkg := pkgs[0]
 
-	// Succeeded, or out of options.
-	return
+		if len(pkg.GoFiles) == 0 {
+			fmt.Printf("No Go files found in package: %v\n", gofn)
+			return nil
+		}
+		// files = pkg.GoFiles
+		// fgo := pkg.GoFiles[0]
+		// pkgPathAbs, _ = filepath.Abs(filepath.Dir(fgo))
+		var buf bytes.Buffer
+		cfg := slprint.Config{Mode: printerMode, Tabwidth: tabWidth}
+		cfg.Fprint(&buf, pkg.Fset, pkg.Syntax[0])
+		slfix := slEdits(buf.Bytes())
+		exsl := extractHLSL(slfix)
+
+		if !*keepTmp {
+			os.Remove(gofn)
+		}
+
+		slfn := filepath.Join(*outDir, fn+".hlsl")
+		ioutil.WriteFile(slfn, exsl, 0644)
+		compileFile(fn + ".hlsl")
+	}
+	return nil
 }
 
-// format formats the given package file originally obtained from src
-// and adjusts the result based on the original source via sourceAdj
-// and indentAdj.
-func format(
-	fset *token.FileSet,
-	file *ast.File,
-	sourceAdj func(src []byte, indent int) []byte,
-	indentAdj int,
-	src []byte,
-	cfg slprint.Config,
-) ([]byte, error) {
-	if sourceAdj == nil {
-		// Complete source file.
-		var buf bytes.Buffer
-		err := cfg.Fprint(&buf, fset, file)
+func extractFiles(files []string) {
+	key := []byte("//gosl: ")
+	start := []byte("start")
+	hlsl := []byte("hlsl")
+	end := []byte("end")
+	nl := []byte("\n")
+
+	for _, fn := range files {
+		buf, err := os.ReadFile(fn)
 		if err != nil {
-			return nil, err
+			continue
 		}
-		slfix := slEdits(buf.Bytes())
-		return slfix, nil
-		// return buf.Bytes(), nil
+		lines := bytes.Split(buf, nl)
+
+		inReg := false
+		inHlsl := false
+		var outLns [][]byte
+		slFn := ""
+		for _, ln := range lines {
+			isKey := bytes.HasPrefix(ln, key)
+			var keyStr []byte
+			if isKey {
+				keyStr = ln[len(key):]
+				// fmt.Printf("key: %s\n", string(keyStr))
+			}
+			switch {
+			case inReg && isKey && bytes.HasPrefix(keyStr, end):
+				if inHlsl {
+					outLns = append(outLns, ln)
+				}
+				slFiles[slFn] = outLns
+				inReg = false
+				inHlsl = false
+			case inReg:
+				outLns = append(outLns, ln)
+			case isKey && bytes.HasPrefix(keyStr, start):
+				inReg = true
+				slFn = string(keyStr[len(start)+1:])
+				outLns = slFiles[slFn]
+			case isKey && bytes.HasPrefix(keyStr, hlsl):
+				inReg = true
+				inHlsl = true
+				slFn = string(keyStr[len(hlsl)+1:])
+				outLns = slFiles[slFn]
+				outLns = append(outLns, ln)
+			}
+		}
 	}
 
-	// Partial source file.
-	// Determine and prepend leading space.
-	i, j := 0, 0
-	for j < len(src) && isSpace(src[j]) {
-		if src[j] == '\n' {
-			i = j + 1 // byte offset of last line in leading space
-		}
-		j++
+	for fn, lns := range slFiles {
+		fn += ".go"
+		outfn := filepath.Join(*outDir, fn)
+		olns := [][]byte{}
+		olns = append(olns, []byte("package main"))
+		olns = append(olns, lns...)
+		res := bytes.Join(olns, nl)
+		ioutil.WriteFile(outfn, res, 0644)
 	}
-	var res []byte
-	res = append(res, src[:i]...)
+}
 
-	// Determine and prepend indentation of first code line.
-	// Spaces are ignored unless there are no tabs,
-	// in which case spaces count as one tab.
-	indent := 0
-	hasSpace := false
-	for _, b := range src[i:j] {
-		switch b {
-		case ' ':
-			hasSpace = true
-		case '\t':
-			indent++
+func extractHLSL(buf []byte) []byte {
+	key := []byte("//gosl: ")
+	hlsl := []byte("hlsl")
+	end := []byte("end")
+	nl := []byte("\n")
+	stComment := []byte("/*")
+	edComment := []byte("*/")
+	comment := []byte("// ")
+
+	lines := bytes.Split(buf, nl)
+
+	lines = lines[1:] // get rid of package
+
+	inHlsl := false
+	for li := 0; li < len(lines); li++ {
+		ln := lines[li]
+		isKey := bytes.HasPrefix(ln, key)
+		var keyStr []byte
+		if isKey {
+			keyStr = ln[len(key):]
+			// fmt.Printf("key: %s\n", string(keyStr))
+		}
+		switch {
+		case inHlsl && isKey && bytes.HasPrefix(keyStr, end):
+			slices.Delete(lines, li, li+1)
+			li--
+			inHlsl = false
+		case inHlsl:
+			switch {
+			case bytes.HasPrefix(ln, stComment) || bytes.HasPrefix(ln, edComment):
+				slices.Delete(lines, li, li+1)
+				li--
+			case bytes.HasPrefix(ln, comment):
+				lines[li] = ln[3:]
+			}
+		case isKey && bytes.HasPrefix(keyStr, hlsl):
+			inHlsl = true
+			slices.Delete(lines, li, li+1)
+			li--
 		}
 	}
-	if indent == 0 && hasSpace {
-		indent = 1
-	}
-	for i := 0; i < indent; i++ {
-		res = append(res, '\t')
-	}
+	return bytes.Join(lines, nl)
+}
 
-	// Format the source.
-	// Write it without any leading and trailing space.
-	cfg.Indent = indent + indentAdj
-	var buf bytes.Buffer
-	err := cfg.Fprint(&buf, fset, file)
+func compileFile(fn string) error {
+	ext := filepath.Ext(fn)
+	ofn := fn[:len(fn)-len(ext)] + ".spv"
+	cmd := exec.Command("glslc", "-fshader-stage=compute", "-o", ofn, fn)
+	cmd.Dir, _ = filepath.Abs(*outDir)
+	out, err := cmd.CombinedOutput()
+	fmt.Printf("\n################\nglslc output for: %s\n%s\n", fn, out)
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return err
 	}
-
-	slfix := slEdits(buf.Bytes())
-	if slfix == nil {
-		return nil, nil
-	}
-
-	out := sourceAdj(slfix, cfg.Indent)
-
-	// If the adjusted output is empty, the source
-	// was empty but (possibly) for white space.
-	// The result is the incoming source.
-	if len(out) == 0 {
-		return src, nil
-	}
-
-	// Otherwise, append output to leading space.
-	res = append(res, out...)
-
-	// Determine and append trailing space.
-	i = len(src)
-	for i > 0 && isSpace(src[i-1]) {
-		i--
-	}
-	return append(res, src[i:]...), nil
+	return nil
 }
 
 // isSpace reports whether the byte is a space character.

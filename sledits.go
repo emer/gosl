@@ -31,49 +31,10 @@ func slEdits(src []byte) []byte {
 	nl := []byte("\n")
 	lines := bytes.Split(src, nl)
 
-	lines = filterGoSL(lines)
-	if len(lines) == 0 {
-		return nil
-	}
-
 	lines = slEditsMethMove(lines)
 	slEditsReplace(lines)
 
 	return bytes.Join(lines, nl)
-}
-
-// filterGoSL includes only regions marked as //gosl:
-func filterGoSL(lines [][]byte) [][]byte {
-	key := []byte("//gosl: ")
-	start := []byte("start")
-	hlsl := []byte("hlsl")
-	end := []byte("end")
-
-	inReg := false
-	var outLns [][]byte
-
-	for _, ln := range lines {
-		isKey := bytes.HasPrefix(ln, key)
-		var keyStr []byte
-		if isKey {
-			keyStr = ln[len(key):]
-			// fmt.Printf("key: %s\n", string(keyStr))
-		}
-		switch {
-		case inReg && isKey && bytes.HasPrefix(keyStr, end):
-			outLns = append(outLns, ln)
-			inReg = false
-		case inReg:
-			outLns = append(outLns, ln)
-		case isKey && bytes.HasPrefix(keyStr, start):
-			inReg = true
-			outLns = append(outLns, ln)
-		case isKey && bytes.HasPrefix(keyStr, hlsl):
-			inReg = true
-			outLns = append(outLns, ln)
-		}
-	}
-	return outLns
 }
 
 // slEditsMethMove moves hlsl segments around, e.g., methods
@@ -181,7 +142,8 @@ var Replaces = []Replace{
 	{[]byte("mat32.Cos("), []byte("cos(")},
 	{[]byte("mat32.Sin("), []byte("sin(")},
 	{[]byte("mat32.Abs("), []byte("abs(")},
-	{[]byte("mat32.FastExp("), []byte("exp(")}, // todo: fastexp
+	{[]byte("mat32.FastExp("), []byte("FastExp(")},
+	{[]byte("math.Float32frombits("), []byte("asfloat(")},
 	// {[]byte(""), []byte("")},
 	// {[]byte(""), []byte("")},
 	// {[]byte(""), []byte("")},

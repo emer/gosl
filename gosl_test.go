@@ -19,15 +19,13 @@ var update = flag.Bool("update", false, "update .golden files")
 
 func runTest(t *testing.T, in, out string) {
 	// process flags
-	info, err := os.Lstat(in)
+	_, err := os.Lstat(in)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	initParserMode()
-
-	outfn, err := processFile(in, info)
+	err = processFiles([]string{in})
 	if err != nil {
 		t.Error(err)
 		return
@@ -37,6 +35,12 @@ func runTest(t *testing.T, in, out string) {
 	if err != nil {
 		t.Error(err)
 		return
+	}
+
+	outfn := ""
+	for fn := range slFiles {
+		outfn = filepath.Join(*outDir, fn+".hlsl")
+		break
 	}
 
 	got, err := os.ReadFile(outfn)
@@ -57,7 +61,7 @@ func runTest(t *testing.T, in, out string) {
 			t.Errorf("WARNING: -update did not rewrite input file %s", in)
 		}
 
-		t.Errorf("(gosl %s) != %s (see %s.gosl)\n%s", in, out, in,
+		t.Errorf("(gosl %s) != %s (see %s.gosl)\n%s", outfn, out, in,
 			diff.Diff("expected", expected, "got", got))
 		if err := os.WriteFile(in+".gosl", got, 0666); err != nil {
 			t.Error(err)
@@ -74,7 +78,7 @@ func runTest(t *testing.T, in, out string) {
 // in the processed file within the first 20 lines, if any.
 func TestRewrite(t *testing.T) {
 	// determine input files
-	match, err := filepath.Glob("testdata/*.input")
+	match, err := filepath.Glob("testdata/*.go")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,12 +91,12 @@ func TestRewrite(t *testing.T) {
 		name := filepath.Base(in)
 		t.Run(name, func(t *testing.T) {
 			out := in // for files where input and output are identical
-			if strings.HasSuffix(in, ".input") {
-				out = in[:len(in)-len(".input")] + ".golden"
+			if strings.HasSuffix(in, ".go") {
+				out = in[:len(in)-len(".go")] + ".golden"
 			}
 			runTest(t, in, out)
 		})
 	}
 
-	extractFiles(outFiles)
+	extractFiles(inFiles)
 }

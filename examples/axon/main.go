@@ -16,7 +16,7 @@ import (
 
 // note: standard one to use is plain "gosl" which should be go install'd
 
-//go:generate ../../gosl -keep minmax chans/chans.go chans time.go neuron.go act.go learn.go layer.go
+//go:generate ../../gosl -keep /Users/oreilly/go/src/github.com/goki/mat32/fastexp.go minmax chans/chans.go chans time.go neuron.go act.go learn.go layer.go
 
 func init() {
 	// must lock main thread for gpu!  this also means that vulkan must be used

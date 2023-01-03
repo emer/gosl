@@ -46,9 +46,19 @@ The flags are:
 
 In general shader code should be simple mathematical expressions and data types, with minimal control logic via `if`, `for` statements, and only using the subset of Go that is consistent with C.  Here are specific restrictions:
 
-* Cannot use any of the non-elemental Go types except `struct` (i.e., `map`, slices, etc are not available), and also no `string` types.  In general float32 and int32 are good.
+## Types
+
+* Cannot use any of the non-elemental Go types except `struct` (i.e., `map`, slices, etc are not available), and also no `string` types.  In general `float32` and `int32` are good.
 
 * todo: bool32 type?
+
+* Alignment and padding of `struct` fields is key -- todo: checker for compatibility.
+
+* HLSL does not support enum types, but standard go `const` declarations will be converted.  Use an `int32` or `uint32` data type.  You cannot use `iota` -- value must be present in the Go source.  Also, for bitflags, define explicitly, not using `bitflags` package.
+
+* HLSL does not do multi-pass compiling, so all dependent types must be specified *before* being used in other ones, and this also precludes referencing the *current* type within itself.  todo: can you just use a forward declaration?
+
+## Syntax
 
 * Cannot use the Go variable define operator `:=`  -- you will get an error in the glslc compiler stage.  It is possible in the future to support this, but it requires a more elaborate form of file processing.  Use `var <name> <type>` to define new local variables instead.
 
@@ -56,8 +66,9 @@ In general shader code should be simple mathematical expressions and data types,
 
 * *Can* use multiple variable names with the same type (e.g., `min, max float32`) -- this will be properly converted to the more redundant C form with the type repeated.
 
-* HLSL does not support enum types, but standard go const decl will be converted -- but you cannot use `iota` -- value must be present in the Go source.  Also, for bitflags, define explicitly, not using `bitflags` package.
+## Random numbers
 
+HLSL does not directly support random numbers.  Here's some discussion: [unity forum](https://forum.unity.com/threads/generate-random-float-between-0-and-1-in-shader.610810/)
 
 # Implementation / Design Notes
 
@@ -68,34 +79,16 @@ While there aren't any pointers allowed in HLSL, the inlining of methods, along 
     
 # TODO
 
-* enums -- do not exist in HLSL -- just use consts:
+* reorganize flow: first extract gosl code into a .go file, then do parsing on that using package system to get type analysis -- needed for offset computation.
 
-```
-// NeuronFlags are bit-flags encoding relevant binary state for neurons
-typedef int NeuronFlags;
+* parse go package paths for files on commandline
 
-	// NeuronOff flag indicates that this neuron has been turned off (i.e., lesioned)
-const NeuronFlags NeuronOff = 0;
-
-	// NeuronHasExt means the neuron has external input in its Ext field
-const NeuronFlags NeuronHasExt = 1;
-
-	// NeuronHasTarg means the neuron has external target input in its Target field
-const NeuronFlags NeuronHasTarg = 2;
-
-	// NeuronHasCmpr means the neuron has external comparison input in its Target field -- used for computing
-	// comparison statistics but does not drive neural activity ever
-const NeuronFlags NeuronHasCmpr = 3;
-
-const NeuronFlags NeuronFlagsNum = 4;
-```
+* selectorExpr requires type info to know if selecting expr is a package path (exclude) or struct type (include)
 
 * exclude methods by name: Defaults, Update
-
-* fastexp and restore in sledits
 
 * better math / mat32 function replacement: trim prefix and downcase
 
 * full axon compute unit example -- in process
 
-
+https://mines.zoom.us/j/92474241061?pwd=U2ZoMmM5UXV6MjRwUGYvckFFeUpWZz09#success
