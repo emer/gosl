@@ -3,6 +3,7 @@ package test
 import (
 	"math"
 
+	"github.com/goki/gosl/slbool"
 	"github.com/goki/mat32"
 )
 
@@ -16,9 +17,8 @@ func FastExp(x float32) float32 {
 	if x <= -88.76731 { // this doesn't add anything and -exp is main use-case anyway
 		return 0
 	}
-	var i, m int32
-	i = int32(12102203*x) + 127*(1<<23)
-	m = i >> 7 & 0xFFFF // copy mantissa
+	i := int32(12102203*x) + 127*(1<<23)
+	m := i >> 7 & 0xFFFF // copy mantissa
 	i += (((((((((((3537 * m) >> 16) + 13668) * m) >> 18) + 15817) * m) >> 14) - 80470) * m) >> 11)
 	return math.Float32frombits(uint32(i))
 }
@@ -52,16 +52,16 @@ type DataStruct struct {
 
 // ParamStruct has the test params
 type ParamStruct struct {
-	Tau float32 `desc:"rate constant in msec"`
-	Dt  float32 `desc:"1/Tau"`
+	Tau    float32     `desc:"rate constant in msec"`
+	Dt     float32     `desc:"1/Tau"`
+	Option slbool.Bool // note: standard bool doesn't work
 }
 
 // IntegFmRaw computes integrated value from current raw value
 func (ps *ParamStruct) IntegFmRaw(ds *DataStruct, modArg *float32) {
 	// note: the following are just to test basic control structures
-	var newVal float32 // note: cannot use newVal := to define vars
-	newVal = ps.Dt*(ds.Raw-ds.Integ) + *modArg
-	if newVal < -10 {
+	newVal := ps.Dt*(ds.Raw-ds.Integ) + *modArg
+	if newVal < -10 || slbool.IsTrue(ps.Option) {
 		newVal = -10
 	}
 	ds.Integ += newVal

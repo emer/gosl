@@ -37,7 +37,7 @@ func (kp *CaDtParams) Update() {
 type CaParams struct {
 	SpikeG  float32    `def:"12" desc:"spiking gain factor for SynSpk learning rule variants.  This alters the overall range of values, keeping them in roughly the unit scale, and affects effective learning rate."`
 	UpdtThr float32    `def:"0.01,0.02,0.5" desc:"IMPORTANT: only used for SynSpkTheta learning mode: threshold on Act value for updating synapse-level Ca values -- this is purely a performance optimization that excludes random infrequent spikes -- 0.05 works well on larger networks but not smaller, which require the .01 default."`
-	MaxISI  int        `def:"100" desc:"maximum ISI for integrating in Opt mode -- above that just set to 0"`
+	MaxISI  int32      `def:"100" desc:"maximum ISI for integrating in Opt mode -- above that just set to 0"`
 	Dt      CaDtParams `view:"inline" desc:"time constants for integrating at M, P, and D cascading levels"`
 }
 

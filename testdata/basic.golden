@@ -7,9 +7,8 @@ float FastExp(float x) {
 	if (x <= -88.76731) { // this doesn't add anything and -exp is main use-case anyway
 		return 0;
 	}
-	int i, m;
-	i = int(12102203*x) + 127*(1<<23);
-	m = i >> 7 & 0xFFFF; // copy mantissa
+	int i = int(12102203*x) + 127*(1<<23);
+	int m = i >> 7 & 0xFFFF; // copy mantissa
 	i += (((((((((((3537 * m) >> 16) + 13668) * m) >> 18) + 15817) * m) >> 14) - 80470) * m) >> 11);
 	return asfloat(uint(i));
 }
@@ -42,15 +41,15 @@ struct DataStruct {
 
 // ParamStruct has the test params
 struct ParamStruct {
-	float Tau;
-	float Dt;
+	float     Tau;
+	float     Dt;
+	int Option; // note: standard bool doesn't work
 
 // IntegFmRaw computes integrated value from current raw value
 	void IntegFmRaw(inout DataStruct ds, inout float modArg) {
 		// note: the following are just to test basic control structures
-		float newVal; // note: cannot use newVal := to define vars
-		newVal = this.Dt*(ds.Raw-ds.Integ) + modArg;
-		if (newVal < -10) {
+		float newVal = this.Dt*(ds.Raw-ds.Integ) + modArg;
+		if (newVal < -10 || (1 == this.Option)) {
 			newVal = -10;
 		}
 		ds.Integ += newVal;

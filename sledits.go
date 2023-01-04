@@ -135,27 +135,47 @@ var Replaces = []Replace{
 	{[]byte("float64"), []byte("double")},
 	{[]byte("uint32"), []byte("uint")},
 	{[]byte("int32"), []byte("int")},
-	{[]byte("math.Exp("), []byte("exp(")},
-	{[]byte("mat32.Exp("), []byte("exp(")},
-	{[]byte("mat32.Log("), []byte("log(")},
-	{[]byte("mat32.Pow("), []byte("pow(")},
-	{[]byte("mat32.Cos("), []byte("cos(")},
-	{[]byte("mat32.Sin("), []byte("sin(")},
-	{[]byte("mat32.Abs("), []byte("abs(")},
-	{[]byte("mat32.Sqrt("), []byte("sqrt(")},
 	{[]byte("mat32.FastExp("), []byte("FastExp(")},
 	{[]byte("math.Float32frombits("), []byte("asfloat(")},
+	{[]byte("slbool.Bool"), []byte("int")},
+	{[]byte("slbool.True"), []byte("1")},
+	{[]byte("slbool.False"), []byte("0")},
+	{[]byte("slbool.IsTrue("), []byte("(1 == ")},
+	{[]byte("slbool.IsFalse("), []byte("(0 == ")},
+	{[]byte("slbool.FromBool("), []byte("int(")},
 	// {[]byte(""), []byte("")},
 	// {[]byte(""), []byte("")},
 	// {[]byte(""), []byte("")},
 }
 
+func mathReplaceAll(mat, ln []byte) []byte {
+	ml := len(mat)
+	st := 0
+	for {
+		sln := ln[st:]
+		i := bytes.Index(sln, mat)
+		if i < 0 {
+			return ln
+		}
+		fl := ln[st+i+ml : st+i+ml+1]
+		dl := bytes.ToLower(fl)
+		el := ln[st+i+ml+1:]
+		ln = append(ln[:st+i], dl...)
+		ln = append(ln, el...)
+		st += i + 1
+	}
+}
+
 // slEditsReplace replaces Go with equivalent HLSL code
 func slEditsReplace(lines [][]byte) {
+	mt32 := []byte("mat32.")
+	mth := []byte("math.")
 	for li, ln := range lines {
 		for _, r := range Replaces {
-			ln = bytes.Replace(ln, r.From, r.To, -1)
+			ln = bytes.ReplaceAll(ln, r.From, r.To)
 		}
+		ln = mathReplaceAll(mt32, ln)
+		ln = mathReplaceAll(mth, ln)
 		lines[li] = ln
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/emer/axon/chans"
 	"github.com/emer/axon/kinase"
 	"github.com/emer/etable/minmax"
+	"github.com/goki/gosl/slbool"
 	"github.com/goki/mat32"
 )
 
@@ -23,7 +24,7 @@ import (
 // CaM (as in calmodulin), CaP (ltP, CaMKII, plus phase), CaD (ltD, DAPK1, minus phase).
 type CaLrnParams struct {
 	Norm      float32           `def:"80" desc:"denomenator used for normalizing CaLrn, so the max is roughly 1 - 1.5 or so, which works best in terms of previous standard learning rules, and overall learning performance"`
-	SpkVGCC   bool              `def:"true" desc:"use spikes to generate VGCC instead of actual VGCC current -- see SpkVGCCa for calcium contribution from each spike"`
+	SpkVGCC   slbool.Bool       `def:"true" desc:"use spikes to generate VGCC instead of actual VGCC current -- see SpkVGCCa for calcium contribution from each spike"`
 	SpkVgccCa float32           `def:"35" desc:"multiplier on spike for computing Ca contribution to CaLrn in SpkVGCC mode"`
 	VgccTau   float32           `def:"10" desc:"time constant of decay for VgccCa calcium -- it is highly transient around spikes, so decay and diffusion factors are more important than for long-lasting NMDA factor.  VgccCa is integrated separately int VgccCaInt prior to adding into NMDA Ca in CaLrn"`
 	Dt        kinase.CaDtParams `view:"inline" desc:"time constants for integrating CaLrn across M, P and D cascading levels"`
@@ -33,7 +34,7 @@ type CaLrnParams struct {
 
 func (np *CaLrnParams) Defaults() {
 	np.Norm = 80
-	np.SpkVGCC = true
+	np.SpkVGCC = slbool.True
 	np.SpkVgccCa = 35
 	np.VgccTau = 10
 	np.Dt.Defaults()
@@ -50,7 +51,7 @@ func (np *CaLrnParams) Update() {
 // VgccCa updates the simulated VGCC calcium from spiking, if that option is selected,
 // and performs time-integration of VgccCa
 func (np *CaLrnParams) VgccCa(nrn *Neuron) {
-	if np.SpkVGCC {
+	if slbool.IsTrue(np.SpkVGCC) {
 		nrn.VgccCa = np.SpkVgccCa * nrn.Spike
 	}
 	nrn.VgccCaInt += nrn.VgccCa - np.VgccDt*nrn.VgccCaInt // Dt only affects decay, not rise time
@@ -112,26 +113,26 @@ func (np *CaSpkParams) CaFmSpike(nrn *Neuron) {
 // Target value is adapted by neuron-wise error and difference in actual vs. target.
 // drives synaptic scaling at a slow timescale (Network.SlowInterval).
 type TrgAvgActParams struct {
-	On           bool       `desc:"whether to use target average activity mechanism to scale synaptic weights"`
-	ErrLRate     float32    `viewif:"On" def:"0.02" desc:"learning rate for adjustments to Trg value based on unit-level error signal.  Population TrgAvg values are renormalized to fixed overall average in TrgRange. Generally, deviating from the default doesn't make much difference."`
-	SynScaleRate float32    `viewif:"On" def:"0.005,0.0002" desc:"rate parameter for how much to scale synaptic weights in proportion to the AvgDif between target and actual proportion activity -- this determines the effective strength of the constraint, and larger models may need more than the weaker default value."`
-	SubMean      float32    `viewif:"On" def:"0,1" desc:"amount of mean trg change to subtract -- 1 = full zero sum.  1 works best in general -- but in some cases it may be better to start with 0 and then increase using network SetSubMean method at a later point."`
-	TrgRange     minmax.F32 `viewif:"On" def:"{0.5 2}" desc:"range of target normalized average activations -- individual neurons are assigned values within this range to TrgAvg, and clamped within this range."`
-	Permute      bool       `viewif:"On" def:"true" desc:"permute the order of TrgAvg values within layer -- otherwise they are just assigned in order from highest to lowest for easy visualization -- generally must be true if any topographic weights are being used"`
-	Pool         bool       `viewif:"On" desc:"use pool-level target values if pool-level inhibition and 4D pooled layers are present -- if pool sizes are relatively small, then may not be useful to distribute targets just within pool"`
+	On           slbool.Bool `desc:"whether to use target average activity mechanism to scale synaptic weights"`
+	ErrLRate     float32     `viewif:"On" def:"0.02" desc:"learning rate for adjustments to Trg value based on unit-level error signal.  Population TrgAvg values are renormalized to fixed overall average in TrgRange. Generally, deviating from the default doesn't make much difference."`
+	SynScaleRate float32     `viewif:"On" def:"0.005,0.0002" desc:"rate parameter for how much to scale synaptic weights in proportion to the AvgDif between target and actual proportion activity -- this determines the effective strength of the constraint, and larger models may need more than the weaker default value."`
+	SubMean      float32     `viewif:"On" def:"0,1" desc:"amount of mean trg change to subtract -- 1 = full zero sum.  1 works best in general -- but in some cases it may be better to start with 0 and then increase using network SetSubMean method at a later point."`
+	TrgRange     minmax.F32  `viewif:"On" def:"{0.5 2}" desc:"range of target normalized average activations -- individual neurons are assigned values within this range to TrgAvg, and clamped within this range."`
+	Permute      slbool.Bool `viewif:"On" def:"true" desc:"permute the order of TrgAvg values within layer -- otherwise they are just assigned in order from highest to lowest for easy visualization -- generally must be true if any topographic weights are being used"`
+	Pool         slbool.Bool `viewif:"On" desc:"use pool-level target values if pool-level inhibition and 4D pooled layers are present -- if pool sizes are relatively small, then may not be useful to distribute targets just within pool"`
 }
 
 func (ta *TrgAvgActParams) Update() {
 }
 
 func (ta *TrgAvgActParams) Defaults() {
-	ta.On = true
+	ta.On = slbool.True
 	ta.ErrLRate = 0.02
 	ta.SynScaleRate = 0.005
 	ta.SubMean = 1 // 1 in general beneficial
 	ta.TrgRange.Set(0.5, 2)
-	ta.Permute = true
-	ta.Pool = true
+	ta.Permute = slbool.True
+	ta.Pool = slbool.True
 	ta.Update()
 }
 
@@ -142,21 +143,21 @@ func (ta *TrgAvgActParams) Defaults() {
 // Has two factors: the derivative of the sigmoid based on CaSpkD
 // activity levels, and based on the phase-wise differences in activity (Diff).
 type RLRateParams struct {
-	On         bool    `def:"true" desc:"use learning rate modulation"`
-	SigmoidMin float32 `def:"0.05,1" desc:"minimum learning rate multiplier for sigmoidal act (1-act) factor -- prevents lrate from going too low for extreme values.  Set to 1 to disable Sigmoid derivative factor, which is default for Target layers."`
-	Diff       bool    `desc:"modulate learning rate as a function of plus - minus differences"`
-	SpkThr     float32 `def:"0.1" desc:"threshold on Max(CaSpkP, CaSpkD) below which Min lrate applies -- must be > 0 to prevent div by zero"`
-	DiffThr    float32 `def:"0.02" desc:"threshold on recv neuron error delta, i.e., |CaSpkP - CaSpkD| below which lrate is at Min value"`
-	Min        float32 `def:"0.001" desc:"for Diff component, minimum learning rate value when below ActDiffThr"`
+	On         slbool.Bool `def:"true" desc:"use learning rate modulation"`
+	SigmoidMin float32     `def:"0.05,1" desc:"minimum learning rate multiplier for sigmoidal act (1-act) factor -- prevents lrate from going too low for extreme values.  Set to 1 to disable Sigmoid derivative factor, which is default for Target layers."`
+	Diff       slbool.Bool `desc:"modulate learning rate as a function of plus - minus differences"`
+	SpkThr     float32     `def:"0.1" desc:"threshold on Max(CaSpkP, CaSpkD) below which Min lrate applies -- must be > 0 to prevent div by zero"`
+	DiffThr    float32     `def:"0.02" desc:"threshold on recv neuron error delta, i.e., |CaSpkP - CaSpkD| below which lrate is at Min value"`
+	Min        float32     `def:"0.001" desc:"for Diff component, minimum learning rate value when below ActDiffThr"`
 }
 
 func (rl *RLRateParams) Update() {
 }
 
 func (rl *RLRateParams) Defaults() {
-	rl.On = true
+	rl.On = slbool.True
 	rl.SigmoidMin = 0.05
-	rl.Diff = true
+	rl.Diff = slbool.True
 	rl.SpkThr = 0.1
 	rl.DiffThr = 0.02
 	rl.Min = 0.001
@@ -170,7 +171,7 @@ func (rl *RLRateParams) Defaults() {
 // The activity should be CaSpkP and the layer maximum is used
 // to normalize that to a 0-1 range.
 func (rl *RLRateParams) RLRateSigDeriv(act float32, laymax float32) float32 {
-	if !rl.On || laymax == 0 {
+	if slbool.IsFalse(rl.On) || laymax == 0 {
 		return 1.0
 	}
 	ca := act / laymax
@@ -184,7 +185,7 @@ func (rl *RLRateParams) RLRateSigDeriv(act float32, laymax float32) float32 {
 // RLRateDiff returns the learning rate as a function of difference between
 // CaSpkP and CaSpkD values
 func (rl *RLRateParams) RLRateDiff(scap, scad float32) float32 {
-	if !rl.On || !rl.Diff {
+	if slbool.IsFalse(rl.On) || slbool.IsFalse(rl.Diff) {
 		return 1.0
 	}
 	max := mat32.Max(scap, scad)

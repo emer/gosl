@@ -38,7 +38,7 @@ func main() {
 
 	// gp.PropsString(true) // print
 
-	n := 1000 // 0000
+	n := 100000 // 100,000 = 2.38 CPU, 0.005939 GPU
 	maxCycles := 200
 
 	lay := &Layer{}
@@ -78,7 +78,7 @@ func main() {
 	setd := vars.AddSet()
 
 	layv := setp.AddStruct("Layer", int(unsafe.Sizeof(Layer{})), 1, vgpu.Uniform, vgpu.ComputeShader)
-	timev := setp.AddStruct("Time", int(unsafe.Sizeof(Time{})), 1, vgpu.Uniform, vgpu.ComputeShader)
+	timev := setd.AddStruct("Time", int(unsafe.Sizeof(Time{})), 1, vgpu.Storage, vgpu.ComputeShader)
 	neurv := setd.AddStruct("Neurons", int(unsafe.Sizeof(Neuron{})), n, vgpu.Storage, vgpu.ComputeShader)
 
 	setp.ConfigVals(1) // one val per var
@@ -102,7 +102,7 @@ func main() {
 	sy.Mem.SyncToGPU()
 
 	vars.BindDynValIdx(0, "Layer", 0)
-	vars.BindDynValIdx(0, "Time", 0)
+	vars.BindDynValIdx(1, "Time", 0)
 	vars.BindDynValIdx(1, "Neurons", 0)
 
 	sy.CmdResetBindVars(sy.CmdPool.Buff, 0)

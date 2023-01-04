@@ -21,6 +21,8 @@ import (
 	"strings"
 	"text/tabwriter"
 	"unicode"
+
+	"golang.org/x/tools/go/packages"
 )
 
 const (
@@ -59,6 +61,7 @@ type commentInfo struct {
 type printer struct {
 	// Configuration (does not change after initialization)
 	Config
+	pkg  *packages.Package
 	fset *token.FileSet
 
 	// Current state
@@ -102,9 +105,9 @@ type printer struct {
 	curFuncRecv *ast.Ident // current function receiver
 }
 
-func (p *printer) init(cfg *Config, fset *token.FileSet, nodeSizes map[ast.Node]int) {
+func (p *printer) init(cfg *Config, pkg *packages.Package, nodeSizes map[ast.Node]int) {
 	p.Config = *cfg
-	p.fset = fset
+	p.pkg = pkg
 	p.pos = token.Position{Line: 1, Column: 1}
 	p.out = token.Position{Line: 1, Column: 1}
 	p.wsbuf = make([]whiteSpace, 0, 16) // whitespace sequences are short
@@ -199,13 +202,13 @@ func (p *printer) linesFrom(line int) int {
 
 func (p *printer) posFor(pos token.Pos) token.Position {
 	// not used frequently enough to cache entire token.Position
-	return p.fset.PositionFor(pos, false /* absolute position */)
+	return p.pkg.Fset.PositionFor(pos, false /* absolute position */)
 }
 
 func (p *printer) lineFor(pos token.Pos) int {
 	if pos != p.cachedPos {
 		p.cachedPos = pos
-		p.cachedLine = p.fset.PositionFor(pos, false /* absolute position */).Line
+		p.cachedLine = p.pkg.Fset.PositionFor(pos, false /* absolute position */).Line
 	}
 	return p.cachedLine
 }
@@ -1333,10 +1336,10 @@ type Config struct {
 }
 
 // fprint implements Fprint and takes a nodesSizes map for setting up the printer state.
-func (cfg *Config) fprint(output io.Writer, fset *token.FileSet, node any, nodeSizes map[ast.Node]int) (err error) {
+func (cfg *Config) fprint(output io.Writer, pkg *packages.Package, node any, nodeSizes map[ast.Node]int) (err error) {
 	// print node
 	var p printer
-	p.init(cfg, fset, nodeSizes)
+	p.init(cfg, pkg, nodeSizes)
 	if err = p.printNode(node); err != nil {
 		return
 	}
@@ -1396,14 +1399,14 @@ type CommentedNode struct {
 // Position information is interpreted relative to the file set fset.
 // The node type must be *ast.File, *CommentedNode, []ast.Decl, []ast.Stmt,
 // or assignment-compatible to ast.Expr, ast.Decl, ast.Spec, or ast.Stmt.
-func (cfg *Config) Fprint(output io.Writer, fset *token.FileSet, node any) error {
-	return cfg.fprint(output, fset, node, make(map[ast.Node]int))
+func (cfg *Config) Fprint(output io.Writer, pkg *packages.Package, node any) error {
+	return cfg.fprint(output, pkg, node, make(map[ast.Node]int))
 }
 
 // Fprint "pretty-prints" an AST node to output.
 // It calls Config.Fprint with default settings.
 // Note that gosl uses tabs for indentation but spaces for alignment;
 // use format.Node (package go/format) for output that matches gosl.
-func Fprint(output io.Writer, fset *token.FileSet, node any) error {
-	return (&Config{Tabwidth: 8}).Fprint(output, fset, node)
+func Fprint(output io.Writer, pkg *packages.Package, node any) error {
+	return (&Config{Tabwidth: 8}).Fprint(output, pkg, node)
 }

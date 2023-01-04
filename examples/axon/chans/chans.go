@@ -20,11 +20,6 @@ type Chans struct {
 	K float32 `desc:"gated / active potassium channels -- typically hyperpolarizing relative to leak / rest"`
 }
 
-// SetAll sets all the values
-func (ch *Chans) SetAll(e, l, i, k float32) {
-	ch.E, ch.L, ch.I, ch.K = e, l, i, k
-}
-
 // VToBio returns biological mV voltage from normalized 0-1 voltage
 // where 0 = -100mV and 1 = 0mV
 func VToBio(vm float32) float32 {
@@ -40,6 +35,11 @@ func VFmBio(vm float32) float32 {
 //gosl: end axon
 
 // note: self type not avail in hlsl:
+
+// SetAll sets all the values
+func (ch *Chans) SetAll(e, l, i, k float32) {
+	ch.E, ch.L, ch.I, ch.K = e, l, i, k
+}
 
 // SetFmOtherMinus sets all the values from other Chans minus given value
 func (ch *Chans) SetFmOtherMinus(oth Chans, minus float32) {

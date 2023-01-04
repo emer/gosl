@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 
 	"github.com/goki/gosl/slprint"
+	"github.com/goki/ki/ints"
 	"golang.org/x/exp/slices"
 	"golang.org/x/tools/go/packages"
 )
@@ -58,14 +59,14 @@ func processFiles(fls []string) (map[string][]byte, error) {
 		// pkgPathAbs, _ = filepath.Abs(filepath.Dir(fgo))
 		var buf bytes.Buffer
 		cfg := slprint.Config{Mode: printerMode, Tabwidth: tabWidth}
-		cfg.Fprint(&buf, pkg.Fset, pkg.Syntax[0])
+		cfg.Fprint(&buf, pkg, pkg.Syntax[0])
 		slfix := slEdits(buf.Bytes())
 		exsl := extractHLSL(slfix)
 		sls[fn] = exsl
 
-		if !*keepTmp {
-			os.Remove(gofn)
-		}
+		// if !*keepTmp {
+		// 	os.Remove(gofn)
+		// }
 
 		slfn := filepath.Join(*outDir, fn+".hlsl")
 		ioutil.WriteFile(slfn, exsl, 0644)
@@ -133,9 +134,18 @@ func extractFiles(files []string) map[string][]byte {
 		outfn := filepath.Join(*outDir, fn+".go")
 		olns := [][]byte{}
 		olns = append(olns, []byte("package main"))
+		olns = append(olns, []byte(`import "math"`))
 		olns = append(olns, lns...)
 		res := bytes.Join(olns, nl)
 		ioutil.WriteFile(outfn, res, 0644)
+		cmd := exec.Command("goimports", "-w", fn+".go") // get imports
+		cmd.Dir, _ = filepath.Abs(*outDir)
+		out, err := cmd.CombinedOutput()
+		_ = out
+		// fmt.Printf("\n################\ngoimports output for: %s\n%s\n", outfn, out)
+		if err != nil {
+			log.Println(err)
+		}
 		rsls[fn] = bytes.Join(lns, nl)
 	}
 
@@ -150,10 +160,33 @@ func extractHLSL(buf []byte) []byte {
 	stComment := []byte("/*")
 	edComment := []byte("*/")
 	comment := []byte("// ")
+	pack := []byte("package")
+	imp := []byte("import")
+	lparen := []byte("(")
+	rparen := []byte(")")
 
 	lines := bytes.Split(buf, nl)
 
-	lines = lines[1:] // get rid of package
+	mx := ints.MinInt(10, len(lines))
+	stln := 0
+	gotImp := false
+	for li := 0; li < mx; li++ {
+		ln := lines[li]
+		switch {
+		case bytes.HasPrefix(ln, pack):
+			stln = li + 1
+		case bytes.HasPrefix(ln, imp):
+			if bytes.HasSuffix(ln, lparen) {
+				gotImp = true
+			} else {
+				stln = li + 1
+			}
+		case gotImp && bytes.HasPrefix(ln, rparen):
+			stln = li + 1
+		}
+	}
+
+	lines = lines[stln:] // get rid of package, import
 
 	inHlsl := false
 	for li := 0; li < len(lines); li++ {

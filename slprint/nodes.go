@@ -1182,8 +1182,6 @@ func (p *printer) possibleSelectorExpr(expr ast.Expr, prec1, depth int) bool {
 // multiple lines.
 func (p *printer) selectorExpr(x *ast.SelectorExpr, depth int, isMethod bool) bool {
 	// gosl: replace receiver with this.
-	// gosl: todo: need type information on x.Sel to know if it is a type
-	// if styp, isType := x.Sel.(*)
 	if id, ok := x.X.(*ast.Ident); ok && p.curFuncRecv != nil && id.Name == p.curFuncRecv.Name {
 		p.print("this")
 	} else {
@@ -1441,15 +1439,28 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace, nosemi bool) {
 		if len(s.Lhs) > 1 && len(s.Rhs) > 1 {
 			depth++
 		}
-		if s.Tok == token.DEFINE {
+		if s.Tok == token.DEFINE && len(s.Lhs) == 1 {
+			if lid, isId := s.Lhs[0].(*ast.Ident); isId {
+				if def, has := p.pkg.TypesInfo.Defs[lid]; has {
+					// fmt.Println(def)
+					typ := def.Type()
+					p.print(typ.String(), blank)
+				}
+				p.exprList(s.Pos(), s.Lhs, depth, 0, s.TokPos, false)
+			} else {
+				p.exprList(s.Pos(), s.Lhs, depth, 0, s.TokPos, false)
+			}
 			// note: type analysis is generally very expensive and must operate
 			// on the entire package.  We don't need it except in this one case..
-			// ps := p.fset.PositionFor(s.Pos(), true)
+			// ps := p.pkg.Fset.PositionFor(s.Pos(), true)
 			// fmt.Printf("%s  -- cannot use the Go := expression in shader code\n", ps)
 			// fmt.Printf("lhs of define: %+t %+v\n", s.Lhs, s.Lhs)
+		} else {
+			p.exprList(s.Pos(), s.Lhs, depth, 0, s.TokPos, false)
 		}
-		p.exprList(s.Pos(), s.Lhs, depth, 0, s.TokPos, false)
 		switch s.Tok {
+		case token.DEFINE:
+			p.print(blank, s.TokPos, token.ASSIGN, blank)
 		case token.AND_NOT_ASSIGN:
 			p.print(blank, s.TokPos, token.AND_ASSIGN, "~")
 		default:
@@ -1810,13 +1821,21 @@ func (p *printer) spec(spec ast.Spec, n int, doIndent bool, tok token.Token) {
 func (p *printer) genDecl(d *ast.GenDecl) {
 	p.setComment(d.Doc)
 	// note: critical to print here to trigger comment generation in right place
-	p.print(d.Pos(), ignore) // don't print import, var, type
+	if d.Tok == token.IMPORT {
+		p.print(d.Pos(), d.Tok, blank)
+	} else {
+		p.print(d.Pos(), ignore) // don't print import, var, type
+	}
 
 	if d.Lparen.IsValid() || len(d.Specs) > 1 {
 		// group of parenthesized declarations
-		// p.print(d.Lparen, token.LPAREN)
+		if d.Tok == token.IMPORT {
+			p.print(d.Lparen, token.LPAREN)
+		}
 		if n := len(d.Specs); n > 0 {
-			// p.print(indent, formfeed)
+			if d.Tok == token.IMPORT {
+				p.print(indent, formfeed)
+			}
 			if n > 1 && (d.Tok == token.CONST || d.Tok == token.VAR) {
 				// two or more grouped const/var declarations:
 				// determine if the type column must be kept
@@ -1839,9 +1858,13 @@ func (p *printer) genDecl(d *ast.GenDecl) {
 					p.spec(s, n, false, d.Tok)
 				}
 			}
-			// p.print(unindent, formfeed)
+			if d.Tok == token.IMPORT {
+				p.print(unindent, formfeed)
+			}
 		}
-		// p.print(d.Rparen, token.RPAREN)
+		if d.Tok == token.IMPORT {
+			p.print(d.Rparen, token.RPAREN)
+		}
 
 	} else if len(d.Specs) > 0 {
 		// single declaration
@@ -1870,7 +1893,7 @@ func (p *printer) nodeSize(n ast.Node, maxSize int) (size int) {
 	// in RawFormat
 	cfg := Config{Mode: RawFormat}
 	var buf bytes.Buffer
-	if err := cfg.fprint(&buf, p.fset, n, p.nodeSizes); err != nil {
+	if err := cfg.fprint(&buf, p.pkg, n, p.nodeSizes); err != nil {
 		return
 	}
 	if buf.Len() <= maxSize {
@@ -1989,6 +2012,9 @@ func (p *printer) funcDecl(d *ast.FuncDecl) {
 	// FUNC is emitted).
 	startCol := p.out.Column - len("func ")
 	if d.Recv != nil {
+		if d.Name.Name == "Update" || d.Name.Name == "Defaults" || d.Name.Name == "UpdateParams" {
+			return
+		}
 		if d.Recv.List[0].Names != nil {
 			p.curFuncRecv = d.Recv.List[0].Names[0]
 			// fmt.Printf("cur func recv: %v\n", p.curFuncRecv)

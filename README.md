@@ -50,7 +50,7 @@ In general shader code should be simple mathematical expressions and data types,
 
 * Cannot use any of the non-elemental Go types except `struct` (i.e., `map`, slices, etc are not available), and also no `string` types.  In general `float32` and `int32` are good.
 
-* todo: bool32 type?
+* using a `bool` in a `uniform` `struct` causes an obscure `glslc` compiler error: `shaderc: internal error: compilation succeeded but failed to optimize: OpFunctionCall Argument <id> '73[%73]'s type does not match Function`  There are also alignment and padding issues in copying from CPU types.  Use an `int32` instead.
 
 * Alignment and padding of `struct` fields is key -- todo: checker for compatibility.
 
@@ -59,8 +59,6 @@ In general shader code should be simple mathematical expressions and data types,
 * HLSL does not do multi-pass compiling, so all dependent types must be specified *before* being used in other ones, and this also precludes referencing the *current* type within itself.  todo: can you just use a forward declaration?
 
 ## Syntax
-
-* Cannot use the Go variable define operator `:=`  -- you will get an error in the glslc compiler stage.  It is possible in the future to support this, but it requires a more elaborate form of file processing.  Use `var <name> <type>` to define new local variables instead.
 
 * Cannot use multiple return values, or multiple assignment of variables in a single `=` expression.
 
@@ -79,7 +77,7 @@ While there aren't any pointers allowed in HLSL, the inlining of methods, along 
     
 # TODO
 
-* use types to do := properly
+* warn about string type usage, bool in uniform
 
 * fix method comments issue
 
@@ -87,8 +85,5 @@ While there aren't any pointers allowed in HLSL, the inlining of methods, along 
 
 * exclude methods by name: Defaults, Update
 
-* better math / mat32 function replacement: trim prefix and downcase
-
-* full axon compute unit example -- in process
 
 

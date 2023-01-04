@@ -4,6 +4,8 @@
 
 package main
 
+import "github.com/goki/gosl/slbool"
+
 //gosl: start axon
 
 // axon.Layer implements the basic Axon spiking activation function,
@@ -12,8 +14,6 @@ type Layer struct {
 	Act   ActParams       `view:"add-fields" desc:"Activation parameters and methods for computing activations"`
 	Learn LearnNeurParams `view:"add-fields" desc:"Learning parameters and methods that operate at the neuron level"`
 }
-
-//gosl: end axon
 
 func (ly *Layer) Defaults() {
 	ly.Act.Defaults()
@@ -33,21 +33,6 @@ func (ly *Layer) UpdateParams() {
 
 //////////////////////////////////////////////////////////////////////////////////////
 //  Cycle
-
-// CycleNeuron does one cycle (msec) of updating at the neuron level
-func (ly *Layer) CycleNeuron(ni int, nrn *Neuron, ctime *Time) {
-	ly.GInteg(ni, nrn, ctime)
-	ly.SpikeFmG(ni, nrn, ctime)
-}
-
-// GInteg integrates conductances G over time (Ge, NMDA, etc).
-// reads pool Gi values
-func (ly *Layer) GInteg(ni int, nrn *Neuron, ctime *Time) {
-	ly.GFmSpikeRaw(ni, nrn, ctime)
-	// note: can add extra values to GeRaw and GeSyn here
-	ly.GFmRawSyn(ni, nrn, ctime)
-	ly.GiInteg(ni, nrn, ctime)
-}
 
 // GiInteg adds Gi values from all sources including Pool computed inhib
 // and updates GABAB as well
@@ -81,10 +66,19 @@ func (ly *Layer) GFmRawSyn(ni int, nrn *Neuron, ctime *Time) {
 	nrn.GiSyn = ly.Act.GiFmSyn(nrn, nrn.GiSyn)
 }
 
+// GInteg integrates conductances G over time (Ge, NMDA, etc).
+// reads pool Gi values
+func (ly *Layer) GInteg(ni int, nrn *Neuron, ctime *Time) {
+	ly.GFmSpikeRaw(ni, nrn, ctime)
+	// note: can add extra values to GeRaw and GeSyn here
+	ly.GFmRawSyn(ni, nrn, ctime)
+	ly.GiInteg(ni, nrn, ctime)
+}
+
 // SpikeFmG computes Vm from Ge, Gi, Gl conductances and then Spike from that
 func (ly *Layer) SpikeFmG(ni int, nrn *Neuron, ctime *Time) {
 	intdt := ly.Act.Dt.IntDt
-	if ctime.PlusPhase {
+	if slbool.IsTrue(ctime.PlusPhase) {
 		intdt *= 3.0
 	}
 	ly.Act.VmFmG(nrn)
@@ -97,21 +91,29 @@ func (ly *Layer) SpikeFmG(ni int, nrn *Neuron, ctime *Time) {
 		}
 	}
 	nrn.ActInt += intdt * (nrn.Act - nrn.ActInt) // using reg act here now
-	if !ctime.PlusPhase {
+	if slbool.IsFalse(ctime.PlusPhase) {
 		nrn.GeM += ly.Act.Dt.IntDt * (nrn.Ge - nrn.GeM)
 		nrn.GiM += ly.Act.Dt.IntDt * (nrn.GiSyn - nrn.GiM)
 	}
 }
 
+// CycleNeuron does one cycle (msec) of updating at the neuron level
+func (ly *Layer) CycleNeuron(ni int, nrn *Neuron, ctime *Time) {
+	ly.GInteg(ni, nrn, ctime)
+	ly.SpikeFmG(ni, nrn, ctime)
+}
+
+//gosl: end axon
+
 //gosl: hlsl axon
 /*
 // // note: double-commented lines required here -- binding is var, set
 [[vk::binding(0, 0)]] uniform Layer Lay;
-[[vk::binding(1, 0)]] uniform Time time;
-[[vk::binding(0, 1)]] RWStructuredBuffer<Neuron> Neurons;
+[[vk::binding(0, 1)]] RWStructuredBuffer<Time> time;
+[[vk::binding(1, 1)]] RWStructuredBuffer<Neuron> Neurons;
 [numthreads(1, 1, 1)]
 void main(uint3 idx : SV_DispatchThreadID) {
-    Lay.CycleNeuron(idx.x, Neurons[idx.x], time);
+    Lay.CycleNeuron(idx.x, Neurons[idx.x], time[0]);
 }
 */
 //gosl: end axon

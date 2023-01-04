@@ -4,6 +4,8 @@
 
 package minmax
 
+import "math"
+
 //gosl: hlsl axon
 // #include "fastexp.hlsl"
 //gosl: end axon
@@ -16,18 +18,6 @@ type F32 struct {
 	Min float32
 	Max float32
 }
-
-// Set sets the min and max values
-func (mr *F32) Set(min, max float32) {
-	mr.Min, mr.Max = min, max
-}
-
-// todo: needs MaxFloat32..
-// SetInfinity sets the Min to +MaxFloat, Max to -MaxFloat -- suitable for
-// iteratively calling Fit*InRange
-// func (mr *F32) SetInfinity() {
-// 	mr.Min, mr.Max = math.MaxFloat32, -math.MaxFloat32
-// }
 
 // IsValid returns true if Min <= Max
 func (mr *F32) IsValid() bool {
@@ -69,38 +59,6 @@ func (mr *F32) Midpoint() float32 {
 	return 0.5 * (mr.Max + mr.Min)
 }
 
-// todo: this doesn't parse in HLSL
-// FitInRange adjusts our Min, Max to fit within those of other F32
-// returns true if we had to adjust to fit.
-// func (mr *F32) FitInRange(oth F32) bool {
-// 	adj := false
-// 	if oth.Min < mr.Min {
-// 		mr.Min = oth.Min
-// 		adj = true
-// 	}
-// 	if oth.Max > mr.Max {
-// 		mr.Max = oth.Max
-// 		adj = true
-// 	}
-// 	return adj
-// }
-
-// FitValInRange adjusts our Min, Max to fit given value within Min, Max range
-// returns true if we had to adjust to fit.
-func (mr *F32) FitValInRange(val float32) bool {
-	var adj bool
-	adj = false
-	if val < mr.Min {
-		mr.Min = val
-		adj = true
-	}
-	if val > mr.Max {
-		mr.Max = val
-		adj = true
-	}
-	return adj
-}
-
 // NormVal normalizes value to 0-1 unit range relative to current Min / Max range
 // Clips the value within Min-Max range first.
 func (mr *F32) NormVal(val float32) float32 {
@@ -137,3 +95,46 @@ func (mr *F32) ClipNormVal(val float32) float32 {
 }
 
 //gosl: end axon
+
+// FitInRange adjusts our Min, Max to fit within those of other F32
+// returns true if we had to adjust to fit.
+func (mr *F32) FitInRange(oth F32) bool {
+	adj := false
+	if oth.Min < mr.Min {
+		mr.Min = oth.Min
+		adj = true
+	}
+	if oth.Max > mr.Max {
+		mr.Max = oth.Max
+		adj = true
+	}
+	return adj
+}
+
+// FitValInRange adjusts our Min, Max to fit given value within Min, Max range
+// returns true if we had to adjust to fit.
+func (mr *F32) FitValInRange(val float32) bool {
+	var adj bool
+	adj = false
+	if val < mr.Min {
+		mr.Min = val
+		adj = true
+	}
+	if val > mr.Max {
+		mr.Max = val
+		adj = true
+	}
+	return adj
+}
+
+// Set sets the min and max values
+func (mr *F32) Set(min, max float32) {
+	mr.Min, mr.Max = min, max
+}
+
+// todo: needs MaxFloat32..
+// SetInfinity sets the Min to +MaxFloat, Max to -MaxFloat -- suitable for
+// iteratively calling Fit*InRange
+func (mr *F32) SetInfinity() {
+	mr.Min, mr.Max = math.MaxFloat32, -math.MaxFloat32
+}
