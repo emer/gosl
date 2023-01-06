@@ -2012,8 +2012,10 @@ func (p *printer) funcDecl(d *ast.FuncDecl) {
 	// FUNC is emitted).
 	startCol := p.out.Column - len("func ")
 	if d.Recv != nil {
-		if d.Name.Name == "Update" || d.Name.Name == "Defaults" || d.Name.Name == "UpdateParams" {
-			return
+		for ex := range p.ExcludeFuns {
+			if d.Name.Name == ex {
+				return
+			}
 		}
 		if d.Recv.List[0].Names != nil {
 			p.curFuncRecv = d.Recv.List[0].Names[0]

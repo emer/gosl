@@ -58,7 +58,7 @@ func processFiles(fls []string) (map[string][]byte, error) {
 		// fgo := pkg.GoFiles[0]
 		// pkgPathAbs, _ = filepath.Abs(filepath.Dir(fgo))
 		var buf bytes.Buffer
-		cfg := slprint.Config{Mode: printerMode, Tabwidth: tabWidth}
+		cfg := slprint.Config{Mode: printerMode, Tabwidth: tabWidth, ExcludeFuns: excludeFunMap}
 		cfg.Fprint(&buf, pkg, pkg.Syntax[0])
 		slfix := slEdits(buf.Bytes())
 		exsl := extractHLSL(slfix)

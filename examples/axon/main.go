@@ -6,17 +6,17 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
 	"runtime"
 	"unsafe"
 
 	"github.com/emer/emergent/timer"
+	"github.com/goki/ki/ints"
 	"github.com/goki/vgpu/vgpu"
 )
 
 // note: standard one to use is plain "gosl" which should be go install'd
 
-//go:generate ../../gosl -keep /Users/oreilly/go/src/github.com/goki/mat32/fastexp.go minmax chans/chans.go chans kinase time.go neuron.go act.go learn.go layer.go
+//go:generate ../../gosl -exclude=Update,UpdateParams,Defaults -keep /Users/oreilly/go/src/github.com/goki/mat32/fastexp.go minmax chans/chans.go chans kinase time.go neuron.go act.go learn.go layer.go
 
 func init() {
 	// must lock main thread for gpu!  this also means that vulkan must be used
@@ -24,22 +24,20 @@ func init() {
 	runtime.LockOSThread()
 }
 
-var TheGPU *vgpu.GPU
-
 func main() {
 	if vgpu.Init() != nil {
 		return
 	}
 
 	gp := vgpu.NewComputeGPU()
-	// gp.Debug = true
+	// vgpu.Debug = true
 	gp.Config("axon")
-	TheGPU = gp
 
 	// gp.PropsString(true) // print
 
-	n := 100000 // 100,000 = 2.38 CPU, 0.005939 GPU
-	maxCycles := 200
+	n := 10 // 100,000 = 2.38 CPU, 0.005939 GPU
+	// n := 100000 // 100,000 = 2.38 CPU, 0.005939 GPU
+	maxCycles := 1
 
 	lay := &Layer{}
 	lay.Defaults()
@@ -47,10 +45,17 @@ func main() {
 	time := NewTime()
 	time.Defaults()
 
-	neur := make([]Neuron, n)
-	for i := range neur {
-		d := &neur[i]
-		d.GeRaw = rand.Float32()
+	neur1 := make([]Neuron, n)
+	for i := range neur1 {
+		d := &neur1[i]
+		lay.Act.InitActs(d)
+		d.GeRaw = 0.4
+	}
+	neur2 := make([]Neuron, n)
+	for i := range neur2 {
+		d := &neur2[i]
+		lay.Act.InitActs(d)
+		d.GeRaw = 0.4
 	}
 
 	cpuTmr := timer.Time{}
@@ -59,9 +64,10 @@ func main() {
 		cpuTmr.Start()
 
 		for cy := 0; cy < maxCycles; cy++ {
-			for i := range neur {
-				d := &neur[i]
-				lay.CycleNeuron(i, d, time)
+			for i := range neur1 {
+				d := &neur1[i]
+				d.Vm = lay.Act.Decay.Glong
+				// lay.CycleNeuron(i, d, time)
 			}
 			time.CycleInc()
 		}
@@ -94,7 +100,7 @@ func main() {
 	tvl, _ := timev.Vals.ValByIdxTry(0)
 	tvl.CopyFromBytes(unsafe.Pointer(time))
 	dvl, _ := neurv.Vals.ValByIdxTry(0)
-	dvl.CopyFromBytes(unsafe.Pointer(&neur[0]))
+	dvl.CopyFromBytes(unsafe.Pointer(&neur2[0]))
 
 	// gpuFullTmr := timer.Time{}
 	// gpuFullTmr.Start()
@@ -119,16 +125,17 @@ func main() {
 	gpuTmr.Stop()
 
 	sy.Mem.SyncValIdxFmGPU(1, "Neurons", 0) // this is about same as SyncToGPU
-	dvl.CopyToBytes(unsafe.Pointer(&neur[0]))
+	dvl.CopyToBytes(unsafe.Pointer(&neur2[0]))
 
 	gpuFullTmr.Stop()
 
-	// mx := ints.MinInt(n, 5)
-	// for i := 0; i < mx; i++ {
-	// 	d := &neur[i]
-	// 	fmt.Printf("%d\tRaw: %g\tInteg: %g\tExp: %g\n", i, d.Raw, d.Integ, d.Exp)
-	// }
-	// fmt.Printf("\n")
+	mx := ints.MinInt(n, 5)
+	for i := 0; i < mx; i++ {
+		d1 := &neur1[i]
+		d2 := &neur2[i]
+		fmt.Printf("%d\tGe1: %g\tGe2: %g\tV1: %g\tV2: %g\n", i, d1.Ge, d2.Ge, d1.Vm, d2.Vm)
+	}
+	fmt.Printf("\n")
 
 	fmt.Printf("N: %d\t CPU: %6.4g\t GPU: %6.4g\t Full: %6.4g\n", n, cpuTmr.TotalSecs(), gpuTmr.TotalSecs(), gpuFullTmr.TotalSecs())
 

@@ -25,17 +25,14 @@ func init() {
 	runtime.LockOSThread()
 }
 
-var TheGPU *vgpu.GPU
-
 func main() {
 	if vgpu.Init() != nil {
 		return
 	}
 
 	gp := vgpu.NewComputeGPU()
-	// gp.Debug = true
+	// vgpu.Debug = true
 	gp.Config("basic")
-	TheGPU = gp
 
 	// gp.PropsString(true) // print
 

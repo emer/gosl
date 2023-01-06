@@ -24,8 +24,10 @@ import (
 
 // flags
 var (
-	outDir  = flag.String("out", "shaders", "output directory for shader code, relative to where gosl is invoked")
-	keepTmp = flag.Bool("keep", false, "keep temporary converted versions of the source files, for debugging")
+	outDir        = flag.String("out", "shaders", "output directory for shader code, relative to where gosl is invoked")
+	excludeFuns   = flag.String("exclude", "Update,Defaults", "names of functions to exclude from exporting to HLSL")
+	keepTmp       = flag.Bool("keep", false, "keep temporary converted versions of the source files, for debugging")
+	excludeFunMap = map[string]bool{}
 )
 
 // Keep these in sync with go/format/format.go.
@@ -87,6 +89,14 @@ func addFile(fn string) bool {
 	return true
 }
 
+func goslArgs() {
+	exs := *excludeFuns
+	ex := strings.Split(exs, ",")
+	for _, fn := range ex {
+		excludeFunMap[fn] = true
+	}
+}
+
 func goslMain() {
 	if *outDir != "" {
 		os.MkdirAll(*outDir, 0755)
@@ -97,6 +107,8 @@ func goslMain() {
 		fmt.Printf("at least one file name must be passed\n")
 		return
 	}
+
+	goslArgs()
 
 	for _, arg := range args {
 		switch info, err := os.Stat(arg); {

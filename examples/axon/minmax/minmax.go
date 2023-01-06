@@ -4,13 +4,16 @@
 
 package minmax
 
-import "math"
-
 //gosl: hlsl axon
 // #include "fastexp.hlsl"
 //gosl: end axon
 
 //gosl: start axon
+
+const (
+	MaxFloat32 float32 = 3.402823466e+38
+	MinFloat32 float32 = 1.175494351e-38
+)
 
 // F32 represents a min / max range for float32 values.
 // Supports clipping, renormalizing, etc
@@ -39,6 +42,13 @@ func (mr *F32) IsHigh(val float32) bool {
 	return (val > mr.Min)
 }
 
+// SetInfinity sets the Min to +MaxFloat, Max to -MaxFloat -- suitable for
+// iteratively calling Fit*InRange
+func (mr *F32) SetInfinity() {
+	mr.Min = MaxFloat32
+	mr.Max = -MaxFloat32
+}
+
 // Range returns Max - Min
 func (mr *F32) Range() float32 {
 	return mr.Max - mr.Min
@@ -49,7 +59,7 @@ func (mr *F32) Scale() float32 {
 	var r float32
 	r = mr.Range()
 	if r != 0 {
-		return 1 / r
+		return 1.0 / r
 	}
 	return 0
 }
@@ -94,23 +104,6 @@ func (mr *F32) ClipNormVal(val float32) float32 {
 	return mr.NormVal(val)
 }
 
-//gosl: end axon
-
-// FitInRange adjusts our Min, Max to fit within those of other F32
-// returns true if we had to adjust to fit.
-func (mr *F32) FitInRange(oth F32) bool {
-	adj := false
-	if oth.Min < mr.Min {
-		mr.Min = oth.Min
-		adj = true
-	}
-	if oth.Max > mr.Max {
-		mr.Max = oth.Max
-		adj = true
-	}
-	return adj
-}
-
 // FitValInRange adjusts our Min, Max to fit given value within Min, Max range
 // returns true if we had to adjust to fit.
 func (mr *F32) FitValInRange(val float32) bool {
@@ -129,12 +122,23 @@ func (mr *F32) FitValInRange(val float32) bool {
 
 // Set sets the min and max values
 func (mr *F32) Set(min, max float32) {
-	mr.Min, mr.Max = min, max
+	mr.Min = min
+	mr.Max = max
 }
 
-// todo: needs MaxFloat32..
-// SetInfinity sets the Min to +MaxFloat, Max to -MaxFloat -- suitable for
-// iteratively calling Fit*InRange
-func (mr *F32) SetInfinity() {
-	mr.Min, mr.Max = math.MaxFloat32, -math.MaxFloat32
+//gosl: end axon
+
+// FitInRange adjusts our Min, Max to fit within those of other F32
+// returns true if we had to adjust to fit.
+func (mr *F32) FitInRange(oth F32) bool {
+	adj := false
+	if oth.Min < mr.Min {
+		mr.Min = oth.Min
+		adj = true
+	}
+	if oth.Max > mr.Max {
+		mr.Max = oth.Max
+		adj = true
+	}
+	return adj
 }

@@ -83,7 +83,4 @@ While there aren't any pointers allowed in HLSL, the inlining of methods, along 
 
 * parse go package paths for files on commandline
 
-* exclude methods by name: Defaults, Update
-
-
 
