@@ -35,9 +35,9 @@ func main() {
 
 	// gp.PropsString(true) // print
 
-	n := 10 // 100,000 = 2.38 CPU, 0.005939 GPU
-	// n := 100000 // 100,000 = 2.38 CPU, 0.005939 GPU
-	maxCycles := 1
+	// n := 10 // 100,000 = 2.38 CPU, 0.005939 GPU
+	n := 1000000 // 100,000 = 2.38 CPU, 0.005939 GPU
+	maxCycles := 200
 
 	lay := &Layer{}
 	lay.Defaults()
@@ -49,13 +49,13 @@ func main() {
 	for i := range neur1 {
 		d := &neur1[i]
 		lay.Act.InitActs(d)
-		d.GeRaw = 0.4
+		d.GeBase = 0.4
 	}
 	neur2 := make([]Neuron, n)
 	for i := range neur2 {
 		d := &neur2[i]
 		lay.Act.InitActs(d)
-		d.GeRaw = 0.4
+		d.GeBase = 0.4
 	}
 
 	cpuTmr := timer.Time{}
@@ -66,8 +66,8 @@ func main() {
 		for cy := 0; cy < maxCycles; cy++ {
 			for i := range neur1 {
 				d := &neur1[i]
-				d.Vm = lay.Act.Decay.Glong
-				// lay.CycleNeuron(i, d, time)
+				// d.Vm = lay.Act.Decay.Glong
+				lay.CycleNeuron(i, d, time)
 			}
 			time.CycleInc()
 		}
@@ -120,7 +120,9 @@ func main() {
 	gpuTmr.Start()
 
 	pl.RunComputeWait(sy.CmdPool.Buff, n, 1, 1)
-	// note: could use semaphore here instead of waiting on the compute
+	for cy := 1; cy < maxCycles; cy++ {
+		vgpu.CmdSubmitWait(sy.CmdPool.Buff, &pl.Sys.Device)
+	}
 
 	gpuTmr.Stop()
 

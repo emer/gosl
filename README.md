@@ -37,6 +37,8 @@ Usage:
 
 The flags are:
 
+    -exclude string
+    	names of functions to exclude from exporting to HLSL (default "Update,Defaults")
     -out string
     	output directory for shader code, relative to where gosl is invoked (default "shaders")
     -keep
@@ -76,8 +78,6 @@ While there aren't any pointers allowed in HLSL, the inlining of methods, along 
 
     
 # TODO
-
-* warn about string type usage, bool in uniform
 
 * fix method comments issue
 

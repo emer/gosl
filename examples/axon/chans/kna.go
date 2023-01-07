@@ -19,6 +19,8 @@ type KNaParams struct {
 	Max  float32     `viewif:"On" desc:"Maximum potential conductance of fast K channels -- divide nA biological value by 10 for the normalized units here"`
 	Tau  float32     `viewif:"On" desc:"time constant in cycles for decay of adaptation, which should be milliseconds typically (tau is roughly how long it takes for value to change significantly -- 1.4x the half-life)"`
 	Dt   float32     `view:"-" desc:"1/Tau rate constant"`
+
+	pad, pad1, pad2 float32
 }
 
 func (ka *KNaParams) Defaults() {
@@ -50,9 +52,12 @@ func (ka *KNaParams) GcFmSpike(gKNa *float32, spike bool) {
 // Evidence supports 2 different time constants:
 // Slick (medium) and Slack (slow)
 type KNaMedSlow struct {
-	On   slbool.Bool `desc:"if On, apply K-Na adaptation"`
-	Med  KNaParams   `view:"inline" desc:"medium time-scale adaptation"`
-	Slow KNaParams   `view:"inline" desc:"slow time-scale adaptation"`
+	On slbool.Bool `desc:"if On, apply K-Na adaptation"`
+
+	pad, pad1, pad2 float32
+
+	Med  KNaParams `view:"inline" desc:"medium time-scale adaptation"`
+	Slow KNaParams `view:"inline" desc:"slow time-scale adaptation"`
 }
 
 func (ka *KNaMedSlow) Defaults() {

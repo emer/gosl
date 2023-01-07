@@ -22,6 +22,8 @@ type AKParams struct {
 	Koff float32 `def:"1.8,1.5" desc:"offset for K, 1.8 for distal, 1.5 for proximal"`
 	Voff float32 `def:"1,11" desc:"voltage offset for alpha and beta functions: 1 for distal, 11 for proximal"`
 	Hf   float32 `def:"0.1133,0.1112" desc:"h multiplier factor, 0.1133 for distal, 0.1112 for proximal"`
+
+	pad, pad1 float32
 }
 
 // Defaults sets the parameters for distal dendrites
@@ -129,6 +131,8 @@ type AKsParams struct {
 	Mf   float32 `def:"0.075" desc:"multiplier for M -- determines slope of function"`
 	Voff float32 `def:"2" desc:"voltage offset in biological units for M function"`
 	Vmax float32 `def:-37" desc:"voltage level of maximum channel opening -- stays flat above that"`
+
+	pad, pad1, pad2 float32
 }
 
 // Defaults sets the parameters for distal dendrites

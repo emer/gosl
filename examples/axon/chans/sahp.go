@@ -24,6 +24,7 @@ type SahpParams struct {
 	TauMax float32 `def:"1" desc:"maximum slow rate time constant in msec for activation / deactivation.  The effective Tau is much slower -- 1/20th in original temp, and 1/60th in standard 37 C temp"`
 	CaDt   float32 `view:"-" inactive:"+" desc:"1/Tau"`
 	DtMax  float32 `view:"-" inactive:"+" desc:"1/Tau"`
+	pad    float32
 }
 
 // Defaults sets the parameters

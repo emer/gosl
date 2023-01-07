@@ -24,6 +24,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/goki/gosl/alignsl"
 	"github.com/goki/gosl/slprint"
 	"github.com/goki/ki/ints"
 	"golang.org/x/exp/slices"
@@ -54,6 +55,9 @@ func processFiles(fls []string) (map[string][]byte, error) {
 			log.Println(err)
 			return nil, err
 		}
+
+		alignsl.CheckPackage(pkg)
+
 		// files = pkg.GoFiles
 		// fgo := pkg.GoFiles[0]
 		// pkgPathAbs, _ = filepath.Abs(filepath.Dir(fgo))

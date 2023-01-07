@@ -44,6 +44,7 @@ struct ParamStruct {
 	float     Tau;
 	float     Dt;
 	int Option; // note: standard bool doesn't work
+	float     pad;
 
 // IntegFmRaw computes integrated value from current raw value
 	void IntegFmRaw(inout DataStruct ds, inout float modArg) {

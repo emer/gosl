@@ -30,6 +30,8 @@ type CaLrnParams struct {
 	Dt        kinase.CaDtParams `view:"inline" desc:"time constants for integrating CaLrn across M, P and D cascading levels"`
 	VgccDt    float32           `view:"-" json:"-" xml:"-" inactive:"+" desc:"rate = 1 / tau"`
 	NormInv   float32           `view:"-" json:"-" xml:"-" inactive:"+" desc:"= 1 / Norm"`
+
+	pad, pad1 float32
 }
 
 func (np *CaLrnParams) Defaults() {
@@ -120,6 +122,8 @@ type TrgAvgActParams struct {
 	TrgRange     minmax.F32  `viewif:"On" def:"{0.5 2}" desc:"range of target normalized average activations -- individual neurons are assigned values within this range to TrgAvg, and clamped within this range."`
 	Permute      slbool.Bool `viewif:"On" def:"true" desc:"permute the order of TrgAvg values within layer -- otherwise they are just assigned in order from highest to lowest for easy visualization -- generally must be true if any topographic weights are being used"`
 	Pool         slbool.Bool `viewif:"On" desc:"use pool-level target values if pool-level inhibition and 4D pooled layers are present -- if pool sizes are relatively small, then may not be useful to distribute targets just within pool"`
+
+	pad, pad1 float32
 }
 
 func (ta *TrgAvgActParams) Update() {
@@ -149,6 +153,8 @@ type RLRateParams struct {
 	SpkThr     float32     `def:"0.1" desc:"threshold on Max(CaSpkP, CaSpkD) below which Min lrate applies -- must be > 0 to prevent div by zero"`
 	DiffThr    float32     `def:"0.02" desc:"threshold on recv neuron error delta, i.e., |CaSpkP - CaSpkD| below which lrate is at Min value"`
 	Min        float32     `def:"0.001" desc:"for Diff component, minimum learning rate value when below ActDiffThr"`
+
+	pad, pad1 float32
 }
 
 func (rl *RLRateParams) Update() {

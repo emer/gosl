@@ -20,6 +20,8 @@ type GABABParams struct {
 	GiSpike  float32 `def:"10" desc:"multiplier for converting Gi to equivalent GABA spikes"`
 	MaxTime  float32 `inactive:"+" desc:"time offset when peak conductance occurs, in msec, computed from RiseTau and DecayTau"`
 	TauFact  float32 `view:"-" desc:"time constant factor used in integration: (Decay / Rise) ^ (Rise / (Decay - Rise))"`
+
+	pad float32
 }
 
 func (gp *GABABParams) Defaults() {

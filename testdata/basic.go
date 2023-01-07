@@ -55,6 +55,7 @@ type ParamStruct struct {
 	Tau    float32     `desc:"rate constant in msec"`
 	Dt     float32     `desc:"1/Tau"`
 	Option slbool.Bool // note: standard bool doesn't work
+	pad    float32
 }
 
 // IntegFmRaw computes integrated value from current raw value

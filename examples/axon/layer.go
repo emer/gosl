@@ -48,7 +48,7 @@ func (ly *Layer) GiInteg(ni int, nrn *Neuron, ctime *Time) {
 // GFmSpikeRaw integrates G*Raw and G*Syn values for given neuron
 // from the Prjn-level GSyn integrated values.
 func (ly *Layer) GFmSpikeRaw(ni int, nrn *Neuron, ctime *Time) {
-	nrn.GeRaw = 0
+	nrn.GeRaw = 0.4
 	nrn.GiRaw = 0
 	nrn.GeSyn = nrn.GeBase
 	nrn.GiSyn = nrn.GiBase
@@ -113,8 +113,8 @@ func (ly *Layer) CycleNeuron(ni int, nrn *Neuron, ctime *Time) {
 [[vk::binding(1, 1)]] RWStructuredBuffer<Neuron> Neurons;
 [numthreads(1, 1, 1)]
 void main(uint3 idx : SV_DispatchThreadID) {
-	Neurons[idx.x].Vm = Lay.Act.Decay.Glong;
-    // // Lay.CycleNeuron(idx.x, Neurons[idx.x], time[0]);
+	// // Neurons[idx.x].Vm = Lay.Act.Decay.Glong;
+   Lay.CycleNeuron(idx.x, Neurons[idx.x], time[0]);
 }
 */
 //gosl: end axon

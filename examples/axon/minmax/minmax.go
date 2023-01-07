@@ -20,6 +20,8 @@ const (
 type F32 struct {
 	Min float32
 	Max float32
+
+	pad, pad1 float32
 }
 
 // IsValid returns true if Min <= Max
