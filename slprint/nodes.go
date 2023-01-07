@@ -475,7 +475,7 @@ func (p *printer) signature(sig *ast.FuncType) {
 
 // gosl: for declarations -- C ordering
 func (p *printer) signatureDecl(d *ast.FuncDecl) {
-	p.print(d.Pos(), ignore) // trigger comment generation
+	// p.print(d.Pos(), ignore) // trigger comment generation
 	sig := d.Type
 	res := sig.Results
 	n := res.NumFields()
@@ -1994,15 +1994,16 @@ func (p *printer) distanceFrom(startPos token.Pos, startOutCol int) int {
 	return infinity
 }
 
-func (p *printer) printMethRecvType(typ ast.Expr) {
+func (p *printer) methRecvType(typ ast.Expr) string {
 	switch x := typ.(type) {
 	case *ast.StarExpr:
-		p.print(x.X)
+		return p.methRecvType(x.X)
 	case *ast.Ident:
-		p.print(x)
+		return x.Name
 	default:
-		p.print(fmt.Sprintf("recv type unknown: %+T\n", x))
+		return fmt.Sprintf("recv type unknown: %+T", x)
 	}
+	return ""
 }
 
 func (p *printer) funcDecl(d *ast.FuncDecl) {
@@ -2021,12 +2022,17 @@ func (p *printer) funcDecl(d *ast.FuncDecl) {
 			p.curFuncRecv = d.Recv.List[0].Names[0]
 			// fmt.Printf("cur func recv: %v\n", p.curFuncRecv)
 		}
-		p.print("<<<<Method: ")
-		p.printMethRecvType(d.Recv.List[0].Type)
-		p.print(">>>>", newline)
-		// p.parameters(d.Recv, funcParam) // method: print receiver
+		mtag := "<<<<Method: " + p.methRecvType(d.Recv.List[0].Type) + ">>>>"
+		if d.Doc != nil {
+			clist := []*ast.Comment{&ast.Comment{Slash: d.Doc.List[0].Slash, Text: mtag}}
+			d.Doc.List = append(clist, d.Doc.List...)
+		} else {
+			p.print(mtag, newline)
+		}
+		p.setComment(d.Doc)
+		p.print(d.Pos(), ignore)
 		p.print(indent)
-		p.print(d.Pos(), ignore) // trigger emission of comments!
+		// p.parameters(d.Recv, funcParam) // method: print receiver
 	} else {
 		p.print(d.Pos(), ignore) // trigger emission of comments!
 	}

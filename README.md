@@ -79,8 +79,10 @@ While there aren't any pointers allowed in HLSL, the inlining of methods, along 
     
 # TODO
 
-* fix method comments issue
-
 * parse go package paths for files on commandline
+
+* figure out compute CmdEnd issue in vgpu
+
+* alignsl only prints out when there is an error
 
 

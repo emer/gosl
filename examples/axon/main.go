@@ -36,7 +36,7 @@ func main() {
 	// gp.PropsString(true) // print
 
 	// n := 10 // 100,000 = 2.38 CPU, 0.005939 GPU
-	n := 1000000 // 100,000 = 2.38 CPU, 0.005939 GPU
+	n := 100000 // 100,000 = 2.38 CPU, 0.005939 GPU
 	maxCycles := 200
 
 	lay := &Layer{}
@@ -121,7 +121,7 @@ func main() {
 
 	pl.RunComputeWait(sy.CmdPool.Buff, n, 1, 1)
 	for cy := 1; cy < maxCycles; cy++ {
-		vgpu.CmdSubmitWait(sy.CmdPool.Buff, &pl.Sys.Device)
+		sy.CmdSubmitWait()
 	}
 
 	gpuTmr.Stop()

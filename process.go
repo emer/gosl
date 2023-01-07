@@ -64,6 +64,8 @@ func processFiles(fls []string) (map[string][]byte, error) {
 		var buf bytes.Buffer
 		cfg := slprint.Config{Mode: printerMode, Tabwidth: tabWidth, ExcludeFuns: excludeFunMap}
 		cfg.Fprint(&buf, pkg, pkg.Syntax[0])
+		tlfn := filepath.Join(*outDir, fn+".tmp")
+		ioutil.WriteFile(tlfn, buf.Bytes(), 0644)
 		slfix := slEdits(buf.Bytes())
 		exsl := extractHLSL(slfix)
 		sls[fn] = exsl
@@ -235,10 +237,4 @@ func compileFile(fn string) error {
 		return err
 	}
 	return nil
-}
-
-// isSpace reports whether the byte is a space character.
-// isSpace defines a space as being among the following bytes: ' ', '\t', '\n' and '\r'.
-func isSpace(b byte) bool {
-	return b == ' ' || b == '\t' || b == '\n' || b == '\r'
 }

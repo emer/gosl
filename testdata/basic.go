@@ -58,7 +58,6 @@ type ParamStruct struct {
 	pad    float32
 }
 
-// IntegFmRaw computes integrated value from current raw value
 func (ps *ParamStruct) IntegFmRaw(ds *DataStruct, modArg *float32) {
 	// note: the following are just to test basic control structures
 	newVal := ps.Dt*(ds.Raw-ds.Integ) + *modArg

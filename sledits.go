@@ -88,8 +88,12 @@ func slEditsMethMove(lines [][]byte) [][]byte {
 			cl = strings.TrimSpace(cl)
 			classes[cl] = sted{st: li}
 			// fmt.Printf("cl: %s at %d\n", cl, li)
-		case bytes.HasPrefix(ln, slmark) && bytes.HasSuffix(ln, slend):
-			tag := string(ln[4 : len(ln)-4])
+		case bytes.HasPrefix(ln, slmark):
+			sli := bytes.Index(ln, slend)
+			if sli < 0 {
+				continue
+			}
+			tag := string(ln[4:sli])
 			// fmt.Printf("tag: %s at: %d\n", tag, li)
 			switch {
 			case strings.HasPrefix(tag, endclass):
