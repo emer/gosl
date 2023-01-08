@@ -78,19 +78,18 @@ func (kp *CaParams) FmCa(ca float32, caM, caP, caD *float32) {
 // IntFmTime returns the interval from current time
 // and last update time, which is -1 if never updated
 // (in which case return is -1)
-func (kp *CaParams) IntFmTime(ctime, utime int32) int {
+func (kp *CaParams) IntFmTime(ctime, utime int32) int32 {
 	if utime < 0 {
 		return -1
 	}
-	return int(ctime - utime)
+	return ctime - utime
 }
 
 // CurCa updates the current Ca* values, dealing with updating for
 // optimized spike-time update versions.
 // ctime is current time in msec, and utime is last update time (-1 if never)
 func (kp *CaParams) CurCa(ctime, utime int32, caM, caP, caD *float32) {
-	var isi int
-	isi = kp.IntFmTime(ctime, utime)
+	isi := kp.IntFmTime(ctime, utime)
 	if isi <= 0 {
 		return
 	}
@@ -100,8 +99,7 @@ func (kp *CaParams) CurCa(ctime, utime int32, caM, caP, caD *float32) {
 		*caD = 0
 		return
 	}
-	var i int
-	for i = 0; i < isi; i++ {
+	for i := int32(0); i < isi; i++ {
 		kp.FmCa(0, caM, caP, caD) // just decay to 0
 	}
 }

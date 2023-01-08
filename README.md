@@ -38,19 +38,23 @@ Usage:
 The flags are:
 
     -exclude string
-    	names of functions to exclude from exporting to HLSL (default "Update,Defaults")
+    	comma-separated list of names of functions to exclude from exporting to HLSL (default "Update,Defaults")
     -out string
     	output directory for shader code, relative to where gosl is invoked (default "shaders")
     -keep
     	keep temporary converted versions of the source files, for debugging
 
+Any `struct` types encountered will be checked for 16-byte alignment of sub-types and overall sizes as an even multiple of 16 bytes (4 `float32` or `int32` values), which is the alignment used in HLSL and glsl shader languages, and the underlying GPU hardware presumably.  Look for error messages on the output from the gosl run.  This ensures that direct byte-wise copies of data between CPU and GPU will be successful.  The fact that `gosl` operates directly on the original CPU-side Go code uniquely enables it to perform these alignment checks, which are otherwise a major source of difficult-to-diagnose bugs.
+
+You can safely ignore warnings of the form: `warning: Linking compute stage: Entry point not found` for any generated `.hlsl` files that serve only as includes to other files.
+    
 # Restrictions    
 
 In general shader code should be simple mathematical expressions and data types, with minimal control logic via `if`, `for` statements, and only using the subset of Go that is consistent with C.  Here are specific restrictions:
 
 ## Types
 
-* Cannot use any of the non-elemental Go types except `struct` (i.e., `map`, slices, etc are not available), and also no `string` types.  In general `float32` and `int32` are good.
+* Cannot use any of the non-elemental Go types except `struct` (i.e., `map`, slices, etc are not available), and also no `string` types.  The In general `float32` and `int32` are good.
 
 * using a `bool` in a `uniform` `struct` causes an obscure `glslc` compiler error: `shaderc: internal error: compilation succeeded but failed to optimize: OpFunctionCall Argument <id> '73[%73]'s type does not match Function`  There are also alignment and padding issues in copying from CPU types.  Use an `int32` instead.
 

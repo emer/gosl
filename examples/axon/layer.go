@@ -103,6 +103,10 @@ func (ly *Layer) CycleNeuron(ni int, nrn *Neuron, ctime *Time) {
 	ly.SpikeFmG(ni, nrn, ctime)
 }
 
+func CycleTimeInc(ctime *Time) {
+	ctime.CycleInc()
+}
+
 //gosl: end axon
 
 //gosl: hlsl axon
@@ -113,8 +117,16 @@ func (ly *Layer) CycleNeuron(ni int, nrn *Neuron, ctime *Time) {
 [[vk::binding(1, 1)]] RWStructuredBuffer<Neuron> Neurons;
 [numthreads(1, 1, 1)]
 void main(uint3 idx : SV_DispatchThreadID) {
-	// // Neurons[idx.x].Vm = Lay.Act.Decay.Glong;
-   Lay.CycleNeuron(idx.x, Neurons[idx.x], time[0]);
+    Lay.CycleNeuron(idx.x, Neurons[idx.x], time[0]);
+	uint ns;
+	uint st;
+	Neurons.GetDimensions(ns, st);
+	// // debugging:
+	// // Neurons[idx.x].SpkSt2 = ns;
+	// // Neurons[idx.x].SpkSt1 = time[0].Cycle;
+	if(idx.x == ns-1) {
+		CycleTimeInc(time[0]);
+	}
 }
 */
 //gosl: end axon

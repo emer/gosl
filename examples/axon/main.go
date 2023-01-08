@@ -11,8 +11,12 @@ import (
 
 	"github.com/emer/emergent/timer"
 	"github.com/goki/ki/ints"
+	"github.com/goki/mat32"
 	"github.com/goki/vgpu/vgpu"
 )
+
+// DiffTol is tolerance on testing diff between cpu and gpu values
+const DiffTol = 1.0e-5
 
 // note: standard one to use is plain "gosl" which should be go install'd
 
@@ -59,21 +63,20 @@ func main() {
 	}
 
 	cpuTmr := timer.Time{}
-	if true {
-		// if false {
-		cpuTmr.Start()
+	cpuTmr.Start()
 
-		for cy := 0; cy < maxCycles; cy++ {
-			for i := range neur1 {
-				d := &neur1[i]
-				// d.Vm = lay.Act.Decay.Glong
-				lay.CycleNeuron(i, d, time)
-			}
-			time.CycleInc()
+	for cy := 0; cy < maxCycles; cy++ {
+		for i := range neur1 {
+			d := &neur1[i]
+			// d.Vm = lay.Act.Decay.Glong
+			lay.CycleNeuron(i, d, time)
 		}
-
-		cpuTmr.Stop()
+		time.CycleInc()
 	}
+
+	cpuTmr.Stop()
+
+	time.Reset()
 
 	sy := gp.NewComputeSystem("axon")
 	pl := sy.NewPipeline("axon")
@@ -131,15 +134,31 @@ func main() {
 
 	gpuFullTmr.Stop()
 
-	mx := ints.MinInt(n, 5)
+	mx := ints.MinInt(n, 1)
+	anyDiff := false
 	for i := 0; i < mx; i++ {
 		d1 := &neur1[i]
 		d2 := &neur2[i]
-		fmt.Printf("%d\tGe1: %g\tGe2: %g\tV1: %g\tV2: %g\n", i, d1.Ge, d2.Ge, d1.Vm, d2.Vm)
+		fmt.Printf("\n%14s\t   CPU\t   GPU\tDiff\n", "Var")
+		for vi, vn := range NeuronVars {
+			v1 := d1.VarByIndex(vi)
+			v2 := d2.VarByIndex(vi)
+			diff := ""
+			if mat32.Abs(v1-v2) > DiffTol {
+				diff = "*"
+				anyDiff = true
+			}
+			fmt.Printf("%14s\t%6.4g\t%6.4g\t%s\n", vn, v1, v2, diff)
+		}
 	}
 	fmt.Printf("\n")
+	if anyDiff {
+		fmt.Printf("ERROR: Differences between CPU and GPU detected -- see stars above\n\n")
+	}
 
-	fmt.Printf("N: %d\t CPU: %6.4g\t GPU: %6.4g\t Full: %6.4g\n", n, cpuTmr.TotalSecs(), gpuTmr.TotalSecs(), gpuFullTmr.TotalSecs())
+	cpu := cpuTmr.TotalSecs()
+	gpu := gpuTmr.TotalSecs()
+	fmt.Printf("N: %d\t CPU: %6.4g\t GPU: %6.4g\t Full: %6.4g\t CPU/GPU: %6.4g\n", n, cpu, gpu, gpuFullTmr.TotalSecs(), cpu/gpu)
 
 	sy.Destroy()
 	gp.Destroy()

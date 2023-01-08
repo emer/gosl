@@ -55,7 +55,7 @@ type ParamStruct struct {
 	Tau    float32     `desc:"rate constant in msec"`
 	Dt     float32     `desc:"1/Tau"`
 	Option slbool.Bool // note: standard bool doesn't work
-	pad    float32
+	// pad    float32 // comment this out to trigger alignment warning
 }
 
 func (ps *ParamStruct) IntegFmRaw(ds *DataStruct, modArg *float32) {

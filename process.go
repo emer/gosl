@@ -56,7 +56,10 @@ func processFiles(fls []string) (map[string][]byte, error) {
 			return nil, err
 		}
 
-		alignsl.CheckPackage(pkg)
+		serr := alignsl.CheckPackage(pkg)
+		if serr != nil {
+			fmt.Println(serr)
+		}
 
 		// files = pkg.GoFiles
 		// fgo := pkg.GoFiles[0]
@@ -64,8 +67,7 @@ func processFiles(fls []string) (map[string][]byte, error) {
 		var buf bytes.Buffer
 		cfg := slprint.Config{Mode: printerMode, Tabwidth: tabWidth, ExcludeFuns: excludeFunMap}
 		cfg.Fprint(&buf, pkg, pkg.Syntax[0])
-		tlfn := filepath.Join(*outDir, fn+".tmp")
-		ioutil.WriteFile(tlfn, buf.Bytes(), 0644)
+		// ioutil.WriteFile(filepath.Join(*outDir, fn+".tmp"), buf.Bytes(), 0644)
 		slfix := slEdits(buf.Bytes())
 		exsl := extractHLSL(slfix)
 		sls[fn] = exsl
