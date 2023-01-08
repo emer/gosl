@@ -4,7 +4,13 @@
 
 /*
 package alignsl performs 16-byte alignment checking of struct fields
-to ensure HLSL (and GSL) compatibility
+and total size modulus checking of struct types to ensure HLSL
+(and GSL) compatibility.
+
+Checks that struct sizes are an even multiple of 16 bytes
+(4 float32's), fields are 32 bit types: [U]Int32, Float32,
+and that fields that are other struct types are aligned
+at even 16 byte multiples.
 */
 package alignsl
 
@@ -119,9 +125,10 @@ func CheckPackage(pkg *packages.Package) error {
 	er := CheckStack(cx)
 	if hasErr || er {
 		str := `
-struct type alignment checking:
-    Checks that struct sizes are an even multiple of 16 bytes (4 float32's)
-    and fields are 32 bit types: [U]Int32, Float32 or other struct.
+ERROR: in struct type alignment checking:
+    Checks that struct sizes are an even multiple of 16 bytes (4 float32's),
+    and fields are 32 bit types: [U]Int32, Float32 or other struct,
+    and that fields that are other struct types are aligned at even 16 byte multiples.
     List of errors found follow below, by struct type name:
 ` + strings.Join(cx.Errs, "\n")
 		return errors.New(str)

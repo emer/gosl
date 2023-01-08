@@ -55,7 +55,8 @@ type ParamStruct struct {
 	Tau    float32     `desc:"rate constant in msec"`
 	Dt     float32     `desc:"1/Tau"`
 	Option slbool.Bool // note: standard bool doesn't work
-	// pad    float32 // comment this out to trigger alignment warning
+
+	pad float32 // comment this out to trigger alignment warning
 }
 
 func (ps *ParamStruct) IntegFmRaw(ds *DataStruct, modArg *float32) {
@@ -70,8 +71,7 @@ func (ps *ParamStruct) IntegFmRaw(ds *DataStruct, modArg *float32) {
 
 // AnotherMeth does more computation
 func (ps *ParamStruct) AnotherMeth(ds *DataStruct) {
-	var i int
-	for i = 0; i < 10; i++ {
+	for i := 0; i < 10; i++ {
 		ds.Integ *= 0.99
 	}
 	var flag NeuronFlags

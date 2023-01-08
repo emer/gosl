@@ -708,8 +708,7 @@ func (ac *ActParams) VmFmInet(vm, dt, inet float32) float32 {
 func (ac *ActParams) VmInteg(vm, dt, ge, gl, gi, gk float32, nvm, inet *float32) {
 	dt *= ac.Dt.DtStep
 	*nvm = vm
-	var i int32
-	for i = 0; i < ac.Dt.VmSteps; i++ {
+	for i := int32(0); i < ac.Dt.VmSteps; i++ {
 		*inet = ac.InetFmG(*nvm, ge, gl, gi, gk)
 		*nvm = ac.VmFmInet(*nvm, dt, *inet)
 	}

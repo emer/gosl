@@ -54,9 +54,9 @@ In general shader code should be simple mathematical expressions and data types,
 
 ## Types
 
-* Cannot use any of the non-elemental Go types except `struct` (i.e., `map`, slices, etc are not available), and also no `string` types.  The In general `float32` and `int32` are good.
+* Can only use `float32`, `[u]int32`, and their 64 bit versions for basic types, and `struct` types composed of these same types -- no other Go types (i.e., `map`, slices, `string`, etc) are compatible.  There are strict alignment restrictions on 16 byte (e.g., 4 `float32`'s) intervals that are enforced via the `alignsl` sub-package.
 
-* using a `bool` in a `uniform` `struct` causes an obscure `glslc` compiler error: `shaderc: internal error: compilation succeeded but failed to optimize: OpFunctionCall Argument <id> '73[%73]'s type does not match Function`  There are also alignment and padding issues in copying from CPU types.  Use an `int32` instead.
+* Use `slbool.Bool` instead of `bool` -- it defines a Go-friendly interface based on a `int32` basic type.  Using a `bool` in a `uniform` `struct` causes an obscure `glslc` compiler error: `shaderc: internal error: compilation succeeded but failed to optimize: OpFunctionCall Argument <id> '73[%73]'s type does not match Function`  
 
 * Alignment and padding of `struct` fields is key -- todo: checker for compatibility.
 
@@ -86,7 +86,5 @@ While there aren't any pointers allowed in HLSL, the inlining of methods, along 
 * parse go package paths for files on commandline
 
 * figure out compute CmdEnd issue in vgpu
-
-* alignsl only prints out when there is an error
 
 

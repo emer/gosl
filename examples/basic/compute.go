@@ -20,6 +20,8 @@ type DataStruct struct {
 type ParamStruct struct {
 	Tau float32 `desc:"rate constant in msec"`
 	Dt  float32 `desc:"1/Tau"`
+
+	pad, pad1 float32
 }
 
 // IntegFmRaw computes integrated value from current raw value
