@@ -29,7 +29,7 @@ For the `main` HLSL function, global variables, to `#include` another `.hlsl` fi
 
 where the HLSL shader code is commented out in the .go file -- it will be copied into the target filename and uncommented.  The HLSL code can be surrounded by `/*` `*/` comment blocks (each on a separate line) for multi-line code. 
 
-Pass filenames or directory names to `gosl` command for files to process -- files without any `//gosl:` comment directives will be skipped.
+Pass filenames, directory names, or Go package paths (e.g., `github.com/goki/mat32/fastexp.go` loads just that file from the given package) to `gosl` command for files to process -- files without any `//gosl:` comment directives will be skipped up front before any expensive processing, so it is not a problem to specify entire directories where only some files are relevant.
 
 Usage:
 
@@ -79,12 +79,5 @@ HLSL does not directly support random numbers.  Here's some discussion: [unity f
 HLSL is very C-like and provides a much better target for Go conversion than glsl.  See `examples/basic/shaders/basic_nouse.glsl` vs the .hlsl version there for the difference.  Only HLSL supports methods in a struct, and performance is the same as writing the expression directly -- it is suitably [inlined](https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-function-syntax).
 
 While there aren't any pointers allowed in HLSL, the inlining of methods, along with the use of the `inout` [InputModifier](https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-function-parameters), effectively supports pass-by-reference.  The [stackoverflow](https://stackoverflow.com/questions/28527622/shaders-function-parameters-performance/28577878#28577878) on this is a bit unclear but the basic example demonstrates that it all goes through.
-
-    
-# TODO
-
-* parse go package paths for files on commandline
-
-* figure out compute CmdEnd issue in vgpu
 
 

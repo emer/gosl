@@ -117,7 +117,9 @@ func CycleTimeInc(ctime *Time) {
 [[vk::binding(1, 1)]] RWStructuredBuffer<Neuron> Neurons;
 [numthreads(1, 1, 1)]
 void main(uint3 idx : SV_DispatchThreadID) {
+	// // for(int i = 0; i < 200; i++) { // 2x faster to do internally
     Lay.CycleNeuron(idx.x, Neurons[idx.x], time[0]);
+	// // }
 	uint ns;
 	uint st;
 	Neurons.GetDimensions(ns, st);

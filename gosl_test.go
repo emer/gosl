@@ -25,7 +25,7 @@ func runTest(t *testing.T, in, out string) {
 		return
 	}
 
-	sls, err := processFiles([]string{in})
+	sls, err := ProcessFiles([]string{in})
 	if err != nil {
 		t.Error(err)
 		return
@@ -93,6 +93,4 @@ func TestRewrite(t *testing.T) {
 			runTest(t, in, out)
 		})
 	}
-
-	extractFiles(inFiles)
 }

@@ -9,8 +9,8 @@ import (
 	"strings"
 )
 
-// moveLines moves the st,ed region to 'to' line
-func moveLines(lines *[][]byte, to, st, ed int) {
+// MoveLines moves the st,ed region to 'to' line
+func MoveLines(lines *[][]byte, to, st, ed int) {
 	mvln := (*lines)[st:ed]
 	btwn := (*lines)[to:st]
 	aft := (*lines)[ed:len(*lines)]
@@ -22,24 +22,24 @@ func moveLines(lines *[][]byte, to, st, ed int) {
 	*lines = nln
 }
 
-// slEdits performs post-generation edits for hlsl
+// SlEdits performs post-generation edits for hlsl
 // * moves hlsl segments around, e.g., methods
 // into their proper classes
 // * fixes printf, slice other common code
-func slEdits(src []byte) []byte {
+func SlEdits(src []byte) []byte {
 	// return src // uncomment to show original without edits
 	nl := []byte("\n")
 	lines := bytes.Split(src, nl)
 
-	lines = slEditsMethMove(lines)
-	slEditsReplace(lines)
+	lines = SlEditsMethMove(lines)
+	SlEditsReplace(lines)
 
 	return bytes.Join(lines, nl)
 }
 
-// slEditsMethMove moves hlsl segments around, e.g., methods
+// SlEditsMethMove moves hlsl segments around, e.g., methods
 // into their proper classes
-func slEditsMethMove(lines [][]byte) [][]byte {
+func SlEditsMethMove(lines [][]byte) [][]byte {
 	type sted struct {
 		st, ed int
 	}
@@ -119,7 +119,7 @@ func slEditsMethMove(lines [][]byte) [][]byte {
 				se, ok := classes[lastMeth]
 				if ok {
 					lines = append(lines[:li], lines[li+1:]...) // delete marker
-					moveLines(&lines, se.ed, lastMethSt, li+1)  // extra blank
+					MoveLines(&lines, se.ed, lastMethSt, li+1)  // extra blank
 					classes[lastMeth] = sted{st: se.st, ed: se.ed + ((li + 1) - lastMethSt)}
 					li -= 2
 				}
@@ -152,7 +152,7 @@ var Replaces = []Replace{
 	// {[]byte(""), []byte("")},
 }
 
-func mathReplaceAll(mat, ln []byte) []byte {
+func MathReplaceAll(mat, ln []byte) []byte {
 	ml := len(mat)
 	st := 0
 	for {
@@ -170,16 +170,16 @@ func mathReplaceAll(mat, ln []byte) []byte {
 	}
 }
 
-// slEditsReplace replaces Go with equivalent HLSL code
-func slEditsReplace(lines [][]byte) {
+// SlEditsReplace replaces Go with equivalent HLSL code
+func SlEditsReplace(lines [][]byte) {
 	mt32 := []byte("mat32.")
 	mth := []byte("math.")
 	for li, ln := range lines {
 		for _, r := range Replaces {
 			ln = bytes.ReplaceAll(ln, r.From, r.To)
 		}
-		ln = mathReplaceAll(mt32, ln)
-		ln = mathReplaceAll(mth, ln)
+		ln = MathReplaceAll(mt32, ln)
+		ln = MathReplaceAll(mth, ln)
 		lines[li] = ln
 	}
 }

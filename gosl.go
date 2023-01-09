@@ -13,10 +13,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/fs"
-	"log"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/goki/gosl/slprint"
@@ -42,22 +39,9 @@ const (
 	printerNormalizeNumbers = 1 << 30
 )
 
-var (
-	inFiles    []string            // list of all input files processed
-	packProcd  = map[string]bool{} // list of all package paths in inFiles -- remove these
-	filesProcd = map[string]bool{} // prevent redundancies
-	slFiles    map[string][]byte   // output files
-)
-
 func usage() {
 	fmt.Fprintf(os.Stderr, "usage: gosl [flags] [path ...]\n")
 	flag.PrintDefaults()
-}
-
-func isGoFile(f fs.DirEntry) bool {
-	// ignore non-Go files
-	name := f.Name()
-	return !strings.HasPrefix(name, ".") && strings.HasSuffix(name, ".go") && !f.IsDir()
 }
 
 func main() {
@@ -66,30 +50,7 @@ func main() {
 	goslMain()
 }
 
-func addFile(fn string) bool {
-	if _, has := filesProcd[fn]; has {
-		return false
-	}
-	inFiles = append(inFiles, fn)
-	filesProcd[fn] = true
-	dir, _ := filepath.Split(fn)
-	if dir != "" {
-		dir = dir[:len(dir)-1]
-		pd, sd := filepath.Split(dir)
-		if pd != "" {
-			dir = sd
-		}
-		if !(dir == "mat32") {
-			if _, has := packProcd[dir]; !has {
-				packProcd[dir] = true
-				// fmt.Printf("package: %s\n", dir)
-			}
-		}
-	}
-	return true
-}
-
-func goslArgs() {
+func GoslArgs() {
 	exs := *excludeFuns
 	ex := strings.Split(exs, ",")
 	for _, fn := range ex {
@@ -108,34 +69,6 @@ func goslMain() {
 		return
 	}
 
-	goslArgs()
-
-	for _, arg := range args {
-		switch info, err := os.Stat(arg); {
-		case err != nil:
-			fmt.Println(err)
-		case !info.IsDir():
-			// Non-directory arguments are always formatted.
-			arg := arg
-			addFile(arg)
-		default:
-			// Directories are walked, ignoring non-Go files.
-			err := filepath.WalkDir(arg, func(path string, f fs.DirEntry, err error) error {
-				if err != nil || !isGoFile(f) {
-					return err
-				}
-				_, err = f.Info()
-				if err != nil {
-					return nil
-				}
-				addFile(path)
-				return nil
-			})
-			if err != nil {
-				log.Println(err)
-			}
-		}
-	}
-
-	processFiles(inFiles)
+	GoslArgs()
+	ProcessFiles(args)
 }

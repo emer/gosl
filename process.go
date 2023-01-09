@@ -2,16 +2,11 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// copied from go src/cmd/gofmt/internal.go:
+// heavily modified from go src/cmd/gofmt/internal.go:
 
 // Copyright 2015 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-
-// TODO(gri): This file and the file src/go/format/internal.go are
-// the same (but for this comment and the package name). Do not modify
-// one without the other. Determine if we can factor out functionality
-// in a public API. See also #11844 for context.
 
 package main
 
@@ -32,8 +27,9 @@ import (
 )
 
 // does all the file processing
-func processFiles(fls []string) (map[string][]byte, error) {
-	sls := extractFiles(fls) // extract files to shader/*.go in slFiles
+func ProcessFiles(paths []string) (map[string][]byte, error) {
+	fls := FilesFromPaths(paths)
+	sls := ExtractFiles(fls) // extract files to shader/*.go
 
 	for fn := range sls {
 		gofn := filepath.Join(*outDir, fn+".go")
@@ -68,8 +64,8 @@ func processFiles(fls []string) (map[string][]byte, error) {
 		cfg := slprint.Config{Mode: printerMode, Tabwidth: tabWidth, ExcludeFuns: excludeFunMap}
 		cfg.Fprint(&buf, pkg, pkg.Syntax[0])
 		// ioutil.WriteFile(filepath.Join(*outDir, fn+".tmp"), buf.Bytes(), 0644)
-		slfix := slEdits(buf.Bytes())
-		exsl := extractHLSL(slfix)
+		slfix := SlEdits(buf.Bytes())
+		exsl := ExtractHLSL(slfix)
 		sls[fn] = exsl
 
 		// if !*keepTmp {
@@ -78,13 +74,12 @@ func processFiles(fls []string) (map[string][]byte, error) {
 
 		slfn := filepath.Join(*outDir, fn+".hlsl")
 		ioutil.WriteFile(slfn, exsl, 0644)
-		compileFile(fn + ".hlsl")
+		CompileFile(fn + ".hlsl")
 	}
-	slFiles = sls // save global
 	return sls, nil
 }
 
-func extractFiles(files []string) map[string][]byte {
+func ExtractFiles(files []string) map[string][]byte {
 	sls := map[string][][]byte{}
 	key := []byte("//gosl: ")
 	start := []byte("start")
@@ -119,7 +114,7 @@ func extractFiles(files []string) map[string][]byte {
 				inReg = false
 				inHlsl = false
 			case inReg:
-				for pkg := range packProcd { // remove package prefixes
+				for pkg := range LoadedPackageNames { // remove package prefixes
 					ln = bytes.ReplaceAll(ln, []byte(pkg+"."), []byte{})
 				}
 				outLns = append(outLns, ln)
@@ -160,7 +155,7 @@ func extractFiles(files []string) map[string][]byte {
 	return rsls
 }
 
-func extractHLSL(buf []byte) []byte {
+func ExtractHLSL(buf []byte) []byte {
 	key := []byte("//gosl: ")
 	hlsl := []byte("hlsl")
 	end := []byte("end")
@@ -227,7 +222,7 @@ func extractHLSL(buf []byte) []byte {
 	return bytes.Join(lines, nl)
 }
 
-func compileFile(fn string) error {
+func CompileFile(fn string) error {
 	ext := filepath.Ext(fn)
 	ofn := fn[:len(fn)-len(ext)] + ".spv"
 	cmd := exec.Command("glslc", "-fshader-stage=compute", "-o", ofn, fn)

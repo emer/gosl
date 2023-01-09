@@ -44,9 +44,8 @@ struct ParamStruct {
 	float     Tau;
 	float     Dt;
 	int Option; // note: standard bool doesn't work
-	float     pad;
 
-// IntegFmRaw computes integrated value from current raw value
+	float pad; // comment this out to trigger alignment warning
 	void IntegFmRaw(inout DataStruct ds, inout float modArg) {
 		// note: the following are just to test basic control structures
 		float newVal = this.Dt*(ds.Raw-ds.Integ) + modArg;
@@ -58,8 +57,7 @@ struct ParamStruct {
 	}
 
 	void AnotherMeth(inout DataStruct ds) {
-		int i;
-		for (i = 0; i < 10; i++) {
+		for (int i = 0; i < 10; i++) {
 			ds.Integ *= 0.99;
 		}
 		NeuronFlags flag;
@@ -69,7 +67,6 @@ struct ParamStruct {
 };
 
 
-// AnotherMeth does more computation
 [[vk::binding(0, 0)]] uniform ParamStruct Params;
 [[vk::binding(0, 1)]] RWStructuredBuffer<DataStruct> Data;
 [numthreads(1, 1, 1)]

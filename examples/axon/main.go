@@ -20,7 +20,7 @@ const DiffTol = 1.0e-5
 
 // note: standard one to use is plain "gosl" which should be go install'd
 
-//go:generate ../../gosl -exclude=Update,UpdateParams,Defaults -keep /Users/oreilly/go/src/github.com/goki/mat32/fastexp.go minmax chans/chans.go chans kinase time.go neuron.go act.go learn.go layer.go
+//go:generate ../../gosl -exclude=Update,UpdateParams,Defaults -keep github.com/goki/mat32/fastexp.go minmax chans/chans.go chans kinase time.go neuron.go act.go learn.go layer.go
 
 func init() {
 	// must lock main thread for gpu!  this also means that vulkan must be used
@@ -39,8 +39,8 @@ func main() {
 
 	// gp.PropsString(true) // print
 
-	// n := 10 // 100,000 = 2.38 CPU, 0.005939 GPU
-	n := 100000 // 100,000 = 2.38 CPU, 0.005939 GPU
+	n := 10 // debugging
+	// n := 100000 // 100,000 = 2.38 CPU, 0.005939 GPU
 	maxCycles := 200
 
 	lay := &Layer{}
@@ -122,10 +122,14 @@ func main() {
 	gpuTmr := timer.Time{}
 	gpuTmr.Start()
 
-	pl.RunComputeWait(sy.CmdPool.Buff, n, 1, 1)
+	// note: it is 2x faster to run the for loop within the shader entirely
+	pl.ComputeCommand(n, 1, 1)
+	sy.ComputeSubmit() // technically should wait, but results are same..
+	// if validation mode is on, it complains..
 	for cy := 1; cy < maxCycles; cy++ {
-		sy.CmdSubmitWait()
+		sy.ComputeSubmit() // waiting every time is 10x for 100k
 	}
+	sy.ComputeWait() // waiting only at end is 13x for 100k
 
 	gpuTmr.Stop()
 
