@@ -29,7 +29,7 @@ func init() {
 }
 
 func main() {
-	if vgpu.Init() != nil {
+	if vgpu.InitNoDisplay() != nil {
 		return
 	}
 
@@ -39,8 +39,8 @@ func main() {
 
 	// gp.PropsString(true) // print
 
-	n := 10 // debugging
-	// n := 100000 // 100,000 = 2.38 CPU, 0.005939 GPU
+	// n := 10 // debugging
+	n := 100000 // 100,000 = 2.38 CPU, 0.005939 GPU
 	maxCycles := 200
 
 	lay := &Layer{}

@@ -26,7 +26,7 @@ func init() {
 }
 
 func main() {
-	if vgpu.Init() != nil {
+	if vgpu.InitNoDisplay() != nil {
 		return
 	}
 

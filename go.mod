@@ -6,7 +6,7 @@ require (
 	github.com/emer/emergent v1.3.34
 	github.com/goki/ki v1.1.9
 	github.com/goki/mat32 v1.0.13
-	github.com/goki/vgpu v1.0.8
+	github.com/goki/vgpu v1.0.9
 	golang.org/x/exp v0.0.0-20230105202349-8879d0199aa3
 	golang.org/x/tools v0.5.0
 )
