@@ -13,6 +13,8 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"go/ast"
+	"go/token"
 	"io/ioutil"
 	"log"
 	"os"
@@ -31,46 +33,63 @@ func ProcessFiles(paths []string) (map[string][]byte, error) {
 	fls := FilesFromPaths(paths)
 	sls := ExtractFiles(fls) // extract files to shader/*.go
 
+	pf := "./" + *outDir
+	pkgs, err := packages.Load(&packages.Config{Mode: packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedTypes | packages.NeedSyntax | packages.NeedTypesInfo | packages.NeedTypesSizes}, pf)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	if len(pkgs) != 1 {
+		err := fmt.Errorf("More than one package for path: %v", pf)
+		log.Println(err)
+		return nil, err
+	}
+	pkg := pkgs[0]
+
+	if len(pkg.GoFiles) == 0 {
+		err := fmt.Errorf("No Go files found in package: %+v", pkg)
+		log.Println(err)
+		return nil, err
+	}
+	// fmt.Printf("go files: %+v", pkg.GoFiles)
+	// return nil, err
+
 	for fn := range sls {
-		gofn := filepath.Join(*outDir, fn+".go")
-
-		pkgs, err := packages.Load(&packages.Config{Mode: packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedTypes | packages.NeedSyntax | packages.NeedTypesInfo | packages.NeedTypesSizes}, gofn)
-		if err != nil {
-			log.Println(err)
-			return nil, err
-		}
-		if len(pkgs) != 1 {
-			err := fmt.Errorf("More than one package for path: %v", gofn)
-			log.Println(err)
-			return nil, err
-		}
-		pkg := pkgs[0]
-
-		if len(pkg.GoFiles) == 0 {
-			err := fmt.Errorf("No Go files found in package: %v", gofn)
-			log.Println(err)
-			return nil, err
-		}
+		gofn := fn + ".go"
+		fmt.Printf("###################################\nProcessing file: %s\n\t (ignore any 'Entry point not found' warnings for include-only files)\n", gofn)
 
 		serr := alignsl.CheckPackage(pkg)
 		if serr != nil {
 			fmt.Println(serr)
 		}
 
-		// files = pkg.GoFiles
-		// fgo := pkg.GoFiles[0]
-		// pkgPathAbs, _ = filepath.Abs(filepath.Dir(fgo))
+		var afile *ast.File
+		var fpos token.Position
+		for _, sy := range pkg.Syntax {
+			pos := pkg.Fset.Position(sy.Package)
+			_, posfn := filepath.Split(pos.Filename)
+			if posfn == gofn {
+				fpos = pos
+				afile = sy
+				break
+			}
+		}
+		if afile == nil {
+			fmt.Printf("Warning: File named: %s not found in processed package\n", gofn)
+			continue
+		}
+
 		var buf bytes.Buffer
 		cfg := slprint.Config{Mode: printerMode, Tabwidth: tabWidth, ExcludeFuns: excludeFunMap}
-		cfg.Fprint(&buf, pkg, pkg.Syntax[0])
+		cfg.Fprint(&buf, pkg, fpos, afile)
 		// ioutil.WriteFile(filepath.Join(*outDir, fn+".tmp"), buf.Bytes(), 0644)
 		slfix := SlEdits(buf.Bytes())
 		exsl := ExtractHLSL(slfix)
 		sls[fn] = exsl
 
-		// if !*keepTmp {
-		// 	os.Remove(gofn)
-		// }
+		if !*keepTmp {
+			os.Remove(gofn)
+		}
 
 		slfn := filepath.Join(*outDir, fn+".hlsl")
 		ioutil.WriteFile(slfn, exsl, 0644)
@@ -86,6 +105,7 @@ func ExtractFiles(files []string) map[string][]byte {
 	hlsl := []byte("hlsl")
 	end := []byte("end")
 	nl := []byte("\n")
+	include := []byte("#include")
 
 	for _, fn := range files {
 		buf, err := os.ReadFile(fn)
@@ -115,7 +135,9 @@ func ExtractFiles(files []string) map[string][]byte {
 				inHlsl = false
 			case inReg:
 				for pkg := range LoadedPackageNames { // remove package prefixes
-					ln = bytes.ReplaceAll(ln, []byte(pkg+"."), []byte{})
+					if !bytes.Contains(ln, include) {
+						ln = bytes.ReplaceAll(ln, []byte(pkg+"."), []byte{})
+					}
 				}
 				outLns = append(outLns, ln)
 			case isKey && bytes.HasPrefix(keyStr, start):
@@ -228,7 +250,7 @@ func CompileFile(fn string) error {
 	cmd := exec.Command("glslc", "-fshader-stage=compute", "-o", ofn, fn)
 	cmd.Dir, _ = filepath.Abs(*outDir)
 	out, err := cmd.CombinedOutput()
-	fmt.Printf("\n################\nglslc output for: %s\n%s\n", fn, out)
+	fmt.Printf("\n-----------------------------\nglslc output for: %s\n%s\n", fn, out)
 	if err != nil {
 		log.Println(err)
 		return err

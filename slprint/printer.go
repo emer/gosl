@@ -105,11 +105,11 @@ type printer struct {
 	curFuncRecv *ast.Ident // current function receiver
 }
 
-func (p *printer) init(cfg *Config, pkg *packages.Package, nodeSizes map[ast.Node]int) {
+func (p *printer) init(cfg *Config, pkg *packages.Package, pos token.Position, nodeSizes map[ast.Node]int) {
 	p.Config = *cfg
 	p.pkg = pkg
-	p.pos = token.Position{Line: 1, Column: 1}
-	p.out = token.Position{Line: 1, Column: 1}
+	p.pos = pos
+	p.out = pos
 	p.wsbuf = make([]whiteSpace, 0, 16) // whitespace sequences are short
 	p.nodeSizes = nodeSizes
 	p.cachedPos = -1
@@ -1308,10 +1308,10 @@ type Config struct {
 }
 
 // fprint implements Fprint and takes a nodesSizes map for setting up the printer state.
-func (cfg *Config) fprint(output io.Writer, pkg *packages.Package, node any, nodeSizes map[ast.Node]int) (err error) {
+func (cfg *Config) fprint(output io.Writer, pkg *packages.Package, pos token.Position, node any, nodeSizes map[ast.Node]int) (err error) {
 	// print node
 	var p printer
-	p.init(cfg, pkg, nodeSizes)
+	p.init(cfg, pkg, pos, nodeSizes)
 	if err = p.printNode(node); err != nil {
 		return
 	}
@@ -1371,14 +1371,14 @@ type CommentedNode struct {
 // Position information is interpreted relative to the file set fset.
 // The node type must be *ast.File, *CommentedNode, []ast.Decl, []ast.Stmt,
 // or assignment-compatible to ast.Expr, ast.Decl, ast.Spec, or ast.Stmt.
-func (cfg *Config) Fprint(output io.Writer, pkg *packages.Package, node any) error {
-	return cfg.fprint(output, pkg, node, make(map[ast.Node]int))
+func (cfg *Config) Fprint(output io.Writer, pkg *packages.Package, pos token.Position, node any) error {
+	return cfg.fprint(output, pkg, pos, node, make(map[ast.Node]int))
 }
 
 // Fprint "pretty-prints" an AST node to output.
 // It calls Config.Fprint with default settings.
 // Note that gosl uses tabs for indentation but spaces for alignment;
 // use format.Node (package go/format) for output that matches gosl.
-func Fprint(output io.Writer, pkg *packages.Package, node any) error {
-	return (&Config{Tabwidth: 8}).Fprint(output, pkg, node)
+func Fprint(output io.Writer, pkg *packages.Package, pos token.Position, node any) error {
+	return (&Config{Tabwidth: 8}).Fprint(output, pkg, pos, node)
 }
