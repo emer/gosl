@@ -88,7 +88,7 @@ float UintToFloat(uint val) {
 float UintToFloat11(uint val) {
 	const float factor = float(1.) / (float(0xffffffff) + float(1.));
 	const float halffactor = float(0.5) * factor;
-	return asint(val) * factor + halffactor;
+	return 2. * (asint(val) * factor + halffactor);
 }
 
 // Uint2ToFloat01 converts two uint 32 bit integers (uint2)
@@ -159,6 +159,16 @@ float2 RandFloat2(inout uint2 counter, uint key) {
 // unique index of the element being updated.
 float RandFloat(inout uint2 counter, uint key) {
 	return UintToFloat(RandUint(counter, key));
+}
+
+// RandFloat11 returns a uniformly-distributed 32 float
+// in range [-1..1] based on given counter and key.
+// The counter is incremented by 1 (in a 64-bit equivalent manner)
+// as a result of this call, ensuring that the next call will produce
+// the next random number in the sequence.  The key should be the 
+// unique index of the element being updated.
+float RandFloat11(inout uint2 counter, uint key) {
+	return UintToFloat11(RandUint(counter, key));
 }
 
 // RandBoolP returns a bool true value with probability p
