@@ -6,13 +6,76 @@ package slrand
 
 import (
 	"fmt"
+	"math"
 	"testing"
+
+	"github.com/goki/gosl/sltype"
 )
 
+// Known Answer Test for values from the DEShawREsearch reference impl
+func TestKAT(t *testing.T) {
+	kats := []struct {
+		ctr sltype.Uint2
+		key uint32
+		res sltype.Uint2
+	}{{sltype.Uint2{0, 0}, 0, sltype.Uint2{0xff1dae59, 0x6cd10df2}},
+		{sltype.Uint2{0xffffffff, 0xffffffff}, 0xffffffff, sltype.Uint2{0x2c3f628b, 0xab4fd7ad}},
+		{sltype.Uint2{0x243f6a88, 0x85a308d3}, 0x13198a2e, sltype.Uint2{0xdd7ce038, 0xf62a4c12}}}
+
+	for _, tv := range kats {
+		r := Philox2x32(tv.ctr, tv.key)
+		if r != tv.res {
+			fmt.Printf("ctr: %v  key: %d != result: %v -- got: %v\n", tv.ctr, tv.key, tv.res, r)
+		}
+	}
+}
+
+// Float01 Known Answer Test for float conversion values from the DEShawREsearch reference impl
+func TestFloat01KAT(t *testing.T) {
+	minint := math.MinInt32
+	kats := []struct {
+		base uint32
+		add  uint32
+		res  float32
+	}{{0, 0, 1.16415321826934814453e-10},
+		{uint32(minint), 0, 0.5},
+		{math.MaxInt32, 0, 0.5},
+		{math.MaxUint32, 0, 0.99999994},
+	}
+
+	for _, tv := range kats {
+		r := Uint32ToFloat(tv.base + tv.add)
+		if r != tv.res {
+			fmt.Printf("base: %x  add: %x != result: %g -- got: %g\n", tv.base, tv.add, tv.res, r)
+		}
+	}
+}
+
+// Float11 Known Answer Test for float conversion values from the DEShawREsearch reference impl
+func TestFloat11KAT(t *testing.T) {
+	minint := math.MinInt32
+	kats := []struct {
+		base uint32
+		add  uint32
+		res  float32
+	}{{0, 0, 2.32830643653869628906e-10},
+		{uint32(minint), 0, -1.0},
+		{math.MaxInt32, 0, 1.0},
+		{math.MaxUint32, 0, -2.32830643653869628906e-10},
+	}
+
+	for _, tv := range kats {
+		r := Uint32ToFloat11(tv.base + tv.add)
+		if r != tv.res {
+			fmt.Printf("base: %x  add: %x != result: %g -- got: %g\n", tv.base, tv.add, tv.res, r)
+		}
+	}
+}
+
 func TestRand(t *testing.T) {
-	var counter Uint2
-	for i := 0; i < 100; i++ {
-		fmt.Printf("%g\t%g\t%g\n", RandFloat(counter, 0), RandFloat11(counter, 1), RandNormFloat(counter, 2))
+	var counter sltype.Uint2
+	for i := 0; i < 10; i++ {
+		fmt.Printf("%g\t%g\t%g\n", Float(counter, 0), Float11(counter, 1), NormFloat(counter, 2))
 		CounterIncr(&counter)
 	}
 }

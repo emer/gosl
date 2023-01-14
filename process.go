@@ -88,7 +88,7 @@ func ProcessFiles(paths []string) (map[string][]byte, error) {
 		sls[fn] = exsl
 
 		if !*keepTmp {
-			os.Remove(gofn)
+			os.Remove(fpos.Filename)
 		}
 
 		slfn := filepath.Join(*outDir, fn+".hlsl")

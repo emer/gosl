@@ -141,12 +141,21 @@ var Replaces = []Replace{
 	{[]byte("int32"), []byte("int")},
 	{[]byte("mat32.FastExp("), []byte("FastExp(")},
 	{[]byte("math.Float32frombits("), []byte("asfloat(")},
+	{[]byte("slrand."), []byte("Rand")},
+	{[]byte("sltype.U"), []byte("u")},
+	{[]byte("sltype.F"), []byte("f")},
+	{[]byte(".SetFromVec2("), []byte("=(")},
+	{[]byte(".SetFrom2("), []byte("=(")},
 	{[]byte("slbool.Bool"), []byte("int")},
 	{[]byte("slbool.True"), []byte("1")},
 	{[]byte("slbool.False"), []byte("0")},
 	{[]byte("slbool.IsTrue("), []byte("(1 == ")},
 	{[]byte("slbool.IsFalse("), []byte("(0 == ")},
 	{[]byte("slbool.FromBool("), []byte("int(")},
+	// todo: do this conversion in nodes only for correct types
+	// {[]byte(".X"), []byte(".x")},
+	// {[]byte(".Y"), []byte(".y")},
+	// {[]byte(".Z"), []byte(".z")},
 	// {[]byte(""), []byte("")},
 	// {[]byte(""), []byte("")},
 	// {[]byte(""), []byte("")},
@@ -174,7 +183,11 @@ func MathReplaceAll(mat, ln []byte) []byte {
 func SlEditsReplace(lines [][]byte) {
 	mt32 := []byte("mat32.")
 	mth := []byte("math.")
+	include := []byte("#include")
 	for li, ln := range lines {
+		if bytes.Contains(ln, include) {
+			continue
+		}
 		for _, r := range Replaces {
 			ln = bytes.ReplaceAll(ln, r.From, r.To)
 		}

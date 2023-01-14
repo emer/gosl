@@ -76,24 +76,31 @@ uint2 Philox2x32(uint2 counter, uint key) {
 }
 
 // UintToFloat converts a uint 32 bit integer into a 32 bit float
-// in the [0..1) interval (i.e., exclusive of 1).
+// in the (0,1) interval (i.e., exclusive of 1).
+// This differs from the Go standard by excluding 0, which is handy for passing
+// directly to Log function, and from the reference Philox code by excluding 1
+// which is in the Go standard and most other standard RNGs.
 float UintToFloat(uint val) {
-	const float factor = float(1.) / (float(0xffffffff) + float(1.));
+	const float factor = float(1.) / (float(uint(0xffffffff)) + float(1.));
 	const float halffactor = float(0.5) * factor;
-	return val * factor + halffactor;
+	float f = float(val) * factor + halffactor;
+	if(f == 1.0) { // exclude 1
+		return asfloat(0x3F7FFFFF);
+	}
+	return f;
 }
 
 // UintToFloat11 converts a uint 32 bit integer into a 32 bit float
-// in the [1..1] interval.
+// in the [1..1] interval (inclusive of -1 and 1, never identically == 0)
 float UintToFloat11(uint val) {
-	const float factor = float(1.) / (float(0xffffffff) + float(1.));
+	const float factor = float(1.) / (float(int(0x7fffffff)) + float(1.));
 	const float halffactor = float(0.5) * factor;
-	return 2. * (asint(val) * factor + halffactor);
+	return (float(int(val)) * factor + halffactor);
 }
 
-// Uint2ToFloat01 converts two uint 32 bit integers (uint2)
+// Uint2ToFloat converts two uint 32 bit integers (uint2)
 // into two corresponding 32 bit float values (float2)
-// in the [0..1) interval (i.e., exclusive of 1).
+// in the (0,1) interval (i.e., exclusive of 1).
 float2 Uint2ToFloat(uint2 val) {
 	float2 r;
 	r.x = UintToFloat(val.x);
@@ -101,14 +108,23 @@ float2 Uint2ToFloat(uint2 val) {
 	return r;
 }
 
+// Uint2ToFloat11 converts two uint 32 bit integers into 32 bit floats
+// in the [1,1] interval (inclusive of -1 and 1, never identically == 0)
+float2 Uint2ToFloat11(uint2 val) {
+	float2 r;
+	r.x = UintToFloat11(val.x);
+	r.y = UintToFloat11(val.y);
+	return r;
+}
+
 // CounterIncr increments the given counter as if it was 
 // a uint64 integer.
 void CounterIncr(inout uint2 counter) {
 	if(counter.x == 0xffffffff) {
-		counter.y++;
+		counter.y+=1;
 		counter.x = 0;
 	} else {
-		counter.x++;
+		counter.x+=1;
 	}
 }
 
@@ -142,7 +158,7 @@ uint RandUint(inout uint2 counter, uint key) {
 }
 
 // RandFloat2 returns two uniformly-distributed 32 floats
-// in range [0..1) based on given counter and key.
+// in range (0,1) based on given counter and key.
 // The counter is incremented by 1 (in a 64-bit equivalent manner)
 // as a result of this call, ensuring that the next call will produce
 // the next random number in the sequence.  The key should be the 
@@ -152,13 +168,23 @@ float2 RandFloat2(inout uint2 counter, uint key) {
 }
 
 // RandFloat returns a uniformly-distributed 32 float
-// in range [0..1) based on given counter and key.
+// in range (0,1) based on given counter and key.
 // The counter is incremented by 1 (in a 64-bit equivalent manner)
 // as a result of this call, ensuring that the next call will produce
 // the next random number in the sequence.  The key should be the 
 // unique index of the element being updated.
 float RandFloat(inout uint2 counter, uint key) {
 	return UintToFloat(RandUint(counter, key));
+}
+
+// RandFloat112 returns two uniformly-distributed 32 floats
+// in range [-1,1] based on given counter and key.
+// The counter is incremented by 1 (in a 64-bit equivalent manner)
+// as a result of this call, ensuring that the next call will produce
+// the next random number in the sequence.  The key should be the 
+// unique index of the element being updated.
+float2 RandFloat112(inout uint2 counter, uint key) {
+	return Uint2ToFloat11(RandUint2(counter, key));
 }
 
 // RandFloat11 returns a uniformly-distributed 32 float
@@ -191,7 +217,7 @@ float2 RandNormFloat2(inout uint2 counter, uint key) {
 	float r;
 	float2 f;
 	sincospi(UintToFloat11(ur.x), f.x, f.y);
-	r = sqrt(-2. * log(UintToFloat(ur.y))); // u01 is guaranteed to avoid 0. hrmm.
+	r = sqrt(-2. * log(UintToFloat(ur.y))); // guaranteed to avoid 0.
 	f.x *= r;
 	f.y *= r;
 	return f;

@@ -96,8 +96,8 @@ func main() {
 	gpuTmr := timer.Time{}
 	gpuTmr.Start()
 
-	pl.RunComputeWait(sy.CmdPool.Buff, n, 1, 1)
-	// note: could use semaphore here instead of waiting on the compute
+	pl.ComputeCommand(n, 1, 1)
+	sy.ComputeSubmitWait()
 
 	gpuTmr.Stop()
 

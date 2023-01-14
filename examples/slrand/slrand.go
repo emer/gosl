@@ -1,5 +1,85 @@
-// Copyright (c) 2022, The Goki Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 package main
+
+import (
+	"fmt"
+
+	"github.com/goki/gosl/slrand"
+	"github.com/goki/gosl/sltype"
+	"github.com/goki/mat32"
+)
+
+//gosl: hlsl slrand
+// #include "../../../slrand/slrand.hlsl"
+//gosl: end slrand
+
+//gosl: start slrand
+
+type Rnds struct {
+	Uints      sltype.Uint2
+	pad, pad1  int32
+	Floats     sltype.Float2
+	pad2, pad3 int32
+	Floats11   sltype.Float2
+	pad4, pad5 int32
+	Gauss      sltype.Float2
+	pad6, pad7 int32
+}
+
+// RndGen calls random function calls to test generator.
+// Note that the counter to the outer-most computation function
+// is passed by *value*, so the same counter goes to each element
+// as it is computed, but within this scope, counter is passed by
+// reference (as a pointer) so subsequent calls get a new counter value.
+// The counter should be incremented by the number of random calls
+// outside of the overall update function.
+func (r *Rnds) RndGen(counter sltype.Uint2, idx uint32) {
+	r.Uints = slrand.Uint2(&counter, idx)
+	r.Floats = slrand.Float2(&counter, idx)
+	r.Floats11 = slrand.Float112(&counter, idx)
+	r.Gauss = slrand.NormFloat2(&counter, idx)
+}
+
+//gosl: end slrand
+
+const Tol = 1.0e-4 // fails at lower tol eventually -- -6 works for many
+
+func FloatSame(f1, f2 float32) (exact, tol bool) {
+	exact = f1 == f2
+	tol = mat32.Abs(f1-f2) < Tol
+	return
+}
+
+func Float2Same(f1, f2 sltype.Float2) (exact, tol bool) {
+	e1, t1 := FloatSame(f1.X, f2.X)
+	e2, t2 := FloatSame(f1.Y, f2.Y)
+	exact = e1 && e2
+	tol = t1 && t2
+	return
+}
+
+// IsSame compares values at two levels: exact and with Tol
+func (r *Rnds) IsSame(o *Rnds) (exact, tol bool) {
+	e1 := r.Uints == o.Uints
+	e2, t2 := Float2Same(r.Floats, o.Floats)
+	e3, t3 := Float2Same(r.Floats11, o.Floats11)
+	_, t4 := Float2Same(r.Gauss, o.Gauss)
+	exact = e1 && e2 && e3 // skip e4 -- know it isn't
+	tol = t2 && t3 && t4
+	return
+}
+
+func (r *Rnds) String() string {
+	return fmt.Sprintf("U: %x\t%x\tF: %g\t%g\tF11: %g\t%g\tG: %g\t%g", r.Uints.X, r.Uints.Y, r.Floats.X, r.Floats.Y, r.Floats11.X, r.Floats11.Y, r.Gauss.X, r.Gauss.Y)
+}
+
+//gosl: hlsl slrand
+/*
+// // note: double-commented lines required here -- binding is var, set
+[[vk::binding(0, 0)]] uniform sltype.Uint2 Counter;
+[[vk::binding(0, 1)]] RWStructuredBuffer<Rnds> Data;
+[numthreads(1, 1, 1)]
+void main(uint3 idx : SV_DispatchThreadID) {
+	Data[idx.x].RndGen(Counter, idx.x);
+}
+*/
+//gosl: end slrand
