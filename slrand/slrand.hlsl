@@ -137,7 +137,7 @@ void CounterAdd(inout uint2 counter, uint inc) {
 		counter.y++;
 		counter.x = (inc - 1) - (uint(0xffffffff) - counter.x);
 	} else {
-		counter.x++;
+		counter.x+=inc;
 	}
 }
 

@@ -130,10 +130,6 @@ func main() {
 	sy.ComputeSubmit() // technically should wait, but results are same..
 	// if validation mode is on, it complains..
 	for cy := 1; cy < maxCycles; cy++ {
-		lay.CycleTimeInc(time)
-		tvl.CopyFromBytes(unsafe.Pointer(time))
-		sy.Mem.SyncToGPU()
-		// vars.BindDynValIdx(1, "Time", 0)
 		sy.ComputeSubmit() // waiting every time is 10x for 100k
 	}
 	sy.ComputeWait() // waiting only at end is 13x for 100k
