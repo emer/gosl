@@ -231,6 +231,12 @@ func NormFloat(counter *sltype.Uint2, key uint32) float32 {
 	return f.X
 }
 
+// Uintn returns a uint32 in the range [0,n)
+func Uintn(counter *sltype.Uint2, key uint32, n uint32) uint32 {
+	v := Float(counter, key)
+	return uint32(v * float32(n))
+}
+
 // Counter is used for storing the random counter
 // using aligned 16 byte storage
 type Counter struct {

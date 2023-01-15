@@ -244,6 +244,12 @@ float RandNormFloat(inout uint2 counter, uint key) {
 	return f.x;
 }
 
+// Uintn returns a uint 32 bit in the range [0,n)
+uint Uintn(inout uint2 counter, uint key, uint n) {
+	float v = RandFloat(counter, key);
+	return uint(v * float(n));
+}
+
 // RandCounter is used for storing the random counter
 // using aligned 16 byte storage
 struct RandCounter {
