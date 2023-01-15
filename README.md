@@ -77,7 +77,13 @@ In general shader code should be simple mathematical expressions and data types,
 
 ## Random numbers: slrand
 
-See [slrand](https://github.com/goki/gosl/tree/main/slrand) for a shader-optimized random number generation package, which is supported by `gosl` -- it will convert `slrand` calls into appropriate HLSL named function calls.
+See [slrand](https://github.com/goki/gosl/tree/main/slrand) for a shader-optimized random number generation package, which is supported by `gosl` -- it will convert `slrand` calls into appropriate HLSL named function calls.  `gosl` will also copy the `slrand.hlsl` file, which contains the full source code for the RNG, into the destination `shaders` directory, so it can be included with a simple local path:
+
+```Go
+//gosl: hlsl mycode
+// #include "slrand.hlsl"
+//gosl: end mycode
+```
 
 # Implementation / Design Notes
 

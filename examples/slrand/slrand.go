@@ -8,11 +8,11 @@ import (
 	"github.com/goki/mat32"
 )
 
-//gosl: hlsl slrand
-// #include "../../../slrand/slrand.hlsl"
-//gosl: end slrand
+//gosl: hlsl rand
+// #include "slrand.hlsl"
+//gosl: end rand
 
-//gosl: start slrand
+//gosl: start rand
 
 type Rnds struct {
 	Uints      sltype.Uint2
@@ -39,7 +39,7 @@ func (r *Rnds) RndGen(counter sltype.Uint2, idx uint32) {
 	r.Gauss = slrand.NormFloat2(&counter, idx)
 }
 
-//gosl: end slrand
+//gosl: end rand
 
 const Tol = 1.0e-4 // fails at lower tol eventually -- -6 works for many
 
@@ -72,7 +72,7 @@ func (r *Rnds) String() string {
 	return fmt.Sprintf("U: %x\t%x\tF: %g\t%g\tF11: %g\t%g\tG: %g\t%g", r.Uints.X, r.Uints.Y, r.Floats.X, r.Floats.Y, r.Floats11.X, r.Floats11.Y, r.Gauss.X, r.Gauss.Y)
 }
 
-//gosl: hlsl slrand
+//gosl: hlsl rand
 /*
 // // note: double-commented lines required here -- binding is var, set
 [[vk::binding(0, 0)]] uniform sltype.Uint2 Counter;
@@ -82,4 +82,4 @@ void main(uint3 idx : SV_DispatchThreadID) {
 	Data[idx.x].RndGen(Counter, idx.x);
 }
 */
-//gosl: end slrand
+//gosl: end rand

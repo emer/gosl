@@ -237,33 +237,49 @@ func Uintn(counter *sltype.Uint2, key uint32, n uint32) uint32 {
 	return uint32(v * float32(n))
 }
 
-// Counter is used for storing the random counter
-// using aligned 16 byte storage
+// Counter is used for storing the random counter using aligned 16 byte storage,
+// with convenience methods for typical use cases.
+// It retains a copy of the last Seed value, which is applied to the Hi uint32 value.
 type Counter struct {
-	X uint32
-	Y uint32
+	Lo     uint32 `desc:"lower 32 bits of counter, incremented first"`
+	Hi     uint32 `desc:"higher 32 bits of counter, incremented only when Lo turns over"`
+	HiSeed uint32 `desc:"last seed value set by Seed method, restored by Reset()"`
 
-	pad, pad1 uint32
+	pad uint32
 }
 
-// Reset resets counter to 0
+// Reset resets counter to last set Seed state
 func (ct *Counter) Reset() {
-	ct.X = 0
-	ct.Y = 0
+	ct.Lo = 0
+	ct.Hi = ct.HiSeed
 }
 
 // Uint2 returns counter as a Uint2
 func (ct *Counter) Uint2() sltype.Uint2 {
-	return sltype.Uint2{ct.X, ct.Y}
+	return sltype.Uint2{ct.Lo, ct.Hi}
 }
 
 // Set sets the counter from a Uint2
 func (ct *Counter) Set(c sltype.Uint2) {
-	ct.X = c.X
-	ct.Y = c.Y
+	ct.Lo = c.X
+	ct.Hi = c.Y
 }
 
-// Add increments the counter by given amount
+// Seed sets the Hi uint32 value from given seed, saving it in HiSeed field.
+// Each increment in seed generates a unique sequence of over 4 billion numbers,
+// so it is reasonable to just use incremental values there, but more widely
+// spaced numbers will result in longer unique sequences.
+// Resets Lo to 0.
+// This same seed will be restored during Reset
+func (ct *Counter) Seed(seed uint32) {
+	ct.Lo = 0
+	ct.Hi = seed
+	ct.HiSeed = seed
+}
+
+// Add increments the counter by given amount.
+// Call this after thread completion with number of random numbers
+// generated per thread.
 func (ct *Counter) Add(inc int) sltype.Uint2 {
 	c := ct.Uint2()
 	CounterAdd(&c, uint32(inc))

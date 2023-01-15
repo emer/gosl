@@ -26,15 +26,17 @@ func MoveLines(lines *[][]byte, to, st, ed int) {
 // * moves hlsl segments around, e.g., methods
 // into their proper classes
 // * fixes printf, slice other common code
-func SlEdits(src []byte) []byte {
+// returns true if a slrand. prefix was found -- drives copying
+// of that file.
+func SlEdits(src []byte) ([]byte, bool) {
 	// return src // uncomment to show original without edits
 	nl := []byte("\n")
 	lines := bytes.Split(src, nl)
 
 	lines = SlEditsMethMove(lines)
-	SlEditsReplace(lines)
+	hasSlrand := SlEditsReplace(lines)
 
-	return bytes.Join(lines, nl)
+	return bytes.Join(lines, nl), hasSlrand
 }
 
 // SlEditsMethMove moves hlsl segments around, e.g., methods
@@ -180,19 +182,27 @@ func MathReplaceAll(mat, ln []byte) []byte {
 }
 
 // SlEditsReplace replaces Go with equivalent HLSL code
-func SlEditsReplace(lines [][]byte) {
+// returns true if has slrand. -- auto include that header file
+// if so.
+func SlEditsReplace(lines [][]byte) bool {
 	mt32 := []byte("mat32.")
 	mth := []byte("math.")
+	slr := []byte("slrand.")
 	include := []byte("#include")
+	hasSlrand := false
 	for li, ln := range lines {
 		if bytes.Contains(ln, include) {
 			continue
 		}
 		for _, r := range Replaces {
+			if !hasSlrand && bytes.Contains(ln, slr) {
+				hasSlrand = true
+			}
 			ln = bytes.ReplaceAll(ln, r.From, r.To)
 		}
 		ln = MathReplaceAll(mt32, ln)
 		ln = MathReplaceAll(mth, ln)
 		lines[li] = ln
 	}
+	return hasSlrand
 }

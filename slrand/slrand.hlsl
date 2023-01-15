@@ -1,5 +1,13 @@
-// These random number generation functions are optimized for
-// use on the GPU, with equivalent versions available in slrand.go.
+// Copyright (c) 2022, The GoKi Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Original file is in Go package: github.com/goki/gosl/slrand
+// See README.md there for documentation.
+
+// These random number generation (RNG) functions are optimized for
+// use on the GPU, with equivalent Go versions available in slrand.go.
+// This is using the Philox2x32 counter-based RNG.
 
 // vulkan glslang does not support 64 bit integers:
 // https://github.com/KhronosGroup/glslang/issues/2965
@@ -250,32 +258,51 @@ uint RandUintn(inout uint2 counter, uint key, uint n) {
 	return uint(v * float(n));
 }
 
-// RandCounter is used for storing the random counter
-// using aligned 16 byte storage
+// Counter is used for storing the random counter using aligned 16 byte storage,
+// with convenience methods for typical use cases.
+// It retains a copy of the last Seed value, which is applied to the Hi uint32 value.
 struct RandCounter {
-	uint X;
-	uint Y;
-
-	uint pad;
+	uint Lo;
+	uint Hi;
+	uint HiSeed;
+	
 	uint pad1;
 	
+	// Reset resets counter to last set Seed state
 	void Reset() {
-		this.X = 0;
-		this.Y = 0;
+		this.Lo = 0;
+		this.Hi = this.HiSeed;
 	}
 	
+	// Uint2 returns counter as a Uint2
 	uint2 Uint2() {
 		uint2 r;
-		r.x = this.X;
-		r.y = this.Y;
+		r.x = this.Lo;
+		r.y = this.Hi;
 		return r;
 	}
 	
+	// Set sets the counter from a Uint2
 	void Set(uint2 c) {
-		this.X = c.x;
-		this.Y = c.y;
+		this.Lo = c.x;
+		this.Hi = c.y;
+	}
+
+	// Seed sets the Hi uint32 value from given seed, saving it in Seed field.
+	// Each increment in seed generates a unique sequence of over 4 billion numbers,
+	// so it is reasonable to just use incremental values there, but more widely
+	// spaced numbers will result in longer unique sequences.
+	// Resets Lo to 0.
+	// This same seed will be restored during Reset
+	void Seed(uint seed) {
+		this.Lo = 0;
+		this.Hi = seed;
+		this.HiSeed = seed;
 	}
 	
+	// Add increments the counter by given amount.
+	// Call this after thread completion with number of random numbers
+	// generated per thread.
 	uint2 Add(int inc) {
 		uint2 c = this.Uint2();
 		CounterAdd(c, inc);

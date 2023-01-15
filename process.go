@@ -54,6 +54,8 @@ func ProcessFiles(paths []string) (map[string][]byte, error) {
 	// fmt.Printf("go files: %+v", pkg.GoFiles)
 	// return nil, err
 
+	slrandCopied := false
+
 	for fn := range sls {
 		gofn := fn + ".go"
 		fmt.Printf("###################################\nProcessing file: %s\n\t (ignore any 'Entry point not found' warnings for include-only files)\n", gofn)
@@ -83,7 +85,12 @@ func ProcessFiles(paths []string) (map[string][]byte, error) {
 		cfg := slprint.Config{Mode: printerMode, Tabwidth: tabWidth, ExcludeFuns: excludeFunMap}
 		cfg.Fprint(&buf, pkg, fpos, afile)
 		// ioutil.WriteFile(filepath.Join(*outDir, fn+".tmp"), buf.Bytes(), 0644)
-		slfix := SlEdits(buf.Bytes())
+		slfix, hasSlrand := SlEdits(buf.Bytes())
+		if hasSlrand && !slrandCopied {
+			fmt.Printf("copying slrand.hlsl to shaders\n")
+			CopySlrand()
+			slrandCopied = true
+		}
 		exsl := ExtractHLSL(slfix)
 		sls[fn] = exsl
 

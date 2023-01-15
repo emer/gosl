@@ -6,6 +6,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"io/fs"
 	"log"
 	"os"
@@ -104,4 +105,53 @@ func FilesFromPaths(paths []string) []string {
 		}
 	}
 	return fls
+}
+
+func CopyFile(src, dst string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+	_, err = io.Copy(out, in)
+	return err
+}
+
+func CopySlrand() error {
+	hdr := "slrand.hlsl"
+	tofn := filepath.Join(*outDir, hdr)
+
+	pnm := "github.com/goki/gosl/slrand"
+
+	pkgs, err := packages.Load(&packages.Config{Mode: packages.NeedName | packages.NeedFiles}, pnm)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	if len(pkgs) != 1 {
+		err = fmt.Errorf("%s package not found", pnm)
+		fmt.Println(err)
+		return err
+	}
+	pkg := pkgs[0]
+	var fn string
+	if len(pkg.GoFiles) > 0 {
+		fn = pkg.GoFiles[0]
+	} else if len(pkg.OtherFiles) > 0 {
+		fn = pkg.GoFiles[0]
+	} else {
+		err = fmt.Errorf("No files found in package: %s", pnm)
+		fmt.Println(err)
+		return err
+	}
+	dir, _ := filepath.Split(fn)
+	// dir = filepath.Join(dir, "slrand")
+	fmfn := filepath.Join(dir, hdr)
+	CopyFile(fmfn, tofn)
+	return nil
 }
