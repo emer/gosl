@@ -244,8 +244,8 @@ float RandNormFloat(inout uint2 counter, uint key) {
 	return f.x;
 }
 
-// Uintn returns a uint 32 bit in the range [0,n)
-uint Uintn(inout uint2 counter, uint key, uint n) {
+// RandUintn returns a uint 32 bit in the range [0,n)
+uint RandUintn(inout uint2 counter, uint key, uint n) {
 	float v = RandFloat(counter, key);
 	return uint(v * float(n));
 }

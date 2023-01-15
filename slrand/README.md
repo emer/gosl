@@ -10,14 +10,13 @@ The key advantage of this algorithm is its *stateless* nature, where the result 
 ```
 where the HLSL `uint2` type is 2 `uint32` 32-bit unsigned integers.  For GPU usage, the key is always set to the unique element being processed (e.g., the index of the data structure being updated), ensuring that different numbers are generated for each such element, and the counter should be configured as a shared global value that is incremented after every RNG call.  For example, if 4 RNG calls happen within a given set of GPU code, each thread starts with the same uniform starting value that will be incremented by 4 after the GPU call, and then it locally increments its local counter after each call.
 
-The `Rand2x32` wrapper function around Philox2x32 will automatically increment the counter var passed to it, using the `CounterIncr()` method that manages the two 32 bit numbers as if they are a full 64 bit uint.
+The `Float` and `Uint32` etc wrapper functions around Philox2x32 will automatically increment the counter var passed to it, using the `CounterIncr()` method that manages the two 32 bit numbers as if they are a full 64 bit uint.
 
 `gosl` will automatically translate the Go versions of the `slrand` package functions into their HLSL equivalents.
 
-# slrand.hlsl
+See the [axon](https://github.com/goki/gosl/tree/main/examples/axon) and [slrand](https://github.com/goki/gosl/tree/main/examples/slrand) examples for how to use in combined Go / GPU code.  In the axon example, the `Counter` is added to the `Time` context struct, and incremented after each cycle based on the number of random numbers generated, as determined by the parameter settings.  Within each cycle, a local arg variable is incremented on each GPU processor as the computation unfolds.
 
-* `rand.Float32()` -> `rand32()`
-
+Critically, these examples show that the CPU and GPU code produce identical random number sequences, which is otherwise quite difficult to achieve without this specific form of RNG.
 
 # Implementational details
 

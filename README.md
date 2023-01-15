@@ -75,9 +75,9 @@ In general shader code should be simple mathematical expressions and data types,
 
 * *Can* use multiple variable names with the same type (e.g., `min, max float32`) -- this will be properly converted to the more redundant C form with the type repeated.
 
-## Random numbers
+## Random numbers: slrand
 
-HLSL does not directly support random numbers.  Here's some discussion: [unity forum](https://forum.unity.com/threads/generate-random-float-between-0-and-1-in-shader.610810/)
+See [slrand](https://github.com/goki/gosl/tree/main/slrand) for a shader-optimized random number generation package, which is supported by `gosl` -- it will convert `slrand` calls into appropriate HLSL named function calls.
 
 # Implementation / Design Notes
 
