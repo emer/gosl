@@ -69,9 +69,10 @@ func main() {
 		for i := range neur1 {
 			d := &neur1[i]
 			// d.Vm = lay.Act.Decay.Glong
-			lay.CycleNeuron(i, d, time)
+			lay.CycleNeuron(i, d, time, time.RandCtr.Uint2())
 		}
-		time.CycleInc()
+		lay.CycleTimeInc(time)
+		// fmt.Printf("%d\ttime.RandCtr: %v\n", cy, time.RandCtr.Uint2())
 	}
 
 	cpuTmr.Stop()
@@ -83,15 +84,17 @@ func main() {
 	pl.AddShaderFile("axon", vgpu.ComputeShader, "shaders/axon.spv")
 
 	vars := sy.Vars()
-	setp := vars.AddSet()
-	setd := vars.AddSet()
+	setl := vars.AddSet()
+	sett := vars.AddSet()
+	setn := vars.AddSet()
 
-	layv := setp.AddStruct("Layer", int(unsafe.Sizeof(Layer{})), 1, vgpu.Uniform, vgpu.ComputeShader)
-	timev := setd.AddStruct("Time", int(unsafe.Sizeof(Time{})), 1, vgpu.Storage, vgpu.ComputeShader)
-	neurv := setd.AddStruct("Neurons", int(unsafe.Sizeof(Neuron{})), n, vgpu.Storage, vgpu.ComputeShader)
+	layv := setl.AddStruct("Layer", int(unsafe.Sizeof(Layer{})), 1, vgpu.Uniform, vgpu.ComputeShader)
+	timev := sett.AddStruct("Time", int(unsafe.Sizeof(Time{})), 1, vgpu.Storage, vgpu.ComputeShader)
+	neurv := setn.AddStruct("Neurons", int(unsafe.Sizeof(Neuron{})), n, vgpu.Storage, vgpu.ComputeShader)
 
-	setp.ConfigVals(1) // one val per var
-	setd.ConfigVals(1) // one val per var
+	setl.ConfigVals(1) // one val per var
+	sett.ConfigVals(1) // one val per var
+	setn.ConfigVals(1) // one val per var
 	sy.Config()        // configures vars, allocates vals, configs pipelines..
 
 	gpuFullTmr := timer.Time{}
@@ -112,7 +115,7 @@ func main() {
 
 	vars.BindDynValIdx(0, "Layer", 0)
 	vars.BindDynValIdx(1, "Time", 0)
-	vars.BindDynValIdx(1, "Neurons", 0)
+	vars.BindDynValIdx(2, "Neurons", 0)
 
 	sy.CmdResetBindVars(sy.CmdPool.Buff, 0)
 
@@ -127,13 +130,17 @@ func main() {
 	sy.ComputeSubmit() // technically should wait, but results are same..
 	// if validation mode is on, it complains..
 	for cy := 1; cy < maxCycles; cy++ {
+		lay.CycleTimeInc(time)
+		tvl.CopyFromBytes(unsafe.Pointer(time))
+		sy.Mem.SyncToGPU()
+		// vars.BindDynValIdx(1, "Time", 0)
 		sy.ComputeSubmit() // waiting every time is 10x for 100k
 	}
 	sy.ComputeWait() // waiting only at end is 13x for 100k
 
 	gpuTmr.Stop()
 
-	sy.Mem.SyncValIdxFmGPU(1, "Neurons", 0) // this is about same as SyncToGPU
+	sy.Mem.SyncValIdxFmGPU(2, "Neurons", 0) // this is about same as SyncToGPU
 	dvl.CopyToBytes(unsafe.Pointer(&neur2[0]))
 
 	gpuFullTmr.Stop()

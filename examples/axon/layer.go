@@ -4,7 +4,10 @@
 
 package main
 
-import "github.com/goki/gosl/slbool"
+import (
+	"github.com/goki/gosl/slbool"
+	"github.com/goki/gosl/sltype"
+)
 
 //gosl: start axon
 
@@ -20,6 +23,7 @@ func (ly *Layer) Defaults() {
 	ly.Learn.Defaults()
 	ly.Act.Clamp.Ge = 1.5
 	ly.Learn.TrgAvgAct.SubMean = 0
+	ly.Act.Noise.On = slbool.True
 }
 
 // todo: why is this UpdateParams and not just Update()?
@@ -57,21 +61,21 @@ func (ly *Layer) GFmSpikeRaw(ni int, nrn *Neuron, ctime *Time) {
 
 // GFmRawSyn computes overall Ge and GiSyn conductances for neuron
 // from GeRaw and GeSyn values, including NMDA, VGCC, AMPA, and GABA-A channels.
-func (ly *Layer) GFmRawSyn(ni int, nrn *Neuron, ctime *Time) {
+func (ly *Layer) GFmRawSyn(ni int, nrn *Neuron, ctime *Time, rndctr *sltype.Uint2) {
 	ly.Act.NMDAFmRaw(nrn, nrn.GeRaw)
 	ly.Learn.LrnNMDAFmRaw(nrn, nrn.GeRaw)
 	ly.Act.GvgccFmVm(nrn)
-	ly.Act.GeFmSyn(nrn, nrn.GeSyn, nrn.Gnmda+nrn.Gvgcc) // sets nrn.GeExt too
+	ly.Act.GeFmSyn(ni, nrn, nrn.GeSyn, nrn.Gnmda+nrn.Gvgcc, rndctr) // sets nrn.GeExt too
 	ly.Act.GkFmVm(nrn)
-	nrn.GiSyn = ly.Act.GiFmSyn(nrn, nrn.GiSyn)
+	nrn.GiSyn = ly.Act.GiFmSyn(ni, nrn, nrn.GiSyn, rndctr)
 }
 
 // GInteg integrates conductances G over time (Ge, NMDA, etc).
 // reads pool Gi values
-func (ly *Layer) GInteg(ni int, nrn *Neuron, ctime *Time) {
+func (ly *Layer) GInteg(ni int, nrn *Neuron, ctime *Time, rndctr *sltype.Uint2) {
 	ly.GFmSpikeRaw(ni, nrn, ctime)
 	// note: can add extra values to GeRaw and GeSyn here
-	ly.GFmRawSyn(ni, nrn, ctime)
+	ly.GFmRawSyn(ni, nrn, ctime, rndctr)
 	ly.GiInteg(ni, nrn, ctime)
 }
 
@@ -98,13 +102,30 @@ func (ly *Layer) SpikeFmG(ni int, nrn *Neuron, ctime *Time) {
 }
 
 // CycleNeuron does one cycle (msec) of updating at the neuron level
-func (ly *Layer) CycleNeuron(ni int, nrn *Neuron, ctime *Time) {
-	ly.GInteg(ni, nrn, ctime)
+func (ly *Layer) CycleNeuron(ni int, nrn *Neuron, ctime *Time, rndctr sltype.Uint2) {
+	ly.GInteg(ni, nrn, ctime, &rndctr)
 	ly.SpikeFmG(ni, nrn, ctime)
 }
 
-func CycleTimeInc(ctime *Time) {
+// CycleNeuronRandIncr returns increment in Rand counter state for cycle neuron
+// based on what random numbers are enabled.
+func (ly *Layer) CycleNeuronRandIncr() int {
+	if slbool.IsFalse(ly.Act.Noise.On) {
+		return 0
+	}
+	inc := 0
+	if ly.Act.Noise.Ge > 0 {
+		inc++
+	}
+	if ly.Act.Noise.Gi > 0 {
+		inc++
+	}
+	return inc
+}
+
+func (ly *Layer) CycleTimeInc(ctime *Time) {
 	ctime.CycleInc()
+	ctime.RandCtr.Add(ly.CycleNeuronRandIncr())
 }
 
 //gosl: end axon
@@ -114,21 +135,13 @@ func CycleTimeInc(ctime *Time) {
 // // note: double-commented lines required here -- binding is var, set
 [[vk::binding(0, 0)]] uniform Layer Lay;
 [[vk::binding(0, 1)]] RWStructuredBuffer<Time> time;
-[[vk::binding(1, 1)]] RWStructuredBuffer<Neuron> Neurons;
+[[vk::binding(0, 2)]] RWStructuredBuffer<Neuron> Neurons;
 [numthreads(1, 1, 1)]
 void main(uint3 idx : SV_DispatchThreadID) {
 	// // for(int i = 0; i < 200; i++) { // 2x faster to do internally
-    Lay.CycleNeuron(idx.x, Neurons[idx.x], time[0]);
+	Lay.CycleNeuron(idx.x, Neurons[idx.x], time[0], time[0].RandCtr.Uint2());
+	// // every attempt to have time increment in GPU didn't work -- even allocating a full array of times
 	// // }
-	uint ns;
-	uint st;
-	Neurons.GetDimensions(ns, st);
-	// // debugging:
-	// // Neurons[idx.x].SpkSt2 = ns;
-	// // Neurons[idx.x].SpkSt1 = time[0].Cycle;
-	if(idx.x == ns-1) {
-		CycleTimeInc(time[0]);
-	}
 }
 */
 //gosl: end axon

@@ -121,10 +121,23 @@ float2 Uint2ToFloat11(uint2 val) {
 // a uint64 integer.
 void CounterIncr(inout uint2 counter) {
 	if(counter.x == 0xffffffff) {
-		counter.y+=1;
+		counter.y++;
 		counter.x = 0;
 	} else {
-		counter.x+=1;
+		counter.x++;
+	}
+}
+
+// CounterAdd adds the given increment to the counter
+void CounterAdd(inout uint2 counter, uint inc) {
+	if(inc == 0) {
+		return;
+	}
+	if(counter.x > uint(0xffffffff) - inc) {
+		counter.y++;
+		counter.x = (inc - 1) - (uint(0xffffffff) - counter.x);
+	} else {
+		counter.x++;
 	}
 }
 
@@ -230,3 +243,38 @@ float RandNormFloat(inout uint2 counter, uint key) {
 	float2 f = RandNormFloat2(counter, key);
 	return f.x;
 }
+
+// RandCounter is used for storing the random counter
+// using aligned 16 byte storage
+struct RandCounter {
+	uint X;
+	uint Y;
+
+	uint pad;
+	uint pad1;
+	
+	void Reset() {
+		this.X = 0;
+		this.Y = 0;
+	}
+	
+	uint2 Uint2() {
+		uint2 r;
+		r.x = this.X;
+		r.y = this.Y;
+		return r;
+	}
+	
+	void Set(uint2 c) {
+		this.X = c.x;
+		this.Y = c.y;
+	}
+	
+	uint2 Add(int inc) {
+		uint2 c = this.Uint2();
+		CounterAdd(c, inc);
+		this.Set(c);
+		return c;
+	}
+};
+

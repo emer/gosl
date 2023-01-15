@@ -105,13 +105,26 @@ func Uint2ToFloat11(val sltype.Uint2) sltype.Float2 {
 }
 
 // CounterIncr increments the given counter as if it was
-// a uint3264 integer.
+// a uint64 integer.
 func CounterIncr(counter *sltype.Uint2) {
 	if counter.X == 0xffffffff {
 		counter.Y++
 		counter.X = 0
 	} else {
 		counter.X++
+	}
+}
+
+// CounterAdd adds the given increment to the counter
+func CounterAdd(counter *sltype.Uint2, inc uint32) {
+	if inc == 0 {
+		return
+	}
+	if counter.X > 0xffffffff-inc {
+		counter.Y++
+		counter.X = (inc - 1) - (0xffffffff - counter.X)
+	} else {
+		counter.X += inc
 	}
 }
 
@@ -216,4 +229,38 @@ func NormFloat2(counter *sltype.Uint2, key uint32) sltype.Float2 {
 func NormFloat(counter *sltype.Uint2, key uint32) float32 {
 	f := NormFloat2(counter, key)
 	return f.X
+}
+
+// Counter is used for storing the random counter
+// using aligned 16 byte storage
+type Counter struct {
+	X uint32
+	Y uint32
+
+	pad, pad1 uint32
+}
+
+// Reset resets counter to 0
+func (ct *Counter) Reset() {
+	ct.X = 0
+	ct.Y = 0
+}
+
+// Uint2 returns counter as a Uint2
+func (ct *Counter) Uint2() sltype.Uint2 {
+	return sltype.Uint2{ct.X, ct.Y}
+}
+
+// Set sets the counter from a Uint2
+func (ct *Counter) Set(c sltype.Uint2) {
+	ct.X = c.X
+	ct.Y = c.Y
+}
+
+// Add increments the counter by given amount
+func (ct *Counter) Add(inc int) sltype.Uint2 {
+	c := ct.Uint2()
+	CounterAdd(&c, uint32(inc))
+	ct.Set(c)
+	return c
 }

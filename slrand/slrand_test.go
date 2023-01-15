@@ -75,7 +75,31 @@ func TestFloat11KAT(t *testing.T) {
 func TestRand(t *testing.T) {
 	var counter sltype.Uint2
 	for i := 0; i < 10; i++ {
-		fmt.Printf("%g\t%g\t%g\n", Float(counter, 0), Float11(counter, 1), NormFloat(counter, 2))
-		CounterIncr(&counter)
+		fmt.Printf("%g\t%g\t%g\n", Float(&counter, 0), Float11(&counter, 1), NormFloat(&counter, 2))
+	}
+}
+
+func TestCounter(t *testing.T) {
+	counter := sltype.Uint2{X: 0xfffffffe, Y: 0}
+	ctr := counter
+	CounterAdd(&ctr, 4)
+	if ctr.X != 2 && ctr.Y != 1 {
+		t.Errorf("Should be 2, 1: %v\n", ctr)
+	}
+	ctr = counter
+	CounterAdd(&ctr, 1)
+	if ctr.X != 0xffffffff && ctr.Y == 0 {
+		t.Errorf("Should be 0, 0xfffffffe: %v\n", ctr)
+	}
+	ctr = counter
+	CounterAdd(&ctr, 2)
+	if ctr.X != 0 && ctr.Y == 1 {
+		t.Errorf("Should be 0, 1: %v\n", ctr)
+	}
+	ctr = counter
+	CounterIncr(&ctr)
+	CounterIncr(&ctr)
+	if ctr.X != 0 && ctr.Y != 1 {
+		t.Errorf("Should be 0, 1: %v\n", ctr)
 	}
 }
