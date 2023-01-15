@@ -103,3 +103,15 @@ func TestCounter(t *testing.T) {
 		t.Errorf("Should be 0, 1: %v\n", ctr)
 	}
 }
+
+func TestIntn(t *testing.T) {
+	var counter sltype.Uint2
+	n := uint32(20)
+	for i := 0; i < 1000; i++ {
+		r := Uintn(&counter, 0, n)
+		if r >= n {
+			t.Errorf("r >= n: %d\n", r)
+		}
+		// fmt.Printf("%d\t%d\n", i, r)
+	}
+}
