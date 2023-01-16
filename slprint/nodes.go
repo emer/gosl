@@ -1672,7 +1672,7 @@ func keepTypeColumn(specs []ast.Spec) []bool {
 	return m
 }
 
-func (p *printer) valueSpec(s *ast.ValueSpec, keepType bool, tok token.Token) {
+func (p *printer) valueSpec(s *ast.ValueSpec, keepType bool, tok token.Token, firstSpec *ast.ValueSpec, isIota bool, idx int) {
 	p.setComment(s.Doc)
 	extraTabs := 2
 	// gosl: key to use Pos() as first arg to trigger emitting of comments!
@@ -1684,10 +1684,15 @@ func (p *printer) valueSpec(s *ast.ValueSpec, keepType bool, tok token.Token) {
 	}
 	if s.Type != nil {
 		p.expr(s.Type)
+	} else if tok == token.CONST && firstSpec.Type != nil {
+		p.expr(firstSpec.Type)
 	}
 	p.print(vtab)
 	p.identList(s.Names, false) // always present
-	if s.Values != nil {
+	if isIota {
+		p.print(vtab, token.ASSIGN, blank)
+		p.print(fmt.Sprintf("%d", idx))
+	} else if s.Values != nil {
 		p.print(vtab, token.ASSIGN, blank)
 		p.exprList(token.NoPos, s.Values, 1, 0, token.NoPos, false)
 		extraTabs--
@@ -1840,13 +1845,22 @@ func (p *printer) genDecl(d *ast.GenDecl) {
 				// two or more grouped const/var declarations:
 				// determine if the type column must be kept
 				keepType := keepTypeColumn(d.Specs)
+				firstSpec := d.Specs[0].(*ast.ValueSpec)
+				isIota := false
+				if d.Tok == token.CONST {
+					if id, isId := firstSpec.Values[0].(*ast.Ident); isId {
+						if id.Name == "iota" {
+							isIota = true
+						}
+					}
+				}
 				var line int
 				for i, s := range d.Specs {
 					if i > 0 {
 						p.linebreak(p.lineFor(s.Pos()), 1, ignore, p.linesFrom(line) > 0)
 					}
 					p.recordLine(&line)
-					p.valueSpec(s.(*ast.ValueSpec), keepType[i], d.Tok)
+					p.valueSpec(s.(*ast.ValueSpec), keepType[i], d.Tok, firstSpec, isIota, i)
 				}
 			} else {
 				var line int

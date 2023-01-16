@@ -31,6 +31,22 @@ const NeuronFlags NeuronHasTarg = 1 << 3;
 // comparison statistics but does not drive neural activity ever
 const NeuronFlags NeuronHasCmpr = 1 << 4;
 
+// Modes are evaluation modes (Training, Testing, etc)
+typedef int Modes;
+
+// The evaluation modes
+
+const Modes NoEvalMode = 0;
+
+// AllModes indicates that the log should occur over all modes present in other items.
+const Modes AllModes = 1;
+
+// Train is this a training mode for the env
+const Modes Train = 2;
+
+// Test is this a test mode for the env
+const Modes Test = 3;
+
 // DataStruct has the test data
 struct DataStruct {
 	float Raw;

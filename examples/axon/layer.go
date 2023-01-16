@@ -61,21 +61,21 @@ func (ly *Layer) GFmSpikeRaw(ni int, nrn *Neuron, ctime *Time) {
 
 // GFmRawSyn computes overall Ge and GiSyn conductances for neuron
 // from GeRaw and GeSyn values, including NMDA, VGCC, AMPA, and GABA-A channels.
-func (ly *Layer) GFmRawSyn(ni int, nrn *Neuron, ctime *Time, rndctr *sltype.Uint2) {
+func (ly *Layer) GFmRawSyn(ni int, nrn *Neuron, ctime *Time, randctr *sltype.Uint2) {
 	ly.Act.NMDAFmRaw(nrn, nrn.GeRaw)
 	ly.Learn.LrnNMDAFmRaw(nrn, nrn.GeRaw)
 	ly.Act.GvgccFmVm(nrn)
-	ly.Act.GeFmSyn(ni, nrn, nrn.GeSyn, nrn.Gnmda+nrn.Gvgcc, rndctr) // sets nrn.GeExt too
+	ly.Act.GeFmSyn(ni, nrn, nrn.GeSyn, nrn.Gnmda+nrn.Gvgcc, randctr) // sets nrn.GeExt too
 	ly.Act.GkFmVm(nrn)
-	nrn.GiSyn = ly.Act.GiFmSyn(ni, nrn, nrn.GiSyn, rndctr)
+	nrn.GiSyn = ly.Act.GiFmSyn(ni, nrn, nrn.GiSyn, randctr)
 }
 
 // GInteg integrates conductances G over time (Ge, NMDA, etc).
 // reads pool Gi values
-func (ly *Layer) GInteg(ni int, nrn *Neuron, ctime *Time, rndctr *sltype.Uint2) {
+func (ly *Layer) GInteg(ni int, nrn *Neuron, ctime *Time, randctr *sltype.Uint2) {
 	ly.GFmSpikeRaw(ni, nrn, ctime)
 	// note: can add extra values to GeRaw and GeSyn here
-	ly.GFmRawSyn(ni, nrn, ctime, rndctr)
+	ly.GFmRawSyn(ni, nrn, ctime, randctr)
 	ly.GiInteg(ni, nrn, ctime)
 }
 
@@ -102,8 +102,8 @@ func (ly *Layer) SpikeFmG(ni int, nrn *Neuron, ctime *Time) {
 }
 
 // CycleNeuron does one cycle (msec) of updating at the neuron level
-func (ly *Layer) CycleNeuron(ni int, nrn *Neuron, ctime *Time, rndctr sltype.Uint2) {
-	ly.GInteg(ni, nrn, ctime, &rndctr)
+func (ly *Layer) CycleNeuron(ni int, nrn *Neuron, ctime *Time, randctr sltype.Uint2) {
+	ly.GInteg(ni, nrn, ctime, &randctr)
 	ly.SpikeFmG(ni, nrn, ctime)
 }
 

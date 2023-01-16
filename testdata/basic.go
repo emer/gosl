@@ -42,6 +42,23 @@ const (
 	NeuronHasCmpr NeuronFlags = 1 << 4
 )
 
+// Modes are evaluation modes (Training, Testing, etc)
+type Modes int32
+
+// The evaluation modes
+const (
+	NoEvalMode Modes = iota
+
+	// AllModes indicates that the log should occur over all modes present in other items.
+	AllModes
+
+	// Train is this a training mode for the env
+	Train
+
+	// Test is this a test mode for the env
+	Test
+)
+
 // DataStruct has the test data
 type DataStruct struct {
 	Raw   float32 `desc:"raw value"`

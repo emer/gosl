@@ -10,7 +10,7 @@ import (
 )
 
 //gosl: hlsl axon
-// #include "../../../slrand/slrand.hlsl"
+// #include "slrand.hlsl"
 //gosl: end axon
 
 //gosl: start axon
