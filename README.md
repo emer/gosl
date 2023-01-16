@@ -4,14 +4,19 @@
 
 Thus, `gosl` enables the same CPU-based Go code to also be run on the GPU.  The relevant subsets of Go code to use are specifically marked using `//gosl:` comment directives, and this code must only use basic expressions and concrete types that will compile correctly in a shader (see [Restrictions](#restrictions) below).  Method functions and pass-by-reference pointer arguments to `struct` types are supported and incur no additional compute cost due to inlining (see notes below for more detail).
 
-See `examples/basic` for a working basic example, using the [vgpu](https://github.com/goki/vgpu) Vulkan-based GPU compute shader system.
+See `examples/basic` and `examples/axon` working example (simple and much more complicated, respectively), using the [vgpu](https://github.com/goki/vgpu) Vulkan-based GPU compute shader system.
 
-You must also install `goimports`:
+You must also install `goimports` which is used on the extracted subset of Go code:
 ```bash
 $ go install golang.org/x/tools/cmd/goimports@latest
 ```
 
-Use these comment directives:
+To install the `gosl` command, do:
+```bash
+$ go install github.com/goki/gosl@latest
+```
+
+In your Go code, use these comment directives:
 
 ```
 //gosl: start <filename>
@@ -23,7 +28,7 @@ Use these comment directives:
 
 to bracket code to be processed.  The resulting converted code is copied into a `shaders` subdirectory created under the current directory where the `gosl` command is run, using the filenames specified in the comment directives.  Each such filename should correspond to a complete shader program, or a file that can be included into other shader programs.  Code is appended to the target file names in the order of the source .go files on the command line, so multiple .go files can be combined into one resulting HLSL file.
 
-For the `main` HLSL function, global variables, to `#include` another `.hlsl` file, or other HLSL specific code, use the following comment directives:
+HLSL specific code, e.g., for the `main` compute function or to specify `#include` files, can be included either by specifying files with a `.hlsl` extension as arguments to the `gosl` command, or by using a `//gosl: hlsl` comment directive as follows:
 ```
 //gosl: hlsl <filename>
 
@@ -31,12 +36,11 @@ For the `main` HLSL function, global variables, to `#include` another `.hlsl` fi
 
 //gosl: end <filename>
 ```
+where the HLSL shader code is commented out in the .go file -- it will be copied into the target filename and uncommented.  The HLSL code can be surrounded by `/*` `*/` comment blocks (each on a separate line) for multi-line code (though using a separate `.hlsl` file is preferable in this case). 
 
-where the HLSL shader code is commented out in the .go file -- it will be copied into the target filename and uncommented.  The HLSL code can be surrounded by `/*` `*/` comment blocks (each on a separate line) for multi-line code. 
+For `.hlsl` files, their filename is used to determine the `shaders` destination file name, and they are automatically appended to the end of the corresponding `.hlsl` file generated from the `Go` files -- this is where the `main` function and associated global variables should be specified.
 
-Pass filenames, directory names, or Go package paths (e.g., `github.com/goki/mat32/fastexp.go` loads just that file from the given package) to `gosl` command for files to process -- files without any `//gosl:` comment directives will be skipped up front before any expensive processing, so it is not a problem to specify entire directories where only some files are relevant.
-
-Usage:
+# Usage
 
 	gosl [flags] [path ...]
 
@@ -49,6 +53,10 @@ The flags are:
     -keep
     	keep temporary converted versions of the source files, for debugging
 
+Note: any existing `.go` files in the output directory will be removed prior to processing, because the entire directory is built to establish all the types, which might be distributed across multiple files.  Any existing `.hlsl` files with the same filenames as those extracted from the `.go` files will be overwritten.  Otherwise, you can maintain other custom `.hlsl` files in the `shaders` directory, although it is recommended to treat the entire directory as automatically generated, to avoid any issues.
+    
+`gosl` path args can include filenames, directory names, or Go package paths (e.g., `github.com/goki/mat32/fastexp.go` loads just that file from the given package) -- files without any `//gosl:` comment directives will be skipped up front before any expensive processing, so it is not a problem to specify entire directories where only some files are relevant.  Also, you can specify a particular file from a directory, then the entire directory, to ensure that a particular file from that directory appears first -- otherwise alphabetical order is used.  `gosl` ensures that only one copy of each file is included.
+  
 Any `struct` types encountered will be checked for 16-byte alignment of sub-types and overall sizes as an even multiple of 16 bytes (4 `float32` or `int32` values), which is the alignment used in HLSL and glsl shader languages, and the underlying GPU hardware presumably.  Look for error messages on the output from the gosl run.  This ensures that direct byte-wise copies of data between CPU and GPU will be successful.  The fact that `gosl` operates directly on the original CPU-side Go code uniquely enables it to perform these alignment checks, which are otherwise a major source of difficult-to-diagnose bugs.
 
 You can safely ignore warnings of the form: `warning: Linking compute stage: Entry point not found` for any generated `.hlsl` files that serve only as includes to other files.

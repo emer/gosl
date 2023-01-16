@@ -20,18 +20,24 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/goki/gosl/alignsl"
 	"github.com/goki/gosl/slprint"
-	"github.com/goki/ki/ints"
-	"golang.org/x/exp/slices"
 	"golang.org/x/tools/go/packages"
 )
 
 // does all the file processing
 func ProcessFiles(paths []string) (map[string][]byte, error) {
 	fls := FilesFromPaths(paths)
-	sls := ExtractFiles(fls) // extract files to shader/*.go
+	gosls := ExtractGoFiles(fls) // extract Go files to shader/*.go
+
+	hlslFiles := []string{}
+	for _, fn := range fls {
+		if strings.HasSuffix(fn, ".hlsl") {
+			hlslFiles = append(hlslFiles, fn)
+		}
+	}
 
 	pf := "./" + *outDir
 	pkgs, err := packages.Load(&packages.Config{Mode: packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedTypes | packages.NeedSyntax | packages.NeedTypesInfo | packages.NeedTypesSizes}, pf)
@@ -54,11 +60,13 @@ func ProcessFiles(paths []string) (map[string][]byte, error) {
 	// fmt.Printf("go files: %+v", pkg.GoFiles)
 	// return nil, err
 
-	slrandCopied := false
+	// map of files with a main function that needs to be compiled
+	needsCompile := map[string]bool{}
 
-	for fn := range sls {
+	slrandCopied := false
+	for fn := range gosls {
 		gofn := fn + ".go"
-		fmt.Printf("###################################\nProcessing file: %s\n\t (ignore any 'Entry point not found' warnings for include-only files)\n", gofn)
+		fmt.Printf("###################################\nProcessing Go file: %s\n", gofn)
 
 		serr := alignsl.CheckPackage(pkg)
 		if serr != nil {
@@ -87,168 +95,61 @@ func ProcessFiles(paths []string) (map[string][]byte, error) {
 		// ioutil.WriteFile(filepath.Join(*outDir, fn+".tmp"), buf.Bytes(), 0644)
 		slfix, hasSlrand := SlEdits(buf.Bytes())
 		if hasSlrand && !slrandCopied {
-			fmt.Printf("copying slrand.hlsl to shaders\n")
+			fmt.Printf("\tcopying slrand.hlsl to shaders\n")
 			CopySlrand()
 			slrandCopied = true
 		}
-		exsl := ExtractHLSL(slfix)
-		sls[fn] = exsl
+		exsl, hasMain := ExtractHLSL(slfix)
+		gosls[fn] = exsl
 
+		if hasMain {
+			needsCompile[fn] = true
+		}
 		if !*keepTmp {
 			os.Remove(fpos.Filename)
 		}
 
+		// add hlsl code
+		for _, hlfn := range hlslFiles {
+			if fn+".hlsl" != hlfn {
+				continue
+			}
+			buf, err := os.ReadFile(hlfn)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			exsl = append(exsl, []byte(fmt.Sprintf("\n// from file: %s\n", hlfn))...)
+			exsl = append(exsl, buf...)
+			gosls[fn] = exsl
+			break
+		}
 		slfn := filepath.Join(*outDir, fn+".hlsl")
 		ioutil.WriteFile(slfn, exsl, 0644)
-		CompileFile(fn + ".hlsl")
 	}
-	return sls, nil
-}
 
-func ExtractFiles(files []string) map[string][]byte {
-	sls := map[string][][]byte{}
-	key := []byte("//gosl: ")
-	start := []byte("start")
-	hlsl := []byte("hlsl")
-	end := []byte("end")
-	nl := []byte("\n")
-	include := []byte("#include")
-
-	for _, fn := range files {
-		buf, err := os.ReadFile(fn)
-		if err != nil {
+	// check for hlsl files that had no go equivalent
+	for _, hlfn := range hlslFiles {
+		hasGo := false
+		for fn := range gosls {
+			if fn+".hlsl" == hlfn {
+				hasGo = true
+				break
+			}
+		}
+		if hasGo {
 			continue
 		}
-		lines := bytes.Split(buf, nl)
-
-		inReg := false
-		inHlsl := false
-		var outLns [][]byte
-		slFn := ""
-		for _, ln := range lines {
-			isKey := bytes.HasPrefix(ln, key)
-			var keyStr []byte
-			if isKey {
-				keyStr = ln[len(key):]
-				// fmt.Printf("key: %s\n", string(keyStr))
-			}
-			switch {
-			case inReg && isKey && bytes.HasPrefix(keyStr, end):
-				if inHlsl {
-					outLns = append(outLns, ln)
-				}
-				sls[slFn] = outLns
-				inReg = false
-				inHlsl = false
-			case inReg:
-				for pkg := range LoadedPackageNames { // remove package prefixes
-					if !bytes.Contains(ln, include) {
-						ln = bytes.ReplaceAll(ln, []byte(pkg+"."), []byte{})
-					}
-				}
-				outLns = append(outLns, ln)
-			case isKey && bytes.HasPrefix(keyStr, start):
-				inReg = true
-				slFn = string(keyStr[len(start)+1:])
-				outLns = sls[slFn]
-			case isKey && bytes.HasPrefix(keyStr, hlsl):
-				inReg = true
-				inHlsl = true
-				slFn = string(keyStr[len(hlsl)+1:])
-				outLns = sls[slFn]
-				outLns = append(outLns, ln)
-			}
-		}
+		tofn := filepath.Join(*outDir, hlfn)
+		CopyFile(hlfn, tofn)
+		fn := strings.TrimSuffix(hlfn, ".hlsl")
+		needsCompile[fn] = true // assume any standalone hlsl is a main
 	}
 
-	rsls := make(map[string][]byte)
-	for fn, lns := range sls {
-		outfn := filepath.Join(*outDir, fn+".go")
-		olns := [][]byte{}
-		olns = append(olns, []byte("package main"))
-		olns = append(olns, []byte(`import "math"`))
-		olns = append(olns, lns...)
-		res := bytes.Join(olns, nl)
-		ioutil.WriteFile(outfn, res, 0644)
-		cmd := exec.Command("goimports", "-w", fn+".go") // get imports
-		cmd.Dir, _ = filepath.Abs(*outDir)
-		out, err := cmd.CombinedOutput()
-		_ = out
-		// fmt.Printf("\n################\ngoimports output for: %s\n%s\n", outfn, out)
-		if err != nil {
-			log.Println(err)
-		}
-		rsls[fn] = bytes.Join(lns, nl)
+	for fn := range needsCompile {
+		CompileFile(fn + ".hlsl")
 	}
-
-	return rsls
-}
-
-func ExtractHLSL(buf []byte) []byte {
-	key := []byte("//gosl: ")
-	hlsl := []byte("hlsl")
-	end := []byte("end")
-	nl := []byte("\n")
-	stComment := []byte("/*")
-	edComment := []byte("*/")
-	comment := []byte("// ")
-	pack := []byte("package")
-	imp := []byte("import")
-	lparen := []byte("(")
-	rparen := []byte(")")
-
-	lines := bytes.Split(buf, nl)
-
-	mx := ints.MinInt(10, len(lines))
-	stln := 0
-	gotImp := false
-	for li := 0; li < mx; li++ {
-		ln := lines[li]
-		switch {
-		case bytes.HasPrefix(ln, pack):
-			stln = li + 1
-		case bytes.HasPrefix(ln, imp):
-			if bytes.HasSuffix(ln, lparen) {
-				gotImp = true
-			} else {
-				stln = li + 1
-			}
-		case gotImp && bytes.HasPrefix(ln, rparen):
-			stln = li + 1
-		}
-	}
-
-	lines = lines[stln:] // get rid of package, import
-
-	inHlsl := false
-	for li := 0; li < len(lines); li++ {
-		ln := lines[li]
-		isKey := bytes.HasPrefix(ln, key)
-		var keyStr []byte
-		if isKey {
-			keyStr = ln[len(key):]
-			// fmt.Printf("key: %s\n", string(keyStr))
-		}
-		switch {
-		case inHlsl && isKey && bytes.HasPrefix(keyStr, end):
-			slices.Delete(lines, li, li+1)
-			li--
-			inHlsl = false
-		case inHlsl:
-			switch {
-			case bytes.HasPrefix(ln, stComment) || bytes.HasPrefix(ln, edComment):
-				slices.Delete(lines, li, li+1)
-				li--
-			case bytes.HasPrefix(ln, comment):
-				lines[li] = ln[3:]
-			}
-		case isKey && bytes.HasPrefix(keyStr, hlsl):
-			inHlsl = true
-			slices.Delete(lines, li, li+1)
-			li--
-		}
-	}
-	return bytes.Join(lines, nl)
+	return gosls, nil
 }
 
 func CompileFile(fn string) error {

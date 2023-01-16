@@ -17,7 +17,7 @@ import (
 
 // note: standard one to use is plain "gosl" which should be go install'd
 
-//go:generate ../../gosl -keep slrand.go
+//go:generate ../../gosl rand.go rand.hlsl
 
 func init() {
 	// must lock main thread for gpu!  this also means that vulkan must be used
@@ -55,7 +55,7 @@ func main() {
 
 	sy := gp.NewComputeSystem("slrand")
 	pl := sy.NewPipeline("slrand")
-	pl.AddShaderFile("slrand", vgpu.ComputeShader, "shaders/slrand.spv")
+	pl.AddShaderFile("slrand", vgpu.ComputeShader, "shaders/rand.spv")
 
 	vars := sy.Vars()
 	setc := vars.AddSet()

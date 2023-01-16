@@ -20,7 +20,7 @@ const DiffTol = 1.0e-5
 
 // note: standard one to use is plain "gosl" which should be go install'd
 
-//go:generate ../../gosl -exclude=Update,UpdateParams,Defaults -keep github.com/goki/mat32/fastexp.go minmax chans/chans.go chans kinase time.go neuron.go act.go learn.go layer.go
+//go:generate ../../gosl -exclude=Update,UpdateParams,Defaults -keep github.com/goki/mat32/fastexp.go minmax chans/chans.go chans kinase time.go neuron.go act.go learn.go layer.go axon.hlsl
 
 func init() {
 	// must lock main thread for gpu!  this also means that vulkan must be used

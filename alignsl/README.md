@@ -6,6 +6,7 @@ Checks that `struct` sizes are an even multiple of 16 bytes (e.g., 4 float32's),
 
 It is called with a [golang.org/x/tools/go/packages](https://pkg.go.dev/golang.org/x/tools/go/packages) `Package` that provides the `types.Sizes` and `Types.Scope()` to get the types.
 
+The `CheckPackage` method checks all types in a `Package`, and returns an error if there are any violations -- this error string contains a full user-friendly warning message that can be printed.
 
 
 

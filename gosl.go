@@ -21,7 +21,7 @@ import (
 
 // flags
 var (
-	outDir        = flag.String("out", "shaders", "output directory for shader code, relative to where gosl is invoked")
+	outDir        = flag.String("out", "shaders", "output directory for shader code, relative to where gosl is invoked -- must not be an empty string")
 	excludeFuns   = flag.String("exclude", "Update,Defaults", "comma-separated list of names of functions to exclude from exporting to HLSL")
 	keepTmp       = flag.Bool("keep", false, "keep temporary converted versions of the source files, for debugging")
 	excludeFunMap = map[string]bool{}
@@ -59,9 +59,12 @@ func GoslArgs() {
 }
 
 func goslMain() {
-	if *outDir != "" {
-		os.MkdirAll(*outDir, 0755)
+	if *outDir == "" {
+		fmt.Printf("Must have an output directory (default shaders), specified in -out arg\n")
+		return
 	}
+	os.MkdirAll(*outDir, 0755)
+	RemoveGoFiles(*outDir)
 
 	args := flag.Args()
 	if len(args) == 0 {

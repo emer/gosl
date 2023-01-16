@@ -1,4 +1,4 @@
-# slrand
+# rand
 
 This example tests the `slrand` random number generation functions.  The `go test` in `slrand` itself tests the Go version of the code against known values, and this example tests the GPU HLSL versions against the Go versions.
 

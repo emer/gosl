@@ -71,15 +71,3 @@ func (r *Rnds) IsSame(o *Rnds) (exact, tol bool) {
 func (r *Rnds) String() string {
 	return fmt.Sprintf("U: %x\t%x\tF: %g\t%g\tF11: %g\t%g\tG: %g\t%g", r.Uints.X, r.Uints.Y, r.Floats.X, r.Floats.Y, r.Floats11.X, r.Floats11.Y, r.Gauss.X, r.Gauss.Y)
 }
-
-//gosl: hlsl rand
-/*
-// // note: double-commented lines required here -- binding is var, set
-[[vk::binding(0, 0)]] uniform sltype.Uint2 Counter;
-[[vk::binding(0, 1)]] RWStructuredBuffer<Rnds> Data;
-[numthreads(1, 1, 1)]
-void main(uint3 idx : SV_DispatchThreadID) {
-	Data[idx.x].RndGen(Counter, idx.x);
-}
-*/
-//gosl: end rand

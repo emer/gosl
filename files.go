@@ -21,9 +21,13 @@ import (
 var LoadedPackageNames = map[string]bool{}
 
 func IsGoFile(f fs.DirEntry) bool {
-	// ignore non-Go files
 	name := f.Name()
 	return !strings.HasPrefix(name, ".") && strings.HasSuffix(name, ".go") && !f.IsDir()
+}
+
+func IsHLSLFile(f fs.DirEntry) bool {
+	name := f.Name()
+	return !strings.HasPrefix(name, ".") && strings.HasSuffix(name, ".hlsl") && !f.IsDir()
 }
 
 func AddFile(fn string, fls []string, procd map[string]bool) []string {
@@ -49,6 +53,8 @@ func AddFile(fn string, fls []string, procd map[string]bool) []string {
 	return fls
 }
 
+// FilesFromPaths processes all paths and returns a full unique list of files
+// for subsequent processing.
 func FilesFromPaths(paths []string) []string {
 	fls := make([]string, 0, len(paths))
 	procd := make(map[string]bool)
@@ -89,7 +95,7 @@ func FilesFromPaths(paths []string) []string {
 		default:
 			// Directories are walked, ignoring non-Go files.
 			err := filepath.WalkDir(path, func(path string, f fs.DirEntry, err error) error {
-				if err != nil || !IsGoFile(f) {
+				if err != nil || !(IsGoFile(f) || IsHLSLFile(f)) {
 					return err
 				}
 				_, err = f.Info()
@@ -154,4 +160,18 @@ func CopySlrand() error {
 	fmfn := filepath.Join(dir, hdr)
 	CopyFile(fmfn, tofn)
 	return nil
+}
+
+// RemoveGoFiles removes .go files in dir
+func RemoveGoFiles(dir string) {
+	err := filepath.WalkDir(dir, func(path string, f fs.DirEntry, err error) error {
+		if err != nil || !IsGoFile(f) {
+			return err
+		}
+		os.Remove(path)
+		return nil
+	})
+	if err != nil {
+		log.Println(err)
+	}
 }
