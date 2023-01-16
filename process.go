@@ -122,6 +122,7 @@ func ProcessFiles(paths []string) (map[string][]byte, error) {
 			exsl = append(exsl, []byte(fmt.Sprintf("\n// from file: %s\n", hlfn))...)
 			exsl = append(exsl, buf...)
 			gosls[fn] = exsl
+			needsCompile[fn] = true // assume any standalone has main
 			break
 		}
 		slfn := filepath.Join(*outDir, fn+".hlsl")

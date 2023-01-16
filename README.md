@@ -91,6 +91,10 @@ See [slrand](https://github.com/goki/gosl/tree/main/slrand) for a shader-optimiz
 //gosl: end mycode
 ```
 
+# Performance
+
+With sufficiently large N, and ignoring the data copying setup time, around ~80x speedup is typical on a Macbook Pro with M1 processor.  The `rand` example produces a 175x speedup!
+
 # Implementation / Design Notes
 
 HLSL is very C-like and provides a much better target for Go conversion than glsl.  See `examples/basic/shaders/basic_nouse.glsl` vs the .hlsl version there for the difference.  Only HLSL supports methods in a struct, and performance is the same as writing the expression directly -- it is suitably [inlined](https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-function-syntax).

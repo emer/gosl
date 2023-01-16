@@ -40,7 +40,15 @@ func main() {
 	// gp.PropsString(true) // print
 
 	// n := 10 // debugging
-	n := 100000 // 100,000 = 2.38 CPU, 0.005939 GPU
+	n := 100000 // 1,000,000 = 80x even with range checking
+	// 100,000 = ~60x "
+
+	// AMD is 64, NVIDIA, M1 are 32
+	threads := 64
+	nInt := ints.IntMultiple(n, threads)
+	// n = nInt // enforce optimal n's -- otherwise requires range checking
+	nGps := nInt / threads // dispatch n
+
 	maxCycles := 200
 
 	lay := &Layer{}
@@ -69,7 +77,7 @@ func main() {
 		for i := range neur1 {
 			d := &neur1[i]
 			// d.Vm = lay.Act.Decay.Glong
-			lay.CycleNeuron(i, d, time, time.RandCtr.Uint2())
+			lay.CycleNeuron(i, d, time)
 		}
 		lay.CycleTimeInc(time)
 		// fmt.Printf("%d\ttime.RandCtr: %v\n", cy, time.RandCtr.Uint2())
@@ -126,7 +134,7 @@ func main() {
 	gpuTmr.Start()
 
 	// note: it is 2x faster to run the for loop within the shader entirely
-	pl.ComputeCommand(n, 1, 1)
+	pl.ComputeCommand(nGps, 1, 1)
 	sy.ComputeSubmit() // technically should wait, but results are same..
 	// if validation mode is on, it complains..
 	for cy := 1; cy < maxCycles; cy++ {

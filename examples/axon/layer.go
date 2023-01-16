@@ -102,7 +102,9 @@ func (ly *Layer) SpikeFmG(ni int, nrn *Neuron, ctime *Time) {
 }
 
 // CycleNeuron does one cycle (msec) of updating at the neuron level
-func (ly *Layer) CycleNeuron(ni int, nrn *Neuron, ctime *Time, randctr sltype.Uint2) {
+func (ly *Layer) CycleNeuron(ni int, nrn *Neuron, ctime *Time) {
+	var randctr sltype.Uint2
+	randctr = ctime.RandCtr.Uint2() // use local var
 	ly.GInteg(ni, nrn, ctime, &randctr)
 	ly.SpikeFmG(ni, nrn, ctime)
 }

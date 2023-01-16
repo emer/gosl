@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/emer/emergent v1.3.34
-	github.com/goki/ki v1.1.9
+	github.com/goki/ki v1.1.11
 	github.com/goki/mat32 v1.0.13
 	github.com/goki/vgpu v1.0.10
 	golang.org/x/exp v0.0.0-20230105202349-8879d0199aa3

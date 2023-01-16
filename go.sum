@@ -12,8 +12,8 @@ github.com/emer/emergent v1.3.34/go.mod h1:pzushoknheZSc32UucKBrxCUv35pzKA9Fh5Ee
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/go-gl/glfw/v3.3/glfw v0.0.0-20221017161538-93cebf72946b h1:GgabKamyOYguHqHjSkDACcgoPIz3w0Dis/zJ1wyHHHU=
 github.com/go-gl/glfw/v3.3/glfw v0.0.0-20221017161538-93cebf72946b/go.mod h1:tQ2UAYgL5IevRw8kRxooKSPJfGvJ9fJQFa0TUsXzTg8=
-github.com/goki/ki v1.1.9 h1:aSGQPFfrTBKEFKvBkNU4JrBpnoxmjvfE9kCrG3T4ojM=
-github.com/goki/ki v1.1.9/go.mod h1:8CF/Hl5lI5x09rlPLfJtw9w2XW/K6FK9eodjpeAKmNU=
+github.com/goki/ki v1.1.11 h1:AjyHwgRtA734bROWb3bB/3fB/h1K5HZEoKfiitZpa8A=
+github.com/goki/ki v1.1.11/go.mod h1:8CF/Hl5lI5x09rlPLfJtw9w2XW/K6FK9eodjpeAKmNU=
 github.com/goki/mat32 v1.0.13 h1:R69m+a2ju/DMt9M4EMts/8UvZDzBQ1xDHRGS4KyTZaU=
 github.com/goki/mat32 v1.0.13/go.mod h1:6tOY3oXQLGItoMcA6nhKwbO3EFXZOo8l+4eIotDFG/k=
 github.com/goki/vgpu v1.0.10 h1:TTzl4c4D6ca2AbzMHaCtOE9C4fuLBsRZ1qs6r07xw6Q=

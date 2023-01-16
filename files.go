@@ -75,6 +75,9 @@ func FilesFromPaths(paths []string) []string {
 			}
 			pkg := pkgs[0]
 			gofls := pkg.GoFiles
+			if len(gofls) == 0 {
+				fmt.Printf("WARNING: no go files found in path: %s\n", path)
+			}
 			if fl != "" {
 				for _, gf := range gofls {
 					if strings.HasSuffix(gf, fl) {

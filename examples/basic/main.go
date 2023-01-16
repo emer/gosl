@@ -36,7 +36,11 @@ func main() {
 
 	// gp.PropsString(true) // print
 
-	n := 10000000
+	n := 100000000 // get 80x with 100m, 50x with 10m
+	threads := 64
+	nInt := ints.IntMultiple(n, threads)
+	n = nInt               // enforce optimal n's -- otherwise requires range checking
+	nGps := nInt / threads // dispatch n
 
 	pars := &ParamStruct{}
 	pars.Defaults()
@@ -96,7 +100,7 @@ func main() {
 	gpuTmr := timer.Time{}
 	gpuTmr.Start()
 
-	pl.ComputeCommand(n, 1, 1)
+	pl.ComputeCommand(nGps, 1, 1)
 	sy.ComputeSubmitWait()
 
 	gpuTmr.Stop()
@@ -113,7 +117,9 @@ func main() {
 	}
 	fmt.Printf("\n")
 
-	fmt.Printf("N: %d\t CPU: %6.4g\t GPU: %6.4g\t Full: %6.4g\n", n, cpuTmr.TotalSecs(), gpuTmr.TotalSecs(), gpuFullTmr.TotalSecs())
+	cpu := cpuTmr.TotalSecs()
+	gpu := gpuTmr.TotalSecs()
+	fmt.Printf("N: %d\t CPU: %6.4g\t GPU: %6.4g\t Full: %6.4g\t CPU/GPU: %6.4g\n", n, cpu, gpu, gpuFullTmr.TotalSecs(), cpu/gpu)
 
 	sy.Destroy()
 	gp.Destroy()

@@ -141,6 +141,8 @@ var Replaces = []Replace{
 	{[]byte("float64"), []byte("double")},
 	{[]byte("uint32"), []byte("uint")},
 	{[]byte("int32"), []byte("int")},
+	{[]byte("ints.MaxInt("), []byte("max(")},
+	{[]byte("ints.MinInt("), []byte("min(")},
 	{[]byte("mat32.FastExp("), []byte("FastExp(")},
 	{[]byte("math.Float32frombits("), []byte("asfloat(")},
 	{[]byte("slrand."), []byte("Rand")},

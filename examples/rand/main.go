@@ -38,6 +38,10 @@ func main() {
 
 	// n := 10
 	n := 10000000
+	threads := 64
+	nInt := ints.IntMultiple(n, threads)
+	n = nInt               // enforce optimal n's -- otherwise requires range checking
+	nGps := nInt / threads // dispatch n
 
 	dataC := make([]Rnds, n)
 	dataG := make([]Rnds, n)
@@ -93,7 +97,7 @@ func main() {
 	gpuTmr := timer.Time{}
 	gpuTmr.Start()
 
-	pl.ComputeCommand(n, 1, 1)
+	pl.ComputeCommand(nGps, 1, 1)
 	sy.ComputeSubmitWait()
 
 	gpuTmr.Stop()
