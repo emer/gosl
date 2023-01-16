@@ -4,7 +4,7 @@
 
 Thus, `gosl` enables the same CPU-based Go code to also be run on the GPU.  The relevant subsets of Go code to use are specifically marked using `//gosl:` comment directives, and this code must only use basic expressions and concrete types that will compile correctly in a shader (see [Restrictions](#restrictions) below).  Method functions and pass-by-reference pointer arguments to `struct` types are supported and incur no additional compute cost due to inlining (see notes below for more detail).
 
-See `examples/basic` and `examples/axon` working example (simple and much more complicated, respectively), using the [vgpu](https://github.com/goki/vgpu) Vulkan-based GPU compute shader system.
+See `examples/basic` and `examples/axon` examples (simple and much more complicated, respectively), using the [vgpu](https://github.com/goki/vgpu) Vulkan-based GPU compute shader system.
 
 You must also install `goimports` which is used on the extracted subset of Go code:
 ```bash
@@ -59,8 +59,6 @@ Note: any existing `.go` files in the output directory will be removed prior to 
   
 Any `struct` types encountered will be checked for 16-byte alignment of sub-types and overall sizes as an even multiple of 16 bytes (4 `float32` or `int32` values), which is the alignment used in HLSL and glsl shader languages, and the underlying GPU hardware presumably.  Look for error messages on the output from the gosl run.  This ensures that direct byte-wise copies of data between CPU and GPU will be successful.  The fact that `gosl` operates directly on the original CPU-side Go code uniquely enables it to perform these alignment checks, which are otherwise a major source of difficult-to-diagnose bugs.
 
-You can safely ignore warnings of the form: `warning: Linking compute stage: Entry point not found` for any generated `.hlsl` files that serve only as includes to other files.
-    
 # Restrictions    
 
 In general shader code should be simple mathematical expressions and data types, with minimal control logic via `if`, `for` statements, and only using the subset of Go that is consistent with C.  Here are specific restrictions:
