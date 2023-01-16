@@ -39,7 +39,7 @@ const (
 // and start at the top, in contiguous order
 type Neuron struct {
 	Flags   NeuronFlags `desc:"bit flags for binary state variables"`
-	LayIdx  int32       `desc:"index of the layer that this neuron belongs to -- needed for neuron-level parallel code."`
+	LayIdx  uint32      `desc:"index of the layer that this neuron belongs to -- needed for neuron-level parallel code."`
 	SubPool int32       `desc:"index of the sub-level inhibitory pool that this neuron is in (only for 4D shapes, the pool (unit-group / hypercolumn) structure level) -- indicies start at 1 -- 0 is layer-level pool (is 0 if no sub-pools)."`
 	Spike   float32     `desc:"whether neuron has spiked or not on this cycle (0 or 1)"`
 

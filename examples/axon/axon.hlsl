@@ -1,6 +1,6 @@
 
 // note: binding is var, set
-[[vk::binding(0, 0)]] uniform Layer Lay;
+[[vk::binding(0, 0)]] uniform Layer Lays[];
 [[vk::binding(0, 1)]] RWStructuredBuffer<Time> time;
 [[vk::binding(0, 2)]] RWStructuredBuffer<Neuron> Neurons;
 
@@ -12,10 +12,10 @@ void main(uint3 idx : SV_DispatchThreadID) {
 	uint st;
 	Neurons.GetDimensions(ns, st);
 	if(idx.x < ns) {
-		Lay.CycleNeuron(idx.x, Neurons[idx.x], time[0]);
-	}
-	if(idx.x == 0) {
-		Lay.CycleTimeInc(time[0]);
+		Lays[Neurons[idx.x].LayIdx].CycleNeuron(idx.x, Neurons[idx.x], time[0]);
+		if(idx.x == 0) {
+			Lays[Neurons[idx.x].LayIdx].CycleTimeInc(time[0]);
+		}
 	}
 }
 

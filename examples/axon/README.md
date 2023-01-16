@@ -18,4 +18,7 @@ The generated files go into the `shaders/` subdirectory.
 
 The generate step must be re-run if any of the computation-relevant code is changed (i.e., within the `//gsl:` start / end blocks) but e.g., changing the number of neurons in `main.go` does not require a re-generate.
 
+# TODO:
+
+The time update is not working on linux -- only on mac -- probably something about shared memory.
 

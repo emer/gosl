@@ -143,7 +143,7 @@ var Replaces = []Replace{
 	{[]byte("int32"), []byte("int")},
 	{[]byte("ints.MaxInt("), []byte("max(")},
 	{[]byte("ints.MinInt("), []byte("min(")},
-	{[]byte("mat32.FastExp("), []byte("FastExp(")},
+	{[]byte("mat32.FastExp("), []byte("FastExp(")}, // FastExp about same speed as native exp?
 	{[]byte("math.Float32frombits("), []byte("asfloat(")},
 	{[]byte("slrand."), []byte("Rand")},
 	{[]byte("sltype.U"), []byte("u")},

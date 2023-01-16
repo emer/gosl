@@ -46,28 +46,42 @@ func main() {
 	// AMD is 64, NVIDIA, M1 are 32
 	threads := 64
 	nInt := ints.IntMultiple(n, threads)
-	// n = nInt // enforce optimal n's -- otherwise requires range checking
+	n = nInt               // enforce optimal n's -- otherwise requires range checking
 	nGps := nInt / threads // dispatch n
 
-	maxCycles := 200
+	maxCycles := 200 // 70x speedup doing 20000
+	// fmt.Printf("n: %d   cycles: %d\n", n, maxCycles)
 
-	lay := &Layer{}
-	lay.Defaults()
+	nLays := 2
+	nfirst := n / nLays
+	lays := make([]Layer, nLays)
+	for li := range lays {
+		ly := &lays[li]
+		ly.Defaults()
+	}
 
 	time := NewTime()
 	time.Defaults()
 
 	neur1 := make([]Neuron, n)
 	for i := range neur1 {
-		d := &neur1[i]
-		lay.Act.InitActs(d)
-		d.GeBase = 0.4
+		nrn := &neur1[i]
+		if i > nfirst {
+			nrn.LayIdx = 1
+		}
+		ly := &lays[nrn.LayIdx]
+		ly.Act.InitActs(nrn)
+		nrn.GeBase = 0.4
 	}
 	neur2 := make([]Neuron, n)
 	for i := range neur2 {
-		d := &neur2[i]
-		lay.Act.InitActs(d)
-		d.GeBase = 0.4
+		nrn := &neur2[i]
+		if i > nfirst {
+			nrn.LayIdx = 1
+		}
+		ly := &lays[nrn.LayIdx]
+		ly.Act.InitActs(nrn)
+		nrn.GeBase = 0.4
 	}
 
 	cpuTmr := timer.Time{}
@@ -75,11 +89,13 @@ func main() {
 
 	for cy := 0; cy < maxCycles; cy++ {
 		for i := range neur1 {
-			d := &neur1[i]
+			nrn := &neur1[i]
+			ly := &lays[nrn.LayIdx]
 			// d.Vm = lay.Act.Decay.Glong
-			lay.CycleNeuron(i, d, time)
+			ly.CycleNeuron(i, nrn, time)
 		}
-		lay.CycleTimeInc(time)
+		ly := &lays[0]
+		ly.CycleTimeInc(time)
 		// fmt.Printf("%d\ttime.RandCtr: %v\n", cy, time.RandCtr.Uint2())
 	}
 
@@ -96,7 +112,7 @@ func main() {
 	sett := vars.AddSet()
 	setn := vars.AddSet()
 
-	layv := setl.AddStruct("Layer", int(unsafe.Sizeof(Layer{})), 1, vgpu.Uniform, vgpu.ComputeShader)
+	layv := setl.AddStruct("Layer", int(unsafe.Sizeof(Layer{})), nLays, vgpu.Uniform, vgpu.ComputeShader)
 	timev := sett.AddStruct("Time", int(unsafe.Sizeof(Time{})), 1, vgpu.Storage, vgpu.ComputeShader)
 	neurv := setn.AddStruct("Neurons", int(unsafe.Sizeof(Neuron{})), n, vgpu.Storage, vgpu.ComputeShader)
 
@@ -110,7 +126,7 @@ func main() {
 
 	// this copy is pretty fast -- most of time is below
 	lvl, _ := layv.Vals.ValByIdxTry(0)
-	lvl.CopyFromBytes(unsafe.Pointer(lay))
+	lvl.CopyFromBytes(unsafe.Pointer(&lays[0]))
 	tvl, _ := timev.Vals.ValByIdxTry(0)
 	tvl.CopyFromBytes(unsafe.Pointer(time))
 	dvl, _ := neurv.Vals.ValByIdxTry(0)

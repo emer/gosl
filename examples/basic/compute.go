@@ -6,6 +6,10 @@ package main
 
 import "github.com/goki/mat32"
 
+//gosl: hlsl basic
+// #include "fastexp.hlsl"
+//gosl: end basic
+
 //gosl: start basic
 
 // DataStruct has the test data
@@ -27,7 +31,7 @@ type ParamStruct struct {
 // IntegFmRaw computes integrated value from current raw value
 func (ps *ParamStruct) IntegFmRaw(ds *DataStruct) {
 	ds.Integ += ps.Dt * (ds.Raw - ds.Integ)
-	ds.Exp = mat32.Exp(-ds.Integ)
+	ds.Exp = mat32.FastExp(-ds.Integ)
 }
 
 //gosl: end basic
