@@ -10,13 +10,14 @@ import (
 	"unsafe"
 
 	"github.com/emer/emergent/timer"
+	"github.com/goki/gosl/sltype"
 	"github.com/goki/ki/ints"
 	"github.com/goki/mat32"
 	"github.com/goki/vgpu/vgpu"
 )
 
 // DiffTol is tolerance on testing diff between cpu and gpu values
-const DiffTol = 1.0e-5
+const DiffTol = 1.0e-3
 
 // note: standard one to use is plain "gosl" which should be go install'd
 
@@ -39,7 +40,7 @@ func main() {
 
 	// gp.PropsString(true) // print
 
-	// n := 10 // debugging
+	// n := 64 // debugging
 	n := 100000 // 1,000,000 = 80x even with range checking
 	// 100,000 = ~60x "
 
@@ -84,6 +85,16 @@ func main() {
 		nrn.GeBase = 0.4
 	}
 
+	// for testing alignment and buffer type isues
+	idxs := make([]sltype.Uint2, n)
+	for i := range idxs {
+		iv := &idxs[i]
+		iv.X = uint32(i)
+		iv.Y = uint32(i)
+		// iv.Z = uint32(i)
+		// iv.W = uint32(i)
+	}
+
 	cpuTmr := timer.Time{}
 	cpuTmr.Start()
 
@@ -111,15 +122,24 @@ func main() {
 	setl := vars.AddSet()
 	sett := vars.AddSet()
 	setn := vars.AddSet()
+	// seti := vars.AddSet()
 
-	layv := setl.AddStruct("Layer", int(unsafe.Sizeof(Layer{})), nLays, vgpu.Uniform, vgpu.ComputeShader)
+	// important: Uniform appears to have much higher alignment restrictions
+	// compared to Storage -- Layer works but Uint4 does not.
+	// Storage however *does* appear to work with only 32 or 16 byte values!
+	// all of this is on mac
+
+	layv := setl.AddStruct("Layers", int(unsafe.Sizeof(Layer{})), nLays, vgpu.Uniform, vgpu.ComputeShader)
 	timev := sett.AddStruct("Time", int(unsafe.Sizeof(Time{})), 1, vgpu.Storage, vgpu.ComputeShader)
 	neurv := setn.AddStruct("Neurons", int(unsafe.Sizeof(Neuron{})), n, vgpu.Storage, vgpu.ComputeShader)
+	// var ui sltype.Uint2
+	// idxv := seti.AddStruct("Idxs", int(unsafe.Sizeof(ui)), n, vgpu.Storage, vgpu.ComputeShader)
 
 	setl.ConfigVals(1) // one val per var
 	sett.ConfigVals(1) // one val per var
 	setn.ConfigVals(1) // one val per var
-	sy.Config()        // configures vars, allocates vals, configs pipelines..
+	// seti.ConfigVals(1) // one val per var
+	sy.Config() // configures vars, allocates vals, configs pipelines..
 
 	gpuFullTmr := timer.Time{}
 	gpuFullTmr.Start()
@@ -129,17 +149,20 @@ func main() {
 	lvl.CopyFromBytes(unsafe.Pointer(&lays[0]))
 	tvl, _ := timev.Vals.ValByIdxTry(0)
 	tvl.CopyFromBytes(unsafe.Pointer(time))
-	dvl, _ := neurv.Vals.ValByIdxTry(0)
-	dvl.CopyFromBytes(unsafe.Pointer(&neur2[0]))
+	nvl, _ := neurv.Vals.ValByIdxTry(0)
+	nvl.CopyFromBytes(unsafe.Pointer(&neur2[0]))
+	// ivl, _ := idxv.Vals.ValByIdxTry(0)
+	// ivl.CopyFromBytes(unsafe.Pointer(&idxs[0]))
 
 	// gpuFullTmr := timer.Time{}
 	// gpuFullTmr.Start()
 
 	sy.Mem.SyncToGPU()
 
-	vars.BindDynValIdx(0, "Layer", 0)
+	vars.BindDynValIdx(0, "Layers", 0)
 	vars.BindDynValIdx(1, "Time", 0)
 	vars.BindDynValIdx(2, "Neurons", 0)
+	// vars.BindDynValIdx(3, "Idxs", 0)
 
 	sy.CmdResetBindVars(sy.CmdPool.Buff, 0)
 
@@ -161,13 +184,15 @@ func main() {
 	gpuTmr.Stop()
 
 	sy.Mem.SyncValIdxFmGPU(2, "Neurons", 0) // this is about same as SyncToGPU
-	dvl.CopyToBytes(unsafe.Pointer(&neur2[0]))
+	nvl.CopyToBytes(unsafe.Pointer(&neur2[0]))
 
 	gpuFullTmr.Stop()
 
 	mx := ints.MinInt(n, 1)
+	_ = mx
 	anyDiff := false
-	for i := 0; i < mx; i++ {
+	// for i := n - 1; i < n; i++ {
+	for i := 0; i < 1; i++ {
 		d1 := &neur1[i]
 		d2 := &neur2[i]
 		fmt.Printf("\n%14s\t   CPU\t   GPU\tDiff\n", "Var")

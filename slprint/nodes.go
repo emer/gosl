@@ -1022,6 +1022,9 @@ func (p *printer) expr1(expr ast.Expr, prec1, depth int) {
 			wasIndented = p.possibleSelectorExpr(x.Fun, token.HighestPrec, depth)
 			p.print(token.RPAREN)
 		} else {
+			// if p.fixSlbool(x, token.HighestPrec, depth) {
+			// 	return
+			// }
 			wasIndented = p.possibleSelectorExpr(x.Fun, token.HighestPrec, depth)
 		}
 		p.print(x.Lparen, token.LPAREN)
@@ -1170,9 +1173,39 @@ func normalizedNumber(lit *ast.BasicLit) *ast.BasicLit {
 	return &ast.BasicLit{ValuePos: lit.ValuePos, Kind: lit.Kind, Value: x}
 }
 
+// todo: not working -- we don't end up with slbool types actually
+func (p *printer) fixSlbool(x *ast.CallExpr, prec1, depth int) bool {
+	sel, ok := x.Fun.(*ast.SelectorExpr)
+	if !ok {
+		return false
+	}
+	fmt.Printf("sel.X: %+v\n", sel.X)
+	ss, ok := sel.X.(*ast.SelectorExpr)
+	if !ok {
+		return false
+	}
+	fmt.Printf("ss: %+v\n", ss)
+	def, ok := p.pkg.TypesInfo.Defs[ss.Sel]
+	if !ok {
+		return false
+	}
+	nm := def.Type().String()
+	fmt.Println(nm)
+	if !strings.Contains(nm, "Bool") {
+		return false
+	}
+	fnm := sel.Sel.Name
+	switch fnm {
+	case "IsTrue":
+		p.expr1(sel, prec1, depth)
+		p.print("==1")
+	}
+	return true
+}
+
 func (p *printer) possibleSelectorExpr(expr ast.Expr, prec1, depth int) bool {
 	if x, ok := expr.(*ast.SelectorExpr); ok {
-		return p.selectorExpr(x, depth, true)
+		return p.selectorExpr(x, depth, true) // method
 	}
 	p.expr1(expr, prec1, depth)
 	return false
@@ -1443,8 +1476,9 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace, nosemi bool) {
 			if lid, isId := s.Lhs[0].(*ast.Ident); isId {
 				if def, has := p.pkg.TypesInfo.Defs[lid]; has {
 					// fmt.Println(def)
-					typ := def.Type()
-					p.print(typ.String(), blank)
+					nm := def.Type().String()
+					spl := strings.Split(nm, ".")
+					p.print(spl[len(spl)-1], blank)
 				}
 				p.exprList(s.Pos(), s.Lhs, depth, 0, s.TokPos, false)
 			} else {

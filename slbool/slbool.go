@@ -18,6 +18,34 @@ const (
 	True  Bool = 1
 )
 
+func (b *Bool) IsTrue() bool {
+	return *b == True
+}
+
+func (b *Bool) IsFalse() bool {
+	return *b == False
+}
+
+func (b *Bool) SetBool(bb bool) {
+	*b = FromBool(bb)
+}
+
+func (b *Bool) String() string {
+	if b.IsTrue() {
+		return "true"
+	}
+	return "false"
+}
+
+func (b *Bool) FromString(s string) {
+	if s == "true" || s == "True" {
+		b.SetBool(true)
+	} else {
+		b.SetBool(false)
+	}
+
+}
+
 func IsTrue(b Bool) bool {
 	return b == True
 }

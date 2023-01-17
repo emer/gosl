@@ -79,7 +79,7 @@ type ParamStruct struct {
 func (ps *ParamStruct) IntegFmRaw(ds *DataStruct, modArg *float32) {
 	// note: the following are just to test basic control structures
 	newVal := ps.Dt*(ds.Raw-ds.Integ) + *modArg
-	if newVal < -10 || slbool.IsTrue(ps.Option) {
+	if newVal < -10 || ps.Option.IsTrue() {
 		newVal = -10
 	}
 	ds.Integ += newVal

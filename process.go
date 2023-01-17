@@ -63,15 +63,15 @@ func ProcessFiles(paths []string) (map[string][]byte, error) {
 	// map of files with a main function that needs to be compiled
 	needsCompile := map[string]bool{}
 
+	serr := alignsl.CheckPackage(pkg)
+	if serr != nil {
+		fmt.Println(serr)
+	}
+
 	slrandCopied := false
 	for fn := range gosls {
 		gofn := fn + ".go"
 		fmt.Printf("###################################\nProcessing Go file: %s\n", gofn)
-
-		serr := alignsl.CheckPackage(pkg)
-		if serr != nil {
-			fmt.Println(serr)
-		}
 
 		var afile *ast.File
 		var fpos token.Position
@@ -125,6 +125,13 @@ func ProcessFiles(paths []string) (map[string][]byte, error) {
 			needsCompile[fn] = true // assume any standalone has main
 			break
 		}
+
+		upfn := strings.ToUpper(fn)
+		once := fmt.Sprintf("#ifndef __%s_HLSL__\n#define __%s_HLSL__\n\n", upfn, upfn)
+		exsl = append([]byte(once), exsl...)
+		oncend := fmt.Sprintf("#endif // __%s_HLSL__\n", upfn)
+		exsl = append(exsl, []byte(oncend)...)
+
 		slfn := filepath.Join(*outDir, fn+".hlsl")
 		ioutil.WriteFile(slfn, exsl, 0644)
 	}

@@ -45,7 +45,7 @@ func (sk *SpikeParams) Defaults() {
 	sk.VmR = 0.3
 	sk.Tr = 3
 	sk.RTau = 1.6667
-	sk.Exp = slbool.True
+	sk.Exp.SetBool(true)
 	sk.ExpSlope = 0.02
 	sk.ExpThr = 0.9
 	sk.MaxHz = 180
@@ -342,7 +342,7 @@ type AttnParams struct {
 }
 
 func (at *AttnParams) Defaults() {
-	at.On = slbool.True
+	at.On.SetBool(true)
 	at.Min = 0.8
 }
 
@@ -354,7 +354,7 @@ func (at *AttnParams) ModVal(val float32, attn float32) float32 {
 	if val < 0 {
 		val = 0
 	}
-	if slbool.IsFalse(at.On) {
+	if at.On.IsFalse() {
 		return val
 	}
 	return val * (at.Min + (1-at.Min)*attn)
@@ -375,7 +375,7 @@ type SynComParams struct {
 func (sc *SynComParams) Defaults() {
 	sc.Delay = 2
 	sc.PFail = 0 // 0.5 works?
-	sc.PFailSWt = slbool.False
+	sc.PFailSWt.SetBool(false)
 }
 
 func (sc *SynComParams) Update() {
@@ -383,7 +383,7 @@ func (sc *SynComParams) Update() {
 
 // WtFailP returns probability of weight (synapse) failure given current SWt value
 func (sc *SynComParams) WtFailP(swt float32) float32 {
-	if slbool.IsFalse(sc.PFailSWt) {
+	if sc.PFailSWt.IsFalse() {
 		return sc.PFail
 	}
 	return sc.PFail * (1 - swt)
@@ -631,7 +631,7 @@ func (ac *ActParams) GkFmVm(nrn *Neuron) {
 	nrn.MahpN += dn
 	nrn.Gak = ac.AK.Gak(nrn.VmDend)
 	nrn.Gk = nrn.Gak + ac.Mahp.GmAHP(nrn.MahpN) + ac.Sahp.GsAHP(nrn.SahpN)
-	if slbool.IsTrue(ac.KNa.On) {
+	if ac.KNa.On.IsTrue() {
 		ac.KNa.GcFmSpike(&nrn.GknaMed, &nrn.GknaSlow, nrn.Spike > .5)
 		nrn.Gk += nrn.GknaMed + nrn.GknaSlow
 	}
@@ -641,13 +641,13 @@ func (ac *ActParams) GkFmVm(nrn *Neuron) {
 // geExt is extra conductance to add to the final Ge value
 func (ac *ActParams) GeFmSyn(ni int, nrn *Neuron, geSyn, geExt float32, randctr *sltype.Uint2) {
 	nrn.GeExt = 0
-	if slbool.IsTrue(ac.Clamp.Add) && nrn.HasFlag(NeuronHasExt) {
+	if ac.Clamp.Add.IsTrue() && nrn.HasFlag(NeuronHasExt) {
 		nrn.GeExt = nrn.Ext * ac.Clamp.Ge
 		geSyn += nrn.GeExt
 	}
 	geSyn = ac.Attn.ModVal(geSyn, nrn.Attn)
 
-	if slbool.IsFalse(ac.Clamp.Add) && nrn.HasFlag(NeuronHasExt) {
+	if ac.Clamp.Add.IsTrue() && nrn.HasFlag(NeuronHasExt) {
 		geSyn = nrn.Ext * ac.Clamp.Ge
 		nrn.GeExt = geSyn
 		geExt = 0 // no extra in this case
