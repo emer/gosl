@@ -11,6 +11,7 @@ import (
 
 	"github.com/emer/emergent/timer"
 	"github.com/goki/gosl/sltype"
+	"github.com/goki/gosl/threading"
 	"github.com/goki/ki/ints"
 	"github.com/goki/mat32"
 	"github.com/goki/vgpu/vgpu"
@@ -45,10 +46,11 @@ func main() {
 	// 100,000 = ~60x "
 
 	// AMD is 64, NVIDIA, M1 are 32
-	threads := 64
-	nInt := ints.IntMultiple(n, threads)
-	n = nInt               // enforce optimal n's -- otherwise requires range checking
-	nGps := nInt / threads // dispatch n
+	gpuThreads := 64
+	cpuThreads := 10
+	nInt := ints.IntMultiple(n, gpuThreads)
+	n = nInt                  // enforce optimal n's -- otherwise requires range checking
+	nGps := nInt / gpuThreads // dispatch n
 
 	maxCycles := 200 // 70x speedup doing 20000
 	// fmt.Printf("n: %d   cycles: %d\n", n, maxCycles)
@@ -99,12 +101,13 @@ func main() {
 	cpuTmr.Start()
 
 	for cy := 0; cy < maxCycles; cy++ {
-		for i := range neur1 {
-			nrn := &neur1[i]
-			ly := &lays[nrn.LayIdx]
-			// d.Vm = lay.Act.Decay.Glong
-			ly.CycleNeuron(i, nrn, time)
-		}
+		threading.ParallelRun(func(st, ed int) {
+			for ni := st; ni < ed; ni++ {
+				nrn := &neur1[ni]
+				ly := &lays[nrn.LayIdx]
+				ly.CycleNeuron(ni, nrn, time)
+			}
+		}, len(neur1), cpuThreads)
 		ly := &lays[0]
 		ly.CycleTimeInc(time)
 		// fmt.Printf("%d\ttime.RandCtr: %v\n", cy, time.RandCtr.Uint2())
