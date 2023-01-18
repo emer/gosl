@@ -46,10 +46,11 @@ func main() {
 	// 100,000 = ~60x "
 
 	// AMD is 64, NVIDIA, M1 are 32
-	threads := 64
-	nInt := ints.IntMultiple(n, threads)
-	n = nInt               // enforce optimal n's -- otherwise requires range checking
-	nGps := nInt / threads // dispatch n
+	gpuThreads := 64
+	cpuThreads := 10
+	nInt := ints.IntMultiple(n, gpuThreads)
+	n = nInt                  // enforce optimal n's -- otherwise requires range checking
+	nGps := nInt / gpuThreads // dispatch n
 
 	maxCycles := 200 // 70x speedup doing 20000
 	// fmt.Printf("n: %d   cycles: %d\n", n, maxCycles)
@@ -106,7 +107,7 @@ func main() {
 				ly := &lays[nrn.LayIdx]
 				ly.CycleNeuron(ni, nrn, time)
 			}
-		}, len(neur1), 10)
+		}, len(neur1), cpuThreads)
 		ly := &lays[0]
 		ly.CycleTimeInc(time)
 		// fmt.Printf("%d\ttime.RandCtr: %v\n", cy, time.RandCtr.Uint2())
