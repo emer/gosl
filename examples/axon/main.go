@@ -11,6 +11,7 @@ import (
 
 	"github.com/emer/emergent/timer"
 	"github.com/goki/gosl/sltype"
+	"github.com/goki/gosl/threading"
 	"github.com/goki/ki/ints"
 	"github.com/goki/mat32"
 	"github.com/goki/vgpu/vgpu"
@@ -99,12 +100,13 @@ func main() {
 	cpuTmr.Start()
 
 	for cy := 0; cy < maxCycles; cy++ {
-		for i := range neur1 {
-			nrn := &neur1[i]
-			ly := &lays[nrn.LayIdx]
-			// d.Vm = lay.Act.Decay.Glong
-			ly.CycleNeuron(i, nrn, time)
-		}
+		threading.ParallelRun(func(st, ed int) {
+			for ni := st; ni < ed; ni++ {
+				nrn := &neur1[ni]
+				ly := &lays[nrn.LayIdx]
+				ly.CycleNeuron(ni, nrn, time)
+			}
+		}, len(neur1), 10)
 		ly := &lays[0]
 		ly.CycleTimeInc(time)
 		// fmt.Printf("%d\ttime.RandCtr: %v\n", cy, time.RandCtr.Uint2())
