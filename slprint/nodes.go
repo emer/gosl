@@ -20,6 +20,7 @@ import (
 	"go/ast"
 	"go/token"
 	"math"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"unicode"
@@ -1477,8 +1478,9 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace, nosemi bool) {
 				if def, has := p.pkg.TypesInfo.Defs[lid]; has {
 					// fmt.Println(def)
 					nm := def.Type().String()
-					spl := strings.Split(nm, ".")
-					p.print(spl[len(spl)-1], blank)
+					_, nm = filepath.Split(nm) // get rid of any paths
+					// fmt.Println(nm)
+					p.print(nm, blank)
 				}
 				p.exprList(s.Pos(), s.Lhs, depth, 0, s.TokPos, false)
 			} else {
@@ -1574,6 +1576,7 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace, nosemi bool) {
 		}
 		p.print(s.Colon, token.COLON)
 		p.stmtList(s.Body, 1, nextIsRBrace)
+		p.print(formfeed, "\tbreak;")
 
 	case *ast.SwitchStmt:
 		p.print(token.SWITCH)

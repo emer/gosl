@@ -103,31 +103,14 @@ func (ly *Layer) SpikeFmG(ni int, nrn *Neuron, ctime *Time) {
 
 // CycleNeuron does one cycle (msec) of updating at the neuron level
 func (ly *Layer) CycleNeuron(ni int, nrn *Neuron, ctime *Time) {
-	var randctr sltype.Uint2
-	randctr = ctime.RandCtr.Uint2() // use local var
+	randctr := ctime.RandCtr.Uint2() // use local var
 	ly.GInteg(ni, nrn, ctime, &randctr)
 	ly.SpikeFmG(ni, nrn, ctime)
 }
 
-// CycleNeuronRandIncr returns increment in Rand counter state for cycle neuron
-// based on what random numbers are enabled.
-func (ly *Layer) CycleNeuronRandIncr() int {
-	if slbool.IsFalse(ly.Act.Noise.On) {
-		return 0
-	}
-	inc := 0
-	if ly.Act.Noise.Ge > 0 {
-		inc++
-	}
-	if ly.Act.Noise.Gi > 0 {
-		inc++
-	}
-	return inc
-}
-
 func (ly *Layer) CycleTimeInc(ctime *Time) {
 	ctime.CycleInc()
-	ctime.RandCtr.Add(ly.CycleNeuronRandIncr())
+	ctime.RandCtr.Add(2) // main code uses fixed inc across all layers..
 }
 
 //gosl: end axon

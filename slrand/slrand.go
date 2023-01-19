@@ -280,9 +280,9 @@ func (ct *Counter) Seed(seed uint32) {
 // Add increments the counter by given amount.
 // Call this after thread completion with number of random numbers
 // generated per thread.
-func (ct *Counter) Add(inc int) sltype.Uint2 {
+func (ct *Counter) Add(inc uint32) sltype.Uint2 {
 	c := ct.Uint2()
-	CounterAdd(&c, uint32(inc))
+	CounterAdd(&c, inc)
 	ct.Set(c)
 	return c
 }

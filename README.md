@@ -69,11 +69,17 @@ In general shader code should be simple mathematical expressions and data types,
 
 * Use `slbool.Bool` instead of `bool` -- it defines a Go-friendly interface based on a `int32` basic type.  Using a `bool` in a `uniform` `struct` causes an obscure `glslc` compiler error: `shaderc: internal error: compilation succeeded but failed to optimize: OpFunctionCall Argument <id> '73[%73]'s type does not match Function`  
 
-* Alignment and padding of `struct` fields is key -- todo: checker for compatibility.
+* Alignment and padding of `struct` fields is key -- this is automatically checked by `gosl`.
 
-* HLSL does not support enum types, but standard go `const` declarations will be converted.  Use an `int32` or `uint32` data type.  You cannot use `iota` -- value must be present in the Go source.  Also, for bitflags, define explicitly, not using `bitflags` package.
+* HLSL does not support enum types, but standard go `const` declarations will be converted.  Use an `int32` or `uint32` data type.  It will automatically deal with the simple incrementing `iota` values, but not more complex cases.  Also, for bitflags, define explicitly, not using `bitflags` package.
 
 * HLSL does not do multi-pass compiling, so all dependent types must be specified *before* being used in other ones, and this also precludes referencing the *current* type within itself.  todo: can you just use a forward declaration?
+
+* HLSL does not provide the same auto-init-to-zero for declared variables -- safer to initialize directly:
+```Go
+    val := float32(0) // guaranteed 0 value
+    var val float32 // not guaranteed to be 0!  avoid!
+```    
 
 ## Syntax
 

@@ -65,7 +65,7 @@ struct ParamStruct {
 	void IntegFmRaw(inout DataStruct ds, inout float modArg) {
 		// note: the following are just to test basic control structures
 		float newVal = this.Dt*(ds.Raw-ds.Integ) + modArg;
-		if (newVal < -10 || (1 == this.Option)) {
+		if (newVal < -10 || this.Option==1) {
 			newVal = -10;
 		}
 		ds.Integ += newVal;
@@ -78,6 +78,19 @@ struct ParamStruct {
 		}
 		NeuronFlags flag;
 		flag &=~NeuronHasExt; // clear flag -- op doesn't exist in C
+
+		Modes mode = Test;
+		switch (mode) {
+		case Train:
+			ds.Exp *= .5;
+			break;
+		case Test:
+			ds.Exp *= 2;
+			break;
+		default:
+			ds.Exp *= 1;
+			break;
+		}
 	}
 
 };

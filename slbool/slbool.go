@@ -18,19 +18,19 @@ const (
 	True  Bool = 1
 )
 
-func (b *Bool) IsTrue() bool {
-	return *b == True
+func (b Bool) IsTrue() bool {
+	return b == True
 }
 
-func (b *Bool) IsFalse() bool {
-	return *b == False
+func (b Bool) IsFalse() bool {
+	return b == False
 }
 
 func (b *Bool) SetBool(bb bool) {
 	*b = FromBool(bb)
 }
 
-func (b *Bool) String() string {
+func (b Bool) String() string {
 	if b.IsTrue() {
 		return "true"
 	}
@@ -45,6 +45,9 @@ func (b *Bool) FromString(s string) {
 	}
 
 }
+
+func (b Bool) MarshalJSON() ([]byte, error)  { return []byte(b.String()), nil }
+func (b *Bool) UnmarshalJSON(s []byte) error { b.FromString(string(s)); return nil }
 
 func IsTrue(b Bool) bool {
 	return b == True

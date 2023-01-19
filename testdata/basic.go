@@ -93,6 +93,16 @@ func (ps *ParamStruct) AnotherMeth(ds *DataStruct) {
 	}
 	var flag NeuronFlags
 	flag &^= NeuronHasExt // clear flag -- op doesn't exist in C
+
+	mode := Test
+	switch mode {
+	case Train:
+		ds.Exp *= .5
+	case Test:
+		ds.Exp *= 2
+	default:
+		ds.Exp *= 1
+	}
 }
 
 //gosl: end basic
