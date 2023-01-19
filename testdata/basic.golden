@@ -81,10 +81,10 @@ struct ParamStruct {
 
 		Modes mode = Test;
 		switch (mode) {
-		case Train:
+		case 2:
 			ds.Exp *= .5;
 			break;
-		case Test:
+		case 3:
 			ds.Exp *= 2;
 			break;
 		default:

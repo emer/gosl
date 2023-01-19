@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"go/types"
 	"math"
 	"path/filepath"
 	"strconv"
@@ -1544,6 +1545,7 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace, nosemi bool) {
 			p.print(blank)
 			p.expr(s.Label)
 		}
+		p.print(";")
 
 	case *ast.BlockStmt:
 		p.block(s, 1)
@@ -1570,7 +1572,26 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace, nosemi bool) {
 	case *ast.CaseClause:
 		if s.List != nil {
 			p.print(token.CASE, blank)
-			p.exprList(s.Pos(), s.List, 1, 0, s.Colon, false)
+			// p.exprList(s.Pos(), s.List, 1, 0, s.Colon, false)
+			// glslc compiler crashes if expr is the label -- convert to int.
+			gotInt := false
+			if len(s.List) != 1 {
+				fmt.Printf("%s:\n\tglslc switch only allows single-arg case values that translate to an int\n", p.pkg.Fset.PositionFor(s.Pos(), true).String())
+			} else {
+				vle := s.List[0]
+				if id, ok := vle.(*ast.Ident); ok {
+					if def, ok := p.pkg.TypesInfo.Uses[id]; ok {
+						if cd, ok := def.(*types.Const); ok {
+							p.print(cd.Val().String())
+							gotInt = true
+						}
+					}
+				}
+			}
+			if !gotInt {
+				fmt.Printf("%s:\n\tglslc switch only allows single-arg case values that translate to an int\n", p.pkg.Fset.PositionFor(s.Pos(), true).String())
+				p.exprList(s.Pos(), s.List, 1, 0, s.Colon, false)
+			}
 		} else {
 			p.print(token.DEFAULT)
 		}
