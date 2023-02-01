@@ -24,6 +24,7 @@ var (
 	outDir        = flag.String("out", "shaders", "output directory for shader code, relative to where gosl is invoked -- must not be an empty string")
 	excludeFuns   = flag.String("exclude", "Update,Defaults", "comma-separated list of names of functions to exclude from exporting to HLSL")
 	keepTmp       = flag.Bool("keep", false, "keep temporary converted versions of the source files, for debugging")
+	debug         = flag.Bool("debug", false, "enable debugging messages while running")
 	excludeFunMap = map[string]bool{}
 )
 

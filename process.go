@@ -71,7 +71,9 @@ func ProcessFiles(paths []string) (map[string][]byte, error) {
 	slrandCopied := false
 	for fn := range gosls {
 		gofn := fn + ".go"
-		fmt.Printf("###################################\nProcessing Go file: %s\n", gofn)
+		if *debug {
+			fmt.Printf("###################################\nProcessing Go file: %s\n", gofn)
+		}
 
 		var afile *ast.File
 		var fpos token.Position
@@ -95,7 +97,9 @@ func ProcessFiles(paths []string) (map[string][]byte, error) {
 		// ioutil.WriteFile(filepath.Join(*outDir, fn+".tmp"), buf.Bytes(), 0644)
 		slfix, hasSlrand := SlEdits(buf.Bytes())
 		if hasSlrand && !slrandCopied {
-			fmt.Printf("\tcopying slrand.hlsl to shaders\n")
+			if *debug {
+				fmt.Printf("\tcopying slrand.hlsl to shaders\n")
+			}
 			CopySlrand()
 			slrandCopied = true
 		}
