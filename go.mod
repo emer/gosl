@@ -7,7 +7,7 @@ require (
 	github.com/goki/gi v1.3.9
 	github.com/goki/ki v1.1.11
 	github.com/goki/mat32 v1.0.14
-	github.com/goki/vgpu v1.0.11
+	github.com/goki/vgpu v1.0.14
 	golang.org/x/exp v0.0.0-20230105202349-8879d0199aa3
 	golang.org/x/tools v0.5.0
 )

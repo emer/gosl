@@ -167,7 +167,8 @@ func ProcessFiles(paths []string) (map[string][]byte, error) {
 func CompileFile(fn string) error {
 	ext := filepath.Ext(fn)
 	ofn := fn[:len(fn)-len(ext)] + ".spv"
-	cmd := exec.Command("glslc", "-fshader-stage=compute", "-o", ofn, fn)
+	// todo: figure out how to use 1.2 here -- see bug issue #1
+	cmd := exec.Command("glslc", "-fshader-stage=compute", "-O", "--target-env=vulkan1.1", "-o", ofn, fn)
 	cmd.Dir, _ = filepath.Abs(*outDir)
 	out, err := cmd.CombinedOutput()
 	fmt.Printf("\n-----------------------------\nglslc output for: %s\n%s\n", fn, out)

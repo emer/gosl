@@ -107,4 +107,12 @@ HLSL is very C-like and provides a much better target for Go conversion than gls
 
 While there aren't any pointers allowed in HLSL, the inlining of methods, along with the use of the `inout` [InputModifier](https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-function-parameters), effectively supports pass-by-reference.  The [stackoverflow](https://stackoverflow.com/questions/28527622/shaders-function-parameters-performance/28577878#28577878) on this is a bit unclear but the basic example demonstrates that it all goes through.
 
+# Links
+
+Key docs for HLSL as compute shaders:
+
+* https://github.com/microsoft/DirectXShaderCompiler/blob/main/docs/SPIR-V.rst
+
+* https://www.saschawillems.de/blog/2020/05/23/shaders-for-vulkan-samples-now-also-available-in-hlsl/
+
 
