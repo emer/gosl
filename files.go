@@ -96,7 +96,7 @@ func FilesFromPaths(paths []string) []string {
 			path := path
 			fls = AddFile(path, fls, procd)
 		default:
-			// Directories are walked, ignoring non-Go files.
+			// Directories are walked, ignoring non-Go, non-HLSL files.
 			err := filepath.WalkDir(path, func(path string, f fs.DirEntry, err error) error {
 				if err != nil || !(IsGoFile(f) || IsHLSLFile(f)) {
 					return err

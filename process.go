@@ -152,9 +152,10 @@ func ProcessFiles(paths []string) (map[string][]byte, error) {
 		if hasGo {
 			continue
 		}
-		tofn := filepath.Join(*outDir, hlfn)
+		_, hlfno := filepath.Split(hlfn) // could be in a subdir
+		tofn := filepath.Join(*outDir, hlfno)
 		CopyFile(hlfn, tofn)
-		fn := strings.TrimSuffix(hlfn, ".hlsl")
+		fn := strings.TrimSuffix(hlfno, ".hlsl")
 		needsCompile[fn] = true // assume any standalone hlsl is a main
 	}
 
