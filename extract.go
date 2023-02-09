@@ -53,10 +53,11 @@ func ExtractGoFiles(files []string) map[string][]byte {
 		var outLns [][]byte
 		slFn := ""
 		for _, ln := range lines {
-			isKey := bytes.HasPrefix(ln, key)
+			tln := bytes.TrimSpace(ln)
+			isKey := bytes.HasPrefix(tln, key)
 			var keyStr []byte
 			if isKey {
-				keyStr = ln[len(key):]
+				keyStr = tln[len(key):]
 				// fmt.Printf("key: %s\n", string(keyStr))
 			}
 			switch {
