@@ -65,7 +65,7 @@ func goslMain() {
 		return
 	}
 	os.MkdirAll(*outDir, 0755)
-	RemoveGoFiles(*outDir)
+	RemoveGenFiles(*outDir)
 
 	args := flag.Args()
 	if len(args) == 0 {

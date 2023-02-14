@@ -172,7 +172,7 @@ func CompileFile(fn string) error {
 	cmd := exec.Command("glslc", "-fshader-stage=compute", "-O", "--target-env=vulkan1.1", "-o", ofn, fn)
 	cmd.Dir, _ = filepath.Abs(*outDir)
 	out, err := cmd.CombinedOutput()
-	fmt.Printf("\n-----------------------------\nglslc output for: %s\n%s\n", fn, out)
+	fmt.Printf("\n-----------------------------------------------------\nglslc output for: %s\n%s", fn, out)
 	if err != nil {
 		log.Println(err)
 		return err

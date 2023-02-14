@@ -30,6 +30,11 @@ func IsHLSLFile(f fs.DirEntry) bool {
 	return !strings.HasPrefix(name, ".") && strings.HasSuffix(name, ".hlsl") && !f.IsDir()
 }
 
+func IsSPVFile(f fs.DirEntry) bool {
+	name := f.Name()
+	return !strings.HasPrefix(name, ".") && strings.HasSuffix(name, ".spv") && !f.IsDir()
+}
+
 func AddFile(fn string, fls []string, procd map[string]bool) []string {
 	if _, has := procd[fn]; has {
 		return fls
@@ -165,13 +170,15 @@ func CopySlrand() error {
 	return nil
 }
 
-// RemoveGoFiles removes .go files in dir
-func RemoveGoFiles(dir string) {
+// RemoveGenFiles removes .go, .hlsl, .spv files in shader generated dir
+func RemoveGenFiles(dir string) {
 	err := filepath.WalkDir(dir, func(path string, f fs.DirEntry, err error) error {
-		if err != nil || !IsGoFile(f) {
+		if err != nil {
 			return err
 		}
-		os.Remove(path)
+		if IsGoFile(f) || IsHLSLFile(f) || IsSPVFile(f) {
+			os.Remove(path)
+		}
 		return nil
 	})
 	if err != nil {

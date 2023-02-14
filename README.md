@@ -26,7 +26,7 @@ In your Go code, use these comment directives:
 //gosl: end <filename>
 ```
 
-to bracket code to be processed.  The resulting converted code is copied into a `shaders` subdirectory created under the current directory where the `gosl` command is run, using the filenames specified in the comment directives.  Each such filename should correspond to a complete shader program, or a file that can be included into other shader programs.  Code is appended to the target file names in the order of the source .go files on the command line, so multiple .go files can be combined into one resulting HLSL file.
+to bracket code to be processed.  The resulting converted code is copied into a `shaders` subdirectory created under the current directory where the `gosl` command is run, using the filenames specified in the comment directives.  Each such filename should correspond to a complete shader program (i.e., a "kernel"), or a file that can be included into other shader programs.  Code is appended to the target file names in the order of the source .go files on the command line, so multiple .go files can be combined into one resulting HLSL file.
 
 HLSL specific code, e.g., for the `main` compute function or to specify `#include` files, can be included either by specifying files with a `.hlsl` extension as arguments to the `gosl` command, or by using a `//gosl: hlsl` comment directive as follows:
 ```
@@ -39,6 +39,8 @@ HLSL specific code, e.g., for the `main` compute function or to specify `#includ
 where the HLSL shader code is commented out in the .go file -- it will be copied into the target filename and uncommented.  The HLSL code can be surrounded by `/*` `*/` comment blocks (each on a separate line) for multi-line code (though using a separate `.hlsl` file is preferable in this case). 
 
 For `.hlsl` files, their filename is used to determine the `shaders` destination file name, and they are automatically appended to the end of the corresponding `.hlsl` file generated from the `Go` files -- this is where the `main` function and associated global variables should be specified.
+
+**IMPORTANT:** all `.go`, `.hlsl`, and `.spv` files are removed from the `shaders` directory prior to processing to ensure everything there is current -- always specify a different source location for any custom `.hlsl` files that are included.
 
 # Usage
 
