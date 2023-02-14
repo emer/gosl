@@ -177,12 +177,12 @@ func main() {
 
 	// note: it is 2x faster to run the for loop within the shader entirely
 	pl.ComputeCommand(nGps, 1, 1)
-	sy.ComputeSubmit() // technically should wait, but results are same..
+	sy.ComputeSubmitWait() // technically should wait, but results are same..
 	// if validation mode is on, it complains..
 	for cy := 1; cy < maxCycles; cy++ {
-		sy.ComputeSubmit() // waiting every time is 10x for 100k
+		sy.ComputeSubmitWait() // waiting every time is 10x for 100k
 	}
-	sy.ComputeWait() // waiting only at end is 13x for 100k
+	// sy.ComputeWait() // waiting only at end is 13x for 100k
 
 	gpuTmr.Stop()
 
