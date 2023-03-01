@@ -1586,6 +1586,11 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace, nosemi bool) {
 							gotInt = true
 						}
 					}
+				} else if bl, ok := vle.(*ast.BasicLit); ok {
+					p.print(bl)
+					gotInt = true
+				} else {
+					fmt.Printf("%#v\n", vle)
 				}
 			}
 			if !gotInt {
