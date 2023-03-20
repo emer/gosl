@@ -81,15 +81,17 @@ struct ParamStruct {
 
 		Modes mode = Test;
 		switch (mode) {
-		case 2:
-			ds.Exp *= .5;
-			break;
 		case 3:
-			ds.Exp *= 2;
-			break;
-		default:
-			ds.Exp *= 1;
-			break;
+		// fallthrough
+
+		case 2:{
+			double ab = .5;
+			ds.Exp *= ab;
+			break; }
+		default:{
+			int ab = 1;
+			ds.Exp *= ab;
+			break; }
 		}
 	}
 

@@ -1418,6 +1418,52 @@ func (p *printer) indentList(list []ast.Expr) bool {
 	return false
 }
 
+// caseClause processes a CaseClause
+func (p *printer) caseClause(s *ast.CaseClause, nextIsRBrace bool) {
+	if s.List != nil {
+		p.print(token.CASE, blank)
+		// p.exprList(s.Pos(), s.List, 1, 0, s.Colon, false)
+		// glslc compiler crashes if expr is the label -- convert to int.
+		gotInt := false
+		if len(s.List) != 1 {
+			fmt.Printf("%s:\n\tglslc switch only allows single-arg case values that translate to an int\n", p.pkg.Fset.PositionFor(s.Pos(), true).String())
+		} else {
+			vle := s.List[0]
+			if id, ok := vle.(*ast.Ident); ok {
+				if def, ok := p.pkg.TypesInfo.Uses[id]; ok {
+					if cd, ok := def.(*types.Const); ok {
+						p.print(cd.Val().String())
+						gotInt = true
+					}
+				}
+			} else if bl, ok := vle.(*ast.BasicLit); ok {
+				p.print(bl)
+				gotInt = true
+			} else {
+				fmt.Printf("gosl: unsupported switch case value: %#v\n", vle)
+			}
+		}
+		if !gotInt {
+			fmt.Printf("%s:\n\tglslc switch only allows single-arg case values that translate to an int\n", p.pkg.Fset.PositionFor(s.Pos(), true).String())
+			p.exprList(s.Pos(), s.List, 1, 0, s.Colon, false)
+		}
+	} else {
+		p.print(token.DEFAULT)
+	}
+	p.print(s.Colon, token.COLON)
+	if len(s.Body) == 1 {
+		if fbr, ok := s.Body[0].(*ast.BranchStmt); ok {
+			if fbr.Tok == token.FALLTHROUGH {
+				p.print(formfeed, "// fallthrough")
+				return
+			}
+		}
+	}
+	p.print(token.LBRACE) // Go implies new context, C doesn't
+	p.stmtList(s.Body, 1, nextIsRBrace)
+	p.print(formfeed, "\tbreak; ", token.RBRACE)
+}
+
 func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace, nosemi bool) {
 	p.print(stmt.Pos())
 
@@ -1570,39 +1616,7 @@ func (p *printer) stmt(stmt ast.Stmt, nextIsRBrace, nosemi bool) {
 		}
 
 	case *ast.CaseClause:
-		if s.List != nil {
-			p.print(token.CASE, blank)
-			// p.exprList(s.Pos(), s.List, 1, 0, s.Colon, false)
-			// glslc compiler crashes if expr is the label -- convert to int.
-			gotInt := false
-			if len(s.List) != 1 {
-				fmt.Printf("%s:\n\tglslc switch only allows single-arg case values that translate to an int\n", p.pkg.Fset.PositionFor(s.Pos(), true).String())
-			} else {
-				vle := s.List[0]
-				if id, ok := vle.(*ast.Ident); ok {
-					if def, ok := p.pkg.TypesInfo.Uses[id]; ok {
-						if cd, ok := def.(*types.Const); ok {
-							p.print(cd.Val().String())
-							gotInt = true
-						}
-					}
-				} else if bl, ok := vle.(*ast.BasicLit); ok {
-					p.print(bl)
-					gotInt = true
-				} else {
-					fmt.Printf("%#v\n", vle)
-				}
-			}
-			if !gotInt {
-				fmt.Printf("%s:\n\tglslc switch only allows single-arg case values that translate to an int\n", p.pkg.Fset.PositionFor(s.Pos(), true).String())
-				p.exprList(s.Pos(), s.List, 1, 0, s.Colon, false)
-			}
-		} else {
-			p.print(token.DEFAULT)
-		}
-		p.print(s.Colon, token.COLON)
-		p.stmtList(s.Body, 1, nextIsRBrace)
-		p.print(formfeed, "\tbreak;")
+		p.caseClause(s, nextIsRBrace)
 
 	case *ast.SwitchStmt:
 		p.print(token.SWITCH)

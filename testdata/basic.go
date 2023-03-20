@@ -96,12 +96,14 @@ func (ps *ParamStruct) AnotherMeth(ds *DataStruct) {
 
 	mode := Test
 	switch mode {
-	case Train:
-		ds.Exp *= .5
 	case Test:
-		ds.Exp *= 2
+		fallthrough
+	case Train:
+		ab := .5
+		ds.Exp *= ab
 	default:
-		ds.Exp *= 1
+		ab := 1
+		ds.Exp *= ab
 	}
 }
 
