@@ -7,6 +7,30 @@ import (
 	"github.com/goki/mat32"
 )
 
+//gosl: nohlsl basic
+
+// note: this code is included in the go pre-processing output but
+// then removed from the final hlsl output.
+// Use when you need different versions of the same function for CPU vs. GPU
+
+// MyTrickyFun this is the CPU version of the tricky function
+func MyTrickyFun(x float32) float32 {
+	return 10 // ok actually not tricky here, but whatever
+}
+
+//gosl: end basic
+
+//gosl: hlsl basic
+
+// // note: here is the hlsl version, only included in hlsl
+
+// // MyTrickyFun this is the GPU version of the tricky function
+// float MyTrickyFun(float x) {
+// 	return 16; // ok actually not tricky here, but whatever
+// }
+
+//gosl: end basic
+
 //gosl: start basic
 
 // FastExp is a quartic spline approximation to the Exp function, by N.N. Schraudolph

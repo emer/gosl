@@ -146,6 +146,7 @@ var Replaces = []Replace{
 	// {[]byte("mat32.FastExp("), []byte("FastExp(")}, // FastExp about same speed as native exp?
 	{[]byte("mat32.FastExp("), []byte("exp(")}, // exp is slightly faster it seems
 	{[]byte("math.Float32frombits("), []byte("asfloat(")},
+	{[]byte("math.Float32bits("), []byte("asuint(")},
 	{[]byte("shaders."), []byte("")},
 	{[]byte("slrand."), []byte("Rand")},
 	{[]byte("sltype.U"), []byte("u")},

@@ -35,6 +35,7 @@ func ExtractGoFiles(files []string) map[string][]byte {
 	key := []byte("//gosl: ")
 	start := []byte("start")
 	hlsl := []byte("hlsl")
+	nohlsl := []byte("nohlsl")
 	end := []byte("end")
 	nl := []byte("\n")
 	include := []byte("#include")
@@ -50,6 +51,7 @@ func ExtractGoFiles(files []string) map[string][]byte {
 
 		inReg := false
 		inHlsl := false
+		inNoHlsl := false
 		var outLns [][]byte
 		slFn := ""
 		for _, ln := range lines {
@@ -62,12 +64,13 @@ func ExtractGoFiles(files []string) map[string][]byte {
 			}
 			switch {
 			case inReg && isKey && bytes.HasPrefix(keyStr, end):
-				if inHlsl {
+				if inHlsl || inNoHlsl {
 					outLns = append(outLns, ln)
 				}
 				sls[slFn] = outLns
 				inReg = false
 				inHlsl = false
+				inNoHlsl = false
 			case inReg:
 				for pkg := range LoadedPackageNames { // remove package prefixes
 					if !bytes.Contains(ln, include) {
@@ -79,6 +82,12 @@ func ExtractGoFiles(files []string) map[string][]byte {
 				inReg = true
 				slFn = string(keyStr[len(start)+1:])
 				outLns = sls[slFn]
+			case isKey && bytes.HasPrefix(keyStr, nohlsl):
+				inReg = true
+				inNoHlsl = true
+				slFn = string(keyStr[len(nohlsl)+1:])
+				outLns = sls[slFn]
+				outLns = append(outLns, ln) // key to include self here
 			case isKey && bytes.HasPrefix(keyStr, hlsl):
 				inReg = true
 				inHlsl = true
@@ -117,6 +126,7 @@ func ExtractGoFiles(files []string) map[string][]byte {
 func ExtractHLSL(buf []byte) ([]byte, bool) {
 	key := []byte("//gosl: ")
 	hlsl := []byte("hlsl")
+	nohlsl := []byte("nohlsl")
 	end := []byte("end")
 	nl := []byte("\n")
 	stComment := []byte("/*")
@@ -153,6 +163,8 @@ func ExtractHLSL(buf []byte) ([]byte, bool) {
 
 	hasMain := false
 	inHlsl := false
+	inNoHlsl := false
+	noHlslStart := 0
 	for li := 0; li < len(lines); li++ {
 		ln := lines[li]
 		isKey := bytes.HasPrefix(ln, key)
@@ -162,15 +174,19 @@ func ExtractHLSL(buf []byte) ([]byte, bool) {
 			// fmt.Printf("key: %s\n", string(keyStr))
 		}
 		switch {
+		case inNoHlsl && isKey && bytes.HasPrefix(keyStr, end):
+			lines = slices.Delete(lines, noHlslStart, li+1)
+			li -= ((li + 1) - noHlslStart)
+			inNoHlsl = false
 		case inHlsl && isKey && bytes.HasPrefix(keyStr, end):
-			slices.Delete(lines, li, li+1)
+			lines = slices.Delete(lines, li, li+1)
 			li--
 			inHlsl = false
 		case inHlsl:
 			del := false
 			switch {
 			case bytes.HasPrefix(ln, stComment) || bytes.HasPrefix(ln, edComment):
-				slices.Delete(lines, li, li+1)
+				lines = slices.Delete(lines, li, li+1)
 				li--
 				del = true
 			case bytes.HasPrefix(ln, comment):
@@ -183,8 +199,11 @@ func ExtractHLSL(buf []byte) ([]byte, bool) {
 			}
 		case isKey && bytes.HasPrefix(keyStr, hlsl):
 			inHlsl = true
-			slices.Delete(lines, li, li+1)
+			lines = slices.Delete(lines, li, li+1)
 			li--
+		case isKey && bytes.HasPrefix(keyStr, nohlsl):
+			inNoHlsl = true
+			noHlslStart = li
 		}
 	}
 	return bytes.Join(lines, nl), hasMain

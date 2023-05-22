@@ -1,4 +1,13 @@
 
+
+// note: here is the hlsl version, only included in hlsl
+
+// MyTrickyFun this is the GPU version of the tricky function
+float MyTrickyFun(float x) {
+	return 16; // ok actually not tricky here, but whatever
+}
+
+
 // FastExp is a quartic spline approximation to the Exp function, by N.N. Schraudolph
 // It does not have any of the sanity checking of a standard method -- returns
 // nonsense when arg is out of range.  Runs in 2.23ns vs. 6.3ns for 64bit which is faster
@@ -104,7 +113,3 @@ struct ParamStruct {
 void main(uint3 idx : SV_DispatchThreadID) {
     Params.IntegFmRaw(Data[idx.x], Data[idx.x].Pad2);
 }
-
-
-
-
