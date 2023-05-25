@@ -123,10 +123,10 @@ func (ps *ParamStruct) AnotherMeth(ds *DataStruct) {
 	case Test:
 		fallthrough
 	case Train:
-		ab := .5
+		ab := float32(.5)
 		ds.Exp *= ab
 	default:
-		ab := 1
+		ab := float32(1)
 		ds.Exp *= ab
 	}
 }
@@ -146,11 +146,11 @@ func (ps *ParamStruct) Update() {
 
 //gosl: hlsl basic
 /*
-[[vk::binding(0, 0)]] uniform ParamStruct Params;
+[[vk::binding(0, 0)]] StructuredBuffer<ParamStruct> Params;
 [[vk::binding(0, 1)]] RWStructuredBuffer<DataStruct> Data;
 [numthreads(1, 1, 1)]
 void main(uint3 idx : SV_DispatchThreadID) {
-    Params.IntegFmRaw(Data[idx.x], Data[idx.x].Pad2);
+    Params[0].IntegFmRaw(Data[idx.x], Data[idx.x].Pad2);
 }
 */
 //gosl: end basic

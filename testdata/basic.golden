@@ -28,33 +28,33 @@ typedef int NeuronFlags;
 // The neuron flags
 
 // NeuronOff flag indicates that this neuron has been turned off (i.e., lesioned)
-const NeuronFlags NeuronOff = 1;
+static const NeuronFlags NeuronOff = 1;
 
 // NeuronHasExt means the neuron has external input in its Ext field
-const NeuronFlags NeuronHasExt = 1 << 2;
+static const NeuronFlags NeuronHasExt = 1 << 2;
 
 // NeuronHasTarg means the neuron has external target input in its Target field
-const NeuronFlags NeuronHasTarg = 1 << 3;
+static const NeuronFlags NeuronHasTarg = 1 << 3;
 
 // NeuronHasCmpr means the neuron has external comparison input in its Target field -- used for computing
 // comparison statistics but does not drive neural activity ever
-const NeuronFlags NeuronHasCmpr = 1 << 4;
+static const NeuronFlags NeuronHasCmpr = 1 << 4;
 
 // Modes are evaluation modes (Training, Testing, etc)
 typedef int Modes;
 
 // The evaluation modes
 
-const Modes NoEvalMode = 0;
+static const Modes NoEvalMode = 0;
 
 // AllModes indicates that the log should occur over all modes present in other items.
-const Modes AllModes = 1;
+static const Modes AllModes = 1;
 
 // Train is this a training mode for the env
-const Modes Train = 2;
+static const Modes Train = 2;
 
 // Test is this a test mode for the env
-const Modes Test = 3;
+static const Modes Test = 3;
 
 // DataStruct has the test data
 struct DataStruct {
@@ -94,11 +94,11 @@ struct ParamStruct {
 		// fallthrough
 
 		case 2:{
-			double ab = .5;
+			float ab = float(.5);
 			ds.Exp *= ab;
 			break; }
 		default:{
-			int ab = 1;
+			float ab = float(1);
 			ds.Exp *= ab;
 			break; }
 		}
@@ -107,9 +107,9 @@ struct ParamStruct {
 };
 
 
-[[vk::binding(0, 0)]] uniform ParamStruct Params;
+[[vk::binding(0, 0)]] StructuredBuffer<ParamStruct> Params;
 [[vk::binding(0, 1)]] RWStructuredBuffer<DataStruct> Data;
 [numthreads(1, 1, 1)]
 void main(uint3 idx : SV_DispatchThreadID) {
-    Params.IntegFmRaw(Data[idx.x], Data[idx.x].Pad2);
+    Params[0].IntegFmRaw(Data[idx.x], Data[idx.x].Pad2);
 }
