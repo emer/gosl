@@ -169,10 +169,12 @@ func CompileFile(fn string) error {
 	ext := filepath.Ext(fn)
 	ofn := fn[:len(fn)-len(ext)] + ".spv"
 	// todo: figure out how to use 1.2 here -- see bug issue #1
-	cmd := exec.Command("glslc", "-fshader-stage=compute", "-O", "--target-env=vulkan1.1", "-o", ofn, fn)
+	// cmd := exec.Command("glslc", "-fshader-stage=compute", "-O", "--target-env=vulkan1.1", "-o", ofn, fn)
+	// dxc is the reference compiler for hlsl!
+	cmd := exec.Command("dxc", "-spirv", "-O3", "-T", "cs_6_0", "-E", "main", "-Fo", ofn, fn)
 	cmd.Dir, _ = filepath.Abs(*outDir)
 	out, err := cmd.CombinedOutput()
-	fmt.Printf("\n-----------------------------------------------------\nglslc output for: %s\n%s", fn, out)
+	fmt.Printf("\n-----------------------------------------------------\ndxc output for: %s\n%s", fn, out)
 	if err != nil {
 		log.Println(err)
 		return err

@@ -141,6 +141,7 @@ var Replaces = []Replace{
 	{[]byte("float64"), []byte("double")},
 	{[]byte("uint32"), []byte("uint")},
 	{[]byte("int32"), []byte("int")},
+	{[]byte("int64"), []byte("int64_t")},
 	{[]byte("ints.MaxInt("), []byte("max(")},
 	{[]byte("ints.MinInt("), []byte("min(")},
 	// {[]byte("mat32.FastExp("), []byte("FastExp(")}, // FastExp about same speed as native exp?

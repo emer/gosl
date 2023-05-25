@@ -1755,7 +1755,7 @@ func (p *printer) valueSpec(s *ast.ValueSpec, keepType bool, tok token.Token, fi
 	// gosl: key to use Pos() as first arg to trigger emitting of comments!
 	switch tok {
 	case token.CONST:
-		p.print(s.Pos(), tok, blank)
+		p.print(s.Pos(), "static", blank, tok, blank)
 	case token.TYPE:
 		p.print(s.Pos(), "typedef", blank)
 	}
