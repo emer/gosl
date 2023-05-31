@@ -165,6 +165,8 @@ var Replaces = []Replace{
 	{[]byte("slbool.IsTrue("), []byte("(1 == ")},
 	{[]byte("slbool.IsFalse("), []byte("(0 == ")},
 	{[]byte("slbool.FromBool("), []byte("int(")},
+	{[]byte("bools.ToFloat32("), []byte("float(")},
+	{[]byte("bools.FromFloat32("), []byte("bool(")},
 	// todo: do this conversion in nodes only for correct types
 	// {[]byte(".X"), []byte(".x")},
 	// {[]byte(".Y"), []byte(".y")},
