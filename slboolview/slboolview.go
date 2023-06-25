@@ -58,7 +58,7 @@ func (vv *BoolValueView) ConfigWidget(widg gi.Node2D) {
 	cb := vv.Widget.(*gi.CheckBox)
 	cb.Tooltip, _ = vv.Tag("desc")
 	cb.SetInactiveState(vv.This().(giv.ValueView).IsInactive())
-	cb.ButtonSig.ConnectOnly(vv.This(), func(recv, send ki.Ki, sig int64, data interface{}) {
+	cb.ButtonSig.ConnectOnly(vv.This(), func(recv, send ki.Ki, sig int64, data any) {
 		if sig == int64(gi.ButtonToggled) {
 			vvv, _ := recv.Embed(KiT_BoolValueView).(*BoolValueView)
 			cbb := vvv.Widget.(*gi.CheckBox)
