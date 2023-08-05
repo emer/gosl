@@ -58,15 +58,27 @@ static const Modes Test = 3;
 
 // DataStruct has the test data
 struct DataStruct {
+
+	// raw value
 	float Raw;
+
+	// integrated value
 	float Integ;
+
+	// exp of integ
 	float Exp;
+
+	// must pad to multiple of 4 floats for arrays
 	float Pad2;
 };
 
 // ParamStruct has the test params
 struct ParamStruct {
-	float     Tau;
+
+	// rate constant in msec
+	float Tau;
+
+	// 1/Tau
 	float     Dt;
 	int Option; // note: standard bool doesn't work
 

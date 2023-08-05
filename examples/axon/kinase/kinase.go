@@ -10,12 +10,24 @@ package kinase
 // at different time scales, including final CaP = CaMKII and CaD = DAPK1
 // timescales for LTP potentiation vs. LTD depression factors.
 type CaDtParams struct {
+
+	// CaM (calmodulin) time constant in cycles (msec) -- for synaptic-level integration this integrates on top of Ca signal from send->CaSyn * recv->CaSyn, each of which are typically integrated with a 30 msec Tau.
 	MTau float32 `def:"2,5" min:"1" desc:"CaM (calmodulin) time constant in cycles (msec) -- for synaptic-level integration this integrates on top of Ca signal from send->CaSyn * recv->CaSyn, each of which are typically integrated with a 30 msec Tau."`
+
+	// LTP spike-driven Ca factor (CaP) time constant in cycles (msec), simulating CaMKII in the Kinase framework, with 40 on top of MTau roughly tracking the biophysical rise time.  Computationally, CaP represents the plus phase learning signal that reflects the most recent past information.
 	PTau float32 `def:"40" min:"1" desc:"LTP spike-driven Ca factor (CaP) time constant in cycles (msec), simulating CaMKII in the Kinase framework, with 40 on top of MTau roughly tracking the biophysical rise time.  Computationally, CaP represents the plus phase learning signal that reflects the most recent past information."`
+
+	// LTD spike-driven Ca factor (CaD) time constant in cycles (msec), simulating DAPK1 in Kinase framework.  Computationally, CaD represents the minus phase learning signal that reflects the expectation representation prior to experiencing the outcome (in addition to the outcome).
 	DTau float32 `def:"40" min:"1" desc:"LTD spike-driven Ca factor (CaD) time constant in cycles (msec), simulating DAPK1 in Kinase framework.  Computationally, CaD represents the minus phase learning signal that reflects the expectation representation prior to experiencing the outcome (in addition to the outcome)."`
-	MDt  float32 `view:"-" json:"-" xml:"-" inactive:"+" desc:"rate = 1 / tau"`
-	PDt  float32 `view:"-" json:"-" xml:"-" inactive:"+" desc:"rate = 1 / tau"`
-	DDt  float32 `view:"-" json:"-" xml:"-" inactive:"+" desc:"rate = 1 / tau"`
+
+	// rate = 1 / tau
+	MDt float32 `view:"-" json:"-" xml:"-" inactive:"+" desc:"rate = 1 / tau"`
+
+	// rate = 1 / tau
+	PDt float32 `view:"-" json:"-" xml:"-" inactive:"+" desc:"rate = 1 / tau"`
+
+	// rate = 1 / tau
+	DDt float32 `view:"-" json:"-" xml:"-" inactive:"+" desc:"rate = 1 / tau"`
 
 	pad, pad1 float32
 }
@@ -37,12 +49,19 @@ func (kp *CaDtParams) Update() {
 // at different time scales, including final CaP = CaMKII and CaD = DAPK1
 // timescales for LTP potentiation vs. LTD depression factors.
 type CaParams struct {
-	SpikeG  float32 `def:"12" desc:"spiking gain factor for SynSpk learning rule variants.  This alters the overall range of values, keeping them in roughly the unit scale, and affects effective learning rate."`
+
+	// spiking gain factor for SynSpk learning rule variants.  This alters the overall range of values, keeping them in roughly the unit scale, and affects effective learning rate.
+	SpikeG float32 `def:"12" desc:"spiking gain factor for SynSpk learning rule variants.  This alters the overall range of values, keeping them in roughly the unit scale, and affects effective learning rate."`
+
+	// IMPORTANT: only used for SynSpkTheta learning mode: threshold on Act value for updating synapse-level Ca values -- this is purely a performance optimization that excludes random infrequent spikes -- 0.05 works well on larger networks but not smaller, which require the .01 default.
 	UpdtThr float32 `def:"0.01,0.02,0.5" desc:"IMPORTANT: only used for SynSpkTheta learning mode: threshold on Act value for updating synapse-level Ca values -- this is purely a performance optimization that excludes random infrequent spikes -- 0.05 works well on larger networks but not smaller, which require the .01 default."`
-	MaxISI  int32   `def:"100" desc:"maximum ISI for integrating in Opt mode -- above that just set to 0"`
+
+	// maximum ISI for integrating in Opt mode -- above that just set to 0
+	MaxISI int32 `def:"100" desc:"maximum ISI for integrating in Opt mode -- above that just set to 0"`
 
 	pad float32
 
+	// time constants for integrating at M, P, and D cascading levels
 	Dt CaDtParams `view:"inline" desc:"time constants for integrating at M, P, and D cascading levels"`
 }
 

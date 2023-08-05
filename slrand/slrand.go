@@ -241,8 +241,14 @@ func Uintn(counter *sltype.Uint2, key uint32, n uint32) uint32 {
 // with convenience methods for typical use cases.
 // It retains a copy of the last Seed value, which is applied to the Hi uint32 value.
 type Counter struct {
-	Lo     uint32 `desc:"lower 32 bits of counter, incremented first"`
-	Hi     uint32 `desc:"higher 32 bits of counter, incremented only when Lo turns over"`
+
+	// lower 32 bits of counter, incremented first
+	Lo uint32 `desc:"lower 32 bits of counter, incremented first"`
+
+	// higher 32 bits of counter, incremented only when Lo turns over
+	Hi uint32 `desc:"higher 32 bits of counter, incremented only when Lo turns over"`
+
+	// last seed value set by Seed method, restored by Reset()
 	HiSeed uint32 `desc:"last seed value set by Seed method, restored by Reset()"`
 
 	pad uint32

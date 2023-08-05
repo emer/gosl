@@ -25,17 +25,39 @@ import (
 // Implements a basic thresholded Vm model, and optionally
 // the AdEx adaptive exponential function (adapt is KNaAdapt)
 type SpikeParams struct {
-	Thr      float32     `def:"0.5" desc:"threshold value Theta (Q) for firing output activation (.5 is more accurate value based on AdEx biological parameters and normalization"`
-	VmR      float32     `def:"0.3" desc:"post-spiking membrane potential to reset to, produces refractory effect if lower than VmInit -- 0.3 is apropriate biologically-based value for AdEx (Brette & Gurstner, 2005) parameters.  See also RTau"`
-	Tr       int32       `min:"1" def:"3" desc:"post-spiking explicit refractory period, in cycles -- prevents Vm updating for this number of cycles post firing -- Vm is reduced in exponential steps over this period according to RTau, being fixed at Tr to VmR exactly"`
-	RTau     float32     `def:"1.6667" desc:"time constant for decaying Vm down to VmR -- at end of Tr it is set to VmR exactly -- this provides a more realistic shape of the post-spiking Vm which is only relevant for more realistic channels that key off of Vm -- does not otherwise affect standard computation"`
-	Exp      slbool.Bool `def:"true" desc:"if true, turn on exponential excitatory current that drives Vm rapidly upward for spiking as it gets past its nominal firing threshold (Thr) -- nicely captures the Hodgkin Huxley dynamics of Na and K channels -- uses Brette & Gurstner 2005 AdEx formulation"`
-	ExpSlope float32     `viewif:"Exp" def:"0.02" desc:"slope in Vm (2 mV = .02 in normalized units) for extra exponential excitatory current that drives Vm rapidly upward for spiking as it gets past its nominal firing threshold (Thr) -- nicely captures the Hodgkin Huxley dynamics of Na and K channels -- uses Brette & Gurstner 2005 AdEx formulation"`
-	ExpThr   float32     `viewif:"Exp" def:"0.9" desc:"membrane potential threshold for actually triggering a spike when using the exponential mechanism"`
-	MaxHz    float32     `def:"180" min:"1" desc:"for translating spiking interval (rate) into rate-code activation equivalent, what is the maximum firing rate associated with a maximum activation value of 1"`
-	ISITau   float32     `def:"5" min:"1" desc:"constant for integrating the spiking interval in estimating spiking rate"`
-	ISIDt    float32     `view:"-" desc:"rate = 1 / tau"`
-	RDt      float32     `view:"-" desc:"rate = 1 / tau"`
+
+	// threshold value Theta (Q) for firing output activation (.5 is more accurate value based on AdEx biological parameters and normalization
+	Thr float32 `def:"0.5" desc:"threshold value Theta (Q) for firing output activation (.5 is more accurate value based on AdEx biological parameters and normalization"`
+
+	// post-spiking membrane potential to reset to, produces refractory effect if lower than VmInit -- 0.3 is apropriate biologically-based value for AdEx (Brette & Gurstner, 2005) parameters.  See also RTau
+	VmR float32 `def:"0.3" desc:"post-spiking membrane potential to reset to, produces refractory effect if lower than VmInit -- 0.3 is apropriate biologically-based value for AdEx (Brette & Gurstner, 2005) parameters.  See also RTau"`
+
+	// post-spiking explicit refractory period, in cycles -- prevents Vm updating for this number of cycles post firing -- Vm is reduced in exponential steps over this period according to RTau, being fixed at Tr to VmR exactly
+	Tr int32 `min:"1" def:"3" desc:"post-spiking explicit refractory period, in cycles -- prevents Vm updating for this number of cycles post firing -- Vm is reduced in exponential steps over this period according to RTau, being fixed at Tr to VmR exactly"`
+
+	// time constant for decaying Vm down to VmR -- at end of Tr it is set to VmR exactly -- this provides a more realistic shape of the post-spiking Vm which is only relevant for more realistic channels that key off of Vm -- does not otherwise affect standard computation
+	RTau float32 `def:"1.6667" desc:"time constant for decaying Vm down to VmR -- at end of Tr it is set to VmR exactly -- this provides a more realistic shape of the post-spiking Vm which is only relevant for more realistic channels that key off of Vm -- does not otherwise affect standard computation"`
+
+	// if true, turn on exponential excitatory current that drives Vm rapidly upward for spiking as it gets past its nominal firing threshold (Thr) -- nicely captures the Hodgkin Huxley dynamics of Na and K channels -- uses Brette & Gurstner 2005 AdEx formulation
+	Exp slbool.Bool `def:"true" desc:"if true, turn on exponential excitatory current that drives Vm rapidly upward for spiking as it gets past its nominal firing threshold (Thr) -- nicely captures the Hodgkin Huxley dynamics of Na and K channels -- uses Brette & Gurstner 2005 AdEx formulation"`
+
+	// slope in Vm (2 mV = .02 in normalized units) for extra exponential excitatory current that drives Vm rapidly upward for spiking as it gets past its nominal firing threshold (Thr) -- nicely captures the Hodgkin Huxley dynamics of Na and K channels -- uses Brette & Gurstner 2005 AdEx formulation
+	ExpSlope float32 `viewif:"Exp" def:"0.02" desc:"slope in Vm (2 mV = .02 in normalized units) for extra exponential excitatory current that drives Vm rapidly upward for spiking as it gets past its nominal firing threshold (Thr) -- nicely captures the Hodgkin Huxley dynamics of Na and K channels -- uses Brette & Gurstner 2005 AdEx formulation"`
+
+	// membrane potential threshold for actually triggering a spike when using the exponential mechanism
+	ExpThr float32 `viewif:"Exp" def:"0.9" desc:"membrane potential threshold for actually triggering a spike when using the exponential mechanism"`
+
+	// for translating spiking interval (rate) into rate-code activation equivalent, what is the maximum firing rate associated with a maximum activation value of 1
+	MaxHz float32 `def:"180" min:"1" desc:"for translating spiking interval (rate) into rate-code activation equivalent, what is the maximum firing rate associated with a maximum activation value of 1"`
+
+	// constant for integrating the spiking interval in estimating spiking rate
+	ISITau float32 `def:"5" min:"1" desc:"constant for integrating the spiking interval in estimating spiking rate"`
+
+	// rate = 1 / tau
+	ISIDt float32 `view:"-" desc:"rate = 1 / tau"`
+
+	// rate = 1 / tau
+	RDt float32 `view:"-" desc:"rate = 1 / tau"`
 
 	pad float32
 }
@@ -95,9 +117,15 @@ func (sk *SpikeParams) AvgFmISI(avg *float32, isi float32) {
 
 // DendParams are the parameters for updating dendrite-specific dynamics
 type DendParams struct {
+
+	// dendrite-specific strength multiplier of the exponential spiking drive on Vm -- e.g., .5 makes it half as strong as at the soma (which uses Gbar.L as a strength multiplier per the AdEx standard model)
 	GbarExp float32 `def:"0.2,0.5" desc:"dendrite-specific strength multiplier of the exponential spiking drive on Vm -- e.g., .5 makes it half as strong as at the soma (which uses Gbar.L as a strength multiplier per the AdEx standard model)"`
-	GbarR   float32 `def:"3,6" desc:"dendrite-specific conductance of Kdr delayed rectifier currents, used to reset membrane potential for dendrite -- applied for Tr msec"`
-	SSGi    float32 `def:"0,2" desc:"SST+ somatostatin positive slow spiking inhibition level specifically affecting dendritic Vm (VmDend) -- this is important for countering a positive feedback loop from NMDA getting stronger over the course of learning -- also typically requires SubMean = 1 for TrgAvgAct and learning to fully counter this feedback loop."`
+
+	// dendrite-specific conductance of Kdr delayed rectifier currents, used to reset membrane potential for dendrite -- applied for Tr msec
+	GbarR float32 `def:"3,6" desc:"dendrite-specific conductance of Kdr delayed rectifier currents, used to reset membrane potential for dendrite -- applied for Tr msec"`
+
+	// SST+ somatostatin positive slow spiking inhibition level specifically affecting dendritic Vm (VmDend) -- this is important for countering a positive feedback loop from NMDA getting stronger over the course of learning -- also typically requires SubMean = 1 for TrgAvgAct and learning to fully counter this feedback loop.
+	SSGi float32 `def:"0,2" desc:"SST+ somatostatin positive slow spiking inhibition level specifically affecting dendritic Vm (VmDend) -- this is important for countering a positive feedback loop from NMDA getting stronger over the course of learning -- also typically requires SubMean = 1 for TrgAvgAct and learning to fully counter this feedback loop."`
 
 	pad float32
 }
@@ -117,11 +145,23 @@ func (dp *DendParams) Update() {
 // ActInitParams are initial values for key network state variables.
 // Initialized in InitActs called by InitWts, and provides target values for DecayState.
 type ActInitParams struct {
-	Vm    float32 `def:"0.3" desc:"initial membrane potential -- see Erev.L for the resting potential (typically .3)"`
-	Act   float32 `def:"0" desc:"initial activation value -- typically 0"`
-	Ge    float32 `def:"0" desc:"baseline level of excitatory conductance (net input) -- Ge is initialized to this value, and it is added in as a constant background level of excitatory input -- captures all the other inputs not represented in the model, and intrinsic excitability, etc"`
-	Gi    float32 `def:"0" desc:"baseline level of inhibitory conductance (net input) -- Gi is initialized to this value, and it is added in as a constant background level of inhibitory input -- captures all the other inputs not represented in the model"`
+
+	// initial membrane potential -- see Erev.L for the resting potential (typically .3)
+	Vm float32 `def:"0.3" desc:"initial membrane potential -- see Erev.L for the resting potential (typically .3)"`
+
+	// initial activation value -- typically 0
+	Act float32 `def:"0" desc:"initial activation value -- typically 0"`
+
+	// baseline level of excitatory conductance (net input) -- Ge is initialized to this value, and it is added in as a constant background level of excitatory input -- captures all the other inputs not represented in the model, and intrinsic excitability, etc
+	Ge float32 `def:"0" desc:"baseline level of excitatory conductance (net input) -- Ge is initialized to this value, and it is added in as a constant background level of excitatory input -- captures all the other inputs not represented in the model, and intrinsic excitability, etc"`
+
+	// baseline level of inhibitory conductance (net input) -- Gi is initialized to this value, and it is added in as a constant background level of inhibitory input -- captures all the other inputs not represented in the model
+	Gi float32 `def:"0" desc:"baseline level of inhibitory conductance (net input) -- Gi is initialized to this value, and it is added in as a constant background level of inhibitory input -- captures all the other inputs not represented in the model"`
+
+	// variance (sigma) of gaussian distribution around baseline Ge values, per unit, to establish variability in intrinsic excitability.  value never goes < 0
 	GeVar float32 `def:"0" desc:"variance (sigma) of gaussian distribution around baseline Ge values, per unit, to establish variability in intrinsic excitability.  value never goes < 0"`
+
+	// variance (sigma) of gaussian distribution around baseline Gi values, per unit, to establish variability in intrinsic excitability.  value never goes < 0
 	GiVar float32 `def:"0" desc:"variance (sigma) of gaussian distribution around baseline Gi values, per unit, to establish variability in intrinsic excitability.  value never goes < 0"`
 
 	pad, pad1 float32
@@ -145,9 +185,15 @@ func (ai *ActInitParams) Defaults() {
 // DecayParams control the decay of activation state in the DecayState function
 // called in NewState when a new state is to be processed.
 type DecayParams struct {
-	Act   float32 `def:"0,0.2,0.5,1" max:"1" min:"0" desc:"proportion to decay most activation state variables toward initial values at start of every ThetaCycle (except those controlled separately below) -- if 1 it is effectively equivalent to full clear, resetting other derived values.  ISI is reset every AlphaCycle to get a fresh sample of activations (doesn't affect direct computation -- only readout)."`
+
+	// proportion to decay most activation state variables toward initial values at start of every ThetaCycle (except those controlled separately below) -- if 1 it is effectively equivalent to full clear, resetting other derived values.  ISI is reset every AlphaCycle to get a fresh sample of activations (doesn't affect direct computation -- only readout).
+	Act float32 `def:"0,0.2,0.5,1" max:"1" min:"0" desc:"proportion to decay most activation state variables toward initial values at start of every ThetaCycle (except those controlled separately below) -- if 1 it is effectively equivalent to full clear, resetting other derived values.  ISI is reset every AlphaCycle to get a fresh sample of activations (doesn't affect direct computation -- only readout)."`
+
+	// proportion to decay long-lasting conductances, NMDA and GABA, and also the dendritic membrane potential -- when using random stimulus order, it is important to decay this significantly to allow a fresh start -- but set Act to 0 to enable ongoing activity to keep neurons in their sensitive regime.
 	Glong float32 `def:"0,0.6" max:"1" min:"0" desc:"proportion to decay long-lasting conductances, NMDA and GABA, and also the dendritic membrane potential -- when using random stimulus order, it is important to decay this significantly to allow a fresh start -- but set Act to 0 to enable ongoing activity to keep neurons in their sensitive regime."`
-	AHP   float32 `def:"0" max:"1" min:"0" desc:"decay of afterhyperpolarization currents, including mAHP, sAHP, and KNa -- has a separate decay because often useful to have this not decay at all even if decay is on."`
+
+	// decay of afterhyperpolarization currents, including mAHP, sAHP, and KNa -- has a separate decay because often useful to have this not decay at all even if decay is on.
+	AHP float32 `def:"0" max:"1" min:"0" desc:"decay of afterhyperpolarization currents, including mAHP, sAHP, and KNa -- has a separate decay because often useful to have this not decay at all even if decay is on."`
 
 	pad float32
 }
@@ -166,22 +212,53 @@ func (ai *DecayParams) Defaults() {
 
 // DtParams are time and rate constants for temporal derivatives in Axon (Vm, G)
 type DtParams struct {
-	Integ       float32 `def:"1,0.5" min:"0" desc:"overall rate constant for numerical integration, for all equations at the unit level -- all time constants are specified in millisecond units, with one cycle = 1 msec -- if you instead want to make one cycle = 2 msec, you can do this globally by setting this integ value to 2 (etc).  However, stability issues will likely arise if you go too high.  For improved numerical stability, you may even need to reduce this value to 0.5 or possibly even lower (typically however this is not necessary).  MUST also coordinate this with network.time_inc variable to ensure that global network.time reflects simulated time accurately"`
-	VmTau       float32 `def:"2.81" min:"1" desc:"membrane potential time constant in cycles, which should be milliseconds typically (tau is roughly how long it takes for value to change significantly -- 1.4x the half-life) -- reflects the capacitance of the neuron in principle -- biological default for AdEx spiking model C = 281 pF = 2.81 normalized"`
-	VmDendTau   float32 `def:"5" min:"1" desc:"dendritic membrane potential time constant in cycles, which should be milliseconds typically (tau is roughly how long it takes for value to change significantly -- 1.4x the half-life) -- reflects the capacitance of the neuron in principle -- biological default for AdEx spiking model C = 281 pF = 2.81 normalized"`
-	VmSteps     int32   `def:"2" min:"1" desc:"number of integration steps to take in computing new Vm value -- this is the one computation that can be most numerically unstable so taking multiple steps with proportionally smaller dt is beneficial"`
-	GeTau       float32 `def:"5" min:"1" desc:"time constant for decay of excitatory AMPA receptor conductance."`
-	GiTau       float32 `def:"7" min:"1" desc:"time constant for decay of inhibitory GABAa receptor conductance."`
-	IntTau      float32 `def:"40" min:"1" desc:"time constant for integrating values over timescale of an individual input state (e.g., roughly 200 msec -- theta cycle), used in computing ActInt, and for GeM from Ge -- this is used for scoring performance, not for learning, in cycles, which should be milliseconds typically (tau is roughly how long it takes for value to change significantly -- 1.4x the half-life), "`
-	LongAvgTau  float32 `def:"20" min:"1" desc:"time constant for integrating slower long-time-scale averages, such as nrn.ActAvg, Pool.ActsMAvg, ActsPAvg -- computed in NewState when a new input state is present (i.e., not msec but in units of a theta cycle) (tau is roughly how long it takes for value to change significantly) -- set lower for smaller models"`
-	MaxCycStart int32   `def:"50" min:"0" desc:"cycle to start updating the SpkMaxCa, SpkMax values within a theta cycle -- early cycles often reflect prior state"`
 
-	VmDt      float32 `view:"-" json:"-" xml:"-" desc:"nominal rate = Integ / tau"`
-	VmDendDt  float32 `view:"-" json:"-" xml:"-" desc:"nominal rate = Integ / tau"`
-	DtStep    float32 `view:"-" json:"-" xml:"-" desc:"1 / VmSteps"`
-	GeDt      float32 `view:"-" json:"-" xml:"-" desc:"rate = Integ / tau"`
-	GiDt      float32 `view:"-" json:"-" xml:"-" desc:"rate = Integ / tau"`
-	IntDt     float32 `view:"-" json:"-" xml:"-" desc:"rate = Integ / tau"`
+	// overall rate constant for numerical integration, for all equations at the unit level -- all time constants are specified in millisecond units, with one cycle = 1 msec -- if you instead want to make one cycle = 2 msec, you can do this globally by setting this integ value to 2 (etc).  However, stability issues will likely arise if you go too high.  For improved numerical stability, you may even need to reduce this value to 0.5 or possibly even lower (typically however this is not necessary).  MUST also coordinate this with network.time_inc variable to ensure that global network.time reflects simulated time accurately
+	Integ float32 `def:"1,0.5" min:"0" desc:"overall rate constant for numerical integration, for all equations at the unit level -- all time constants are specified in millisecond units, with one cycle = 1 msec -- if you instead want to make one cycle = 2 msec, you can do this globally by setting this integ value to 2 (etc).  However, stability issues will likely arise if you go too high.  For improved numerical stability, you may even need to reduce this value to 0.5 or possibly even lower (typically however this is not necessary).  MUST also coordinate this with network.time_inc variable to ensure that global network.time reflects simulated time accurately"`
+
+	// membrane potential time constant in cycles, which should be milliseconds typically (tau is roughly how long it takes for value to change significantly -- 1.4x the half-life) -- reflects the capacitance of the neuron in principle -- biological default for AdEx spiking model C = 281 pF = 2.81 normalized
+	VmTau float32 `def:"2.81" min:"1" desc:"membrane potential time constant in cycles, which should be milliseconds typically (tau is roughly how long it takes for value to change significantly -- 1.4x the half-life) -- reflects the capacitance of the neuron in principle -- biological default for AdEx spiking model C = 281 pF = 2.81 normalized"`
+
+	// dendritic membrane potential time constant in cycles, which should be milliseconds typically (tau is roughly how long it takes for value to change significantly -- 1.4x the half-life) -- reflects the capacitance of the neuron in principle -- biological default for AdEx spiking model C = 281 pF = 2.81 normalized
+	VmDendTau float32 `def:"5" min:"1" desc:"dendritic membrane potential time constant in cycles, which should be milliseconds typically (tau is roughly how long it takes for value to change significantly -- 1.4x the half-life) -- reflects the capacitance of the neuron in principle -- biological default for AdEx spiking model C = 281 pF = 2.81 normalized"`
+
+	// number of integration steps to take in computing new Vm value -- this is the one computation that can be most numerically unstable so taking multiple steps with proportionally smaller dt is beneficial
+	VmSteps int32 `def:"2" min:"1" desc:"number of integration steps to take in computing new Vm value -- this is the one computation that can be most numerically unstable so taking multiple steps with proportionally smaller dt is beneficial"`
+
+	// time constant for decay of excitatory AMPA receptor conductance.
+	GeTau float32 `def:"5" min:"1" desc:"time constant for decay of excitatory AMPA receptor conductance."`
+
+	// time constant for decay of inhibitory GABAa receptor conductance.
+	GiTau float32 `def:"7" min:"1" desc:"time constant for decay of inhibitory GABAa receptor conductance."`
+
+	// time constant for integrating values over timescale of an individual input state (e.g., roughly 200 msec -- theta cycle), used in computing ActInt, and for GeM from Ge -- this is used for scoring performance, not for learning, in cycles, which should be milliseconds typically (tau is roughly how long it takes for value to change significantly -- 1.4x the half-life),
+	IntTau float32 `def:"40" min:"1" desc:"time constant for integrating values over timescale of an individual input state (e.g., roughly 200 msec -- theta cycle), used in computing ActInt, and for GeM from Ge -- this is used for scoring performance, not for learning, in cycles, which should be milliseconds typically (tau is roughly how long it takes for value to change significantly -- 1.4x the half-life), "`
+
+	// time constant for integrating slower long-time-scale averages, such as nrn.ActAvg, Pool.ActsMAvg, ActsPAvg -- computed in NewState when a new input state is present (i.e., not msec but in units of a theta cycle) (tau is roughly how long it takes for value to change significantly) -- set lower for smaller models
+	LongAvgTau float32 `def:"20" min:"1" desc:"time constant for integrating slower long-time-scale averages, such as nrn.ActAvg, Pool.ActsMAvg, ActsPAvg -- computed in NewState when a new input state is present (i.e., not msec but in units of a theta cycle) (tau is roughly how long it takes for value to change significantly) -- set lower for smaller models"`
+
+	// cycle to start updating the SpkMaxCa, SpkMax values within a theta cycle -- early cycles often reflect prior state
+	MaxCycStart int32 `def:"50" min:"0" desc:"cycle to start updating the SpkMaxCa, SpkMax values within a theta cycle -- early cycles often reflect prior state"`
+
+	// nominal rate = Integ / tau
+	VmDt float32 `view:"-" json:"-" xml:"-" desc:"nominal rate = Integ / tau"`
+
+	// nominal rate = Integ / tau
+	VmDendDt float32 `view:"-" json:"-" xml:"-" desc:"nominal rate = Integ / tau"`
+
+	// 1 / VmSteps
+	DtStep float32 `view:"-" json:"-" xml:"-" desc:"1 / VmSteps"`
+
+	// rate = Integ / tau
+	GeDt float32 `view:"-" json:"-" xml:"-" desc:"rate = Integ / tau"`
+
+	// rate = Integ / tau
+	GiDt float32 `view:"-" json:"-" xml:"-" desc:"rate = Integ / tau"`
+
+	// rate = Integ / tau
+	IntDt float32 `view:"-" json:"-" xml:"-" desc:"rate = Integ / tau"`
+
+	// rate = 1 / tau
 	LongAvgDt float32 `view:"-" json:"-" xml:"-" desc:"rate = 1 / tau"`
 }
 
@@ -262,13 +339,27 @@ func (dp *DtParams) AvgVarUpdt(avg, vr *float32, val float32) {
 // SpikeNoiseParams parameterizes background spiking activity impinging on the neuron,
 // simulated using a poisson spiking process.
 type SpikeNoiseParams struct {
-	On       slbool.Bool `desc:"add noise simulating background spiking levels"`
-	GeHz     float32     `def:"100" desc:"mean frequency of excitatory spikes -- typically 50Hz but multiple inputs increase rate -- poisson lambda parameter, also the variance"`
-	Ge       float32     `min:"0" desc:"excitatory conductance per spike -- .001 has minimal impact, .01 can be strong, and .15 is needed to influence timing of clamped inputs"`
-	GiHz     float32     `def:"200" desc:"mean frequency of inhibitory spikes -- typically 100Hz fast spiking but multiple inputs increase rate -- poisson lambda parameter, also the variance"`
-	Gi       float32     `min:"0" desc:"excitatory conductance per spike -- .001 has minimal impact, .01 can be strong, and .15 is needed to influence timing of clamped inputs"`
-	GeExpInt float32     `view:"-" json:"-" xml:"-" desc:"Exp(-Interval) which is the threshold for GeNoiseP as it is updated"`
-	GiExpInt float32     `view:"-" json:"-" xml:"-" desc:"Exp(-Interval) which is the threshold for GiNoiseP as it is updated"`
+
+	// add noise simulating background spiking levels
+	On slbool.Bool `desc:"add noise simulating background spiking levels"`
+
+	// mean frequency of excitatory spikes -- typically 50Hz but multiple inputs increase rate -- poisson lambda parameter, also the variance
+	GeHz float32 `def:"100" desc:"mean frequency of excitatory spikes -- typically 50Hz but multiple inputs increase rate -- poisson lambda parameter, also the variance"`
+
+	// excitatory conductance per spike -- .001 has minimal impact, .01 can be strong, and .15 is needed to influence timing of clamped inputs
+	Ge float32 `min:"0" desc:"excitatory conductance per spike -- .001 has minimal impact, .01 can be strong, and .15 is needed to influence timing of clamped inputs"`
+
+	// mean frequency of inhibitory spikes -- typically 100Hz fast spiking but multiple inputs increase rate -- poisson lambda parameter, also the variance
+	GiHz float32 `def:"200" desc:"mean frequency of inhibitory spikes -- typically 100Hz fast spiking but multiple inputs increase rate -- poisson lambda parameter, also the variance"`
+
+	// excitatory conductance per spike -- .001 has minimal impact, .01 can be strong, and .15 is needed to influence timing of clamped inputs
+	Gi float32 `min:"0" desc:"excitatory conductance per spike -- .001 has minimal impact, .01 can be strong, and .15 is needed to influence timing of clamped inputs"`
+
+	// Exp(-Interval) which is the threshold for GeNoiseP as it is updated
+	GeExpInt float32 `view:"-" json:"-" xml:"-" desc:"Exp(-Interval) which is the threshold for GeNoiseP as it is updated"`
+
+	// Exp(-Interval) which is the threshold for GiNoiseP as it is updated
+	GiExpInt float32 `view:"-" json:"-" xml:"-" desc:"Exp(-Interval) which is the threshold for GiNoiseP as it is updated"`
 
 	pad float32
 }
@@ -315,9 +406,13 @@ func (an *SpikeNoiseParams) PGi(p *float32, ni int, randctr *sltype.Uint2) float
 // (like a current clamp) -- either adds or overwrites existing conductances.
 // Noise is added in either case.
 type ClampParams struct {
-	Ge     float32     `def:"0.8,1.5" desc:"amount of Ge driven for clamping -- generally use 0.8 for Target layers, 1.5 for Input layers"`
-	Add    slbool.Bool `def:"false" view:"add external conductance on top of any existing -- generally this is not a good idea for target layers (creates a main effect that learning can never match), but may be ok for input layers"`
-	ErrThr float32     `def:"0.5" desc:"threshold on neuron Act activity to count as active for computing error relative to target in PctErr method"`
+
+	// amount of Ge driven for clamping -- generally use 0.8 for Target layers, 1.5 for Input layers
+	Ge  float32     `def:"0.8,1.5" desc:"amount of Ge driven for clamping -- generally use 0.8 for Target layers, 1.5 for Input layers"`
+	Add slbool.Bool `def:"false" view:"add external conductance on top of any existing -- generally this is not a good idea for target layers (creates a main effect that learning can never match), but may be ok for input layers"`
+
+	// threshold on neuron Act activity to count as active for computing error relative to target in PctErr method
+	ErrThr float32 `def:"0.5" desc:"threshold on neuron Act activity to count as active for computing error relative to target in PctErr method"`
 
 	pad float32
 }
@@ -335,8 +430,12 @@ func (cp *ClampParams) Defaults() {
 
 // AttnParams determine how the Attn modulates Ge
 type AttnParams struct {
-	On  slbool.Bool `desc:"is attentional modulation active?"`
-	Min float32     `desc:"minimum act multiplier if attention is 0"`
+
+	// is attentional modulation active?
+	On slbool.Bool `desc:"is attentional modulation active?"`
+
+	// minimum act multiplier if attention is 0
+	Min float32 `desc:"minimum act multiplier if attention is 0"`
 
 	pad, pad1 float32
 }
@@ -365,8 +464,14 @@ func (at *AttnParams) ModVal(val float32, attn float32) float32 {
 
 // SynComParams are synaptic communication parameters: delay and probability of failure
 type SynComParams struct {
-	Delay    int32       `min:"0" def:"2" desc:"additional synaptic delay for inputs arriving at this projection -- IMPORTANT: if you change this, you must call InitWts() on Network!  Delay = 0 means a spike reaches receivers in the next Cycle, which is the minimum time.  Biologically, subtract 1 from synaptic delay values to set corresponding Delay value."`
-	PFail    float32     `desc:"probability of synaptic transmission failure -- if > 0, then weights are turned off at random as a function of PFail (times 1-SWt if PFailSwt)"`
+
+	// additional synaptic delay for inputs arriving at this projection -- IMPORTANT: if you change this, you must call InitWts() on Network!  Delay = 0 means a spike reaches receivers in the next Cycle, which is the minimum time.  Biologically, subtract 1 from synaptic delay values to set corresponding Delay value.
+	Delay int32 `min:"0" def:"2" desc:"additional synaptic delay for inputs arriving at this projection -- IMPORTANT: if you change this, you must call InitWts() on Network!  Delay = 0 means a spike reaches receivers in the next Cycle, which is the minimum time.  Biologically, subtract 1 from synaptic delay values to set corresponding Delay value."`
+
+	// probability of synaptic transmission failure -- if > 0, then weights are turned off at random as a function of PFail (times 1-SWt if PFailSwt)
+	PFail float32 `desc:"probability of synaptic transmission failure -- if > 0, then weights are turned off at random as a function of PFail (times 1-SWt if PFailSwt)"`
+
+	// if true, then probability of failure is inversely proportional to SWt structural / slow weight value (i.e., multiply PFail * (1-SWt)))
 	PFailSWt slbool.Bool `desc:"if true, then probability of failure is inversely proportional to SWt structural / slow weight value (i.e., multiply PFail * (1-SWt)))"`
 
 	pad float32
@@ -393,24 +498,60 @@ func (sc *SynComParams) WtFailP(swt float32) float32 {
 // for basic Axon, at the neuron level .
 // This is included in axon.Layer to drive the computation.
 type ActParams struct {
-	Spike   SpikeParams       `view:"inline" desc:"Spiking function parameters"`
-	Dend    DendParams        `view:"inline" desc:"dendrite-specific parameters"`
-	Init    ActInitParams     `view:"inline" desc:"initial values for key network state variables -- initialized in InitActs called by InitWts, and provides target values for DecayState"`
-	Decay   DecayParams       `view:"inline" desc:"amount to decay between AlphaCycles, simulating passage of time and effects of saccades etc, especially important for environments with random temporal structure (e.g., most standard neural net training corpora) "`
-	Dt      DtParams          `view:"inline" desc:"time and rate constants for temporal derivatives / updating of activation state"`
-	Gbar    chans.Chans       `view:"inline" desc:"[Defaults: 1, .2, 1, 1] maximal conductances levels for channels"`
-	Erev    chans.Chans       `view:"inline" desc:"[Defaults: 1, .3, .25, .1] reversal potentials for each channel"`
-	Clamp   ClampParams       `view:"inline" desc:"how external inputs drive neural activations"`
-	Noise   SpikeNoiseParams  `view:"inline" desc:"how, where, when, and how much noise to add"`
-	VmRange minmax.F32        `view:"inline" desc:"range for Vm membrane potential -- [0.1, 1.0] -- important to keep just at extreme range of reversal potentials to prevent numerical instability"`
-	Mahp    chans.MahpParams  `view:"inline" desc:"M-type medium time-scale afterhyperpolarization mAHP current -- this is the primary form of adaptation on the time scale of multiple sequences of spikes"`
-	Sahp    chans.SahpParams  `view:"inline" desc:"slow time-scale afterhyperpolarization sAHP current -- integrates SpkCaD at theta cycle intervals and produces a hard cutoff on sustained activity for any neuron"`
-	KNa     chans.KNaMedSlow  `view:"inline" desc:"sodium-gated potassium channel adaptation parameters -- activates a leak-like current as a function of neural activity (firing = Na influx) at two different time-scales (Slick = medium, Slack = slow)"`
-	NMDA    chans.NMDAParams  `view:"inline" desc:"NMDA channel parameters used in computing Gnmda conductance for bistability, and postsynaptic calcium flux used in learning.  Note that Learn.Snmda has distinct parameters used in computing sending NMDA parameters used in learning."`
-	GABAB   chans.GABABParams `view:"inline" desc:"GABA-B / GIRK channel parameters"`
-	VGCC    chans.VGCCParams  `view:"inline" desc:"voltage gated calcium channels -- provide a key additional source of Ca for learning and positive-feedback loop upstate for active neurons"`
-	AK      chans.AKsParams   `view:"inline" desc:"A-type potassium (K) channel that is particularly important for limiting the runaway excitation from VGCC channels"`
-	Attn    AttnParams        `view:"inline" desc:"Attentional modulation parameters: how Attn modulates Ge"`
+
+	// Spiking function parameters
+	Spike SpikeParams `view:"inline" desc:"Spiking function parameters"`
+
+	// dendrite-specific parameters
+	Dend DendParams `view:"inline" desc:"dendrite-specific parameters"`
+
+	// initial values for key network state variables -- initialized in InitActs called by InitWts, and provides target values for DecayState
+	Init ActInitParams `view:"inline" desc:"initial values for key network state variables -- initialized in InitActs called by InitWts, and provides target values for DecayState"`
+
+	// amount to decay between AlphaCycles, simulating passage of time and effects of saccades etc, especially important for environments with random temporal structure (e.g., most standard neural net training corpora)
+	Decay DecayParams `view:"inline" desc:"amount to decay between AlphaCycles, simulating passage of time and effects of saccades etc, especially important for environments with random temporal structure (e.g., most standard neural net training corpora) "`
+
+	// time and rate constants for temporal derivatives / updating of activation state
+	Dt DtParams `view:"inline" desc:"time and rate constants for temporal derivatives / updating of activation state"`
+
+	// [Defaults: 1, .2, 1, 1] maximal conductances levels for channels
+	Gbar chans.Chans `view:"inline" desc:"[Defaults: 1, .2, 1, 1] maximal conductances levels for channels"`
+
+	// [Defaults: 1, .3, .25, .1] reversal potentials for each channel
+	Erev chans.Chans `view:"inline" desc:"[Defaults: 1, .3, .25, .1] reversal potentials for each channel"`
+
+	// how external inputs drive neural activations
+	Clamp ClampParams `view:"inline" desc:"how external inputs drive neural activations"`
+
+	// how, where, when, and how much noise to add
+	Noise SpikeNoiseParams `view:"inline" desc:"how, where, when, and how much noise to add"`
+
+	// range for Vm membrane potential -- [0.1, 1.0] -- important to keep just at extreme range of reversal potentials to prevent numerical instability
+	VmRange minmax.F32 `view:"inline" desc:"range for Vm membrane potential -- [0.1, 1.0] -- important to keep just at extreme range of reversal potentials to prevent numerical instability"`
+
+	// M-type medium time-scale afterhyperpolarization mAHP current -- this is the primary form of adaptation on the time scale of multiple sequences of spikes
+	Mahp chans.MahpParams `view:"inline" desc:"M-type medium time-scale afterhyperpolarization mAHP current -- this is the primary form of adaptation on the time scale of multiple sequences of spikes"`
+
+	// slow time-scale afterhyperpolarization sAHP current -- integrates SpkCaD at theta cycle intervals and produces a hard cutoff on sustained activity for any neuron
+	Sahp chans.SahpParams `view:"inline" desc:"slow time-scale afterhyperpolarization sAHP current -- integrates SpkCaD at theta cycle intervals and produces a hard cutoff on sustained activity for any neuron"`
+
+	// sodium-gated potassium channel adaptation parameters -- activates a leak-like current as a function of neural activity (firing = Na influx) at two different time-scales (Slick = medium, Slack = slow)
+	KNa chans.KNaMedSlow `view:"inline" desc:"sodium-gated potassium channel adaptation parameters -- activates a leak-like current as a function of neural activity (firing = Na influx) at two different time-scales (Slick = medium, Slack = slow)"`
+
+	// NMDA channel parameters used in computing Gnmda conductance for bistability, and postsynaptic calcium flux used in learning.  Note that Learn.Snmda has distinct parameters used in computing sending NMDA parameters used in learning.
+	NMDA chans.NMDAParams `view:"inline" desc:"NMDA channel parameters used in computing Gnmda conductance for bistability, and postsynaptic calcium flux used in learning.  Note that Learn.Snmda has distinct parameters used in computing sending NMDA parameters used in learning."`
+
+	// GABA-B / GIRK channel parameters
+	GABAB chans.GABABParams `view:"inline" desc:"GABA-B / GIRK channel parameters"`
+
+	// voltage gated calcium channels -- provide a key additional source of Ca for learning and positive-feedback loop upstate for active neurons
+	VGCC chans.VGCCParams `view:"inline" desc:"voltage gated calcium channels -- provide a key additional source of Ca for learning and positive-feedback loop upstate for active neurons"`
+
+	// A-type potassium (K) channel that is particularly important for limiting the runaway excitation from VGCC channels
+	AK chans.AKsParams `view:"inline" desc:"A-type potassium (K) channel that is particularly important for limiting the runaway excitation from VGCC channels"`
+
+	// Attentional modulation parameters: how Attn modulates Ge
+	Attn AttnParams `view:"inline" desc:"Attentional modulation parameters: how Attn modulates Ge"`
 }
 
 func (ac *ActParams) Defaults() {

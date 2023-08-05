@@ -23,14 +23,26 @@ import (
 // CaLrn is then integrated in a cascading manner at multiple time scales:
 // CaM (as in calmodulin), CaP (ltP, CaMKII, plus phase), CaD (ltD, DAPK1, minus phase).
 type CaLrnParams struct {
-	Norm      float32     `def:"80" desc:"denomenator used for normalizing CaLrn, so the max is roughly 1 - 1.5 or so, which works best in terms of previous standard learning rules, and overall learning performance"`
-	SpkVGCC   slbool.Bool `def:"true" desc:"use spikes to generate VGCC instead of actual VGCC current -- see SpkVGCCa for calcium contribution from each spike"`
-	SpkVgccCa float32     `def:"35" desc:"multiplier on spike for computing Ca contribution to CaLrn in SpkVGCC mode"`
-	VgccTau   float32     `def:"10" desc:"time constant of decay for VgccCa calcium -- it is highly transient around spikes, so decay and diffusion factors are more important than for long-lasting NMDA factor.  VgccCa is integrated separately int VgccCaInt prior to adding into NMDA Ca in CaLrn"`
 
+	// denomenator used for normalizing CaLrn, so the max is roughly 1 - 1.5 or so, which works best in terms of previous standard learning rules, and overall learning performance
+	Norm float32 `def:"80" desc:"denomenator used for normalizing CaLrn, so the max is roughly 1 - 1.5 or so, which works best in terms of previous standard learning rules, and overall learning performance"`
+
+	// use spikes to generate VGCC instead of actual VGCC current -- see SpkVGCCa for calcium contribution from each spike
+	SpkVGCC slbool.Bool `def:"true" desc:"use spikes to generate VGCC instead of actual VGCC current -- see SpkVGCCa for calcium contribution from each spike"`
+
+	// multiplier on spike for computing Ca contribution to CaLrn in SpkVGCC mode
+	SpkVgccCa float32 `def:"35" desc:"multiplier on spike for computing Ca contribution to CaLrn in SpkVGCC mode"`
+
+	// time constant of decay for VgccCa calcium -- it is highly transient around spikes, so decay and diffusion factors are more important than for long-lasting NMDA factor.  VgccCa is integrated separately int VgccCaInt prior to adding into NMDA Ca in CaLrn
+	VgccTau float32 `def:"10" desc:"time constant of decay for VgccCa calcium -- it is highly transient around spikes, so decay and diffusion factors are more important than for long-lasting NMDA factor.  VgccCa is integrated separately int VgccCaInt prior to adding into NMDA Ca in CaLrn"`
+
+	// time constants for integrating CaLrn across M, P and D cascading levels
 	Dt kinase.CaDtParams `view:"inline" desc:"time constants for integrating CaLrn across M, P and D cascading levels"`
 
-	VgccDt  float32 `view:"-" json:"-" xml:"-" inactive:"+" desc:"rate = 1 / tau"`
+	// rate = 1 / tau
+	VgccDt float32 `view:"-" json:"-" xml:"-" inactive:"+" desc:"rate = 1 / tau"`
+
+	// = 1 / Norm
 	NormInv float32 `view:"-" json:"-" xml:"-" inactive:"+" desc:"= 1 / Norm"`
 
 	pad, pad1 float32
@@ -80,11 +92,20 @@ func (np *CaLrnParams) CaLrn(nrn *Neuron) {
 // CaSpk* values are integrated separately at the Neuron level and used for UpdtThr
 // and RLRate as a proxy for the activation (spiking) based learning signal.
 type CaSpkParams struct {
-	SpikeG  float32 `def:"8,12" desc:"gain multiplier on spike for computing CaSpk: increasing this directly affects the magnitude of the trace values, learning rate in Target layers, and other factors that depend on CaSpk values: RLRate, UpdtThr.  Prjn.KinaseCa.SpikeG provides an additional gain factor specific to the synapse-level trace factors, without affecting neuron-level CaSpk values.  Larger networks require higher gain factors at the neuron level -- 12, vs 8 for smaller."`
-	SynTau  float32 `def:"30" min:"1" desc:"time constant for integrating spike-driven calcium trace at sender and recv neurons, CaSyn, which then drives synapse-level integration of the joint pre * post synapse-level activity, in cycles (msec)"`
-	SynDt   float32 `view:"-" json:"-" xml:"-" inactive:"+" desc:"rate = 1 / tau"`
+
+	// gain multiplier on spike for computing CaSpk: increasing this directly affects the magnitude of the trace values, learning rate in Target layers, and other factors that depend on CaSpk values: RLRate, UpdtThr.  Prjn.KinaseCa.SpikeG provides an additional gain factor specific to the synapse-level trace factors, without affecting neuron-level CaSpk values.  Larger networks require higher gain factors at the neuron level -- 12, vs 8 for smaller.
+	SpikeG float32 `def:"8,12" desc:"gain multiplier on spike for computing CaSpk: increasing this directly affects the magnitude of the trace values, learning rate in Target layers, and other factors that depend on CaSpk values: RLRate, UpdtThr.  Prjn.KinaseCa.SpikeG provides an additional gain factor specific to the synapse-level trace factors, without affecting neuron-level CaSpk values.  Larger networks require higher gain factors at the neuron level -- 12, vs 8 for smaller."`
+
+	// time constant for integrating spike-driven calcium trace at sender and recv neurons, CaSyn, which then drives synapse-level integration of the joint pre * post synapse-level activity, in cycles (msec)
+	SynTau float32 `def:"30" min:"1" desc:"time constant for integrating spike-driven calcium trace at sender and recv neurons, CaSyn, which then drives synapse-level integration of the joint pre * post synapse-level activity, in cycles (msec)"`
+
+	// rate = 1 / tau
+	SynDt float32 `view:"-" json:"-" xml:"-" inactive:"+" desc:"rate = 1 / tau"`
+
+	// Ca gain factor for SynSpkCa learning rule, to compensate for the effect of SynTau, which increases Ca as it gets larger.  is 1 for SynTau = 30 -- todo: eliminate this at some point!
 	SynSpkG float32 `view:"+" json:"-" xml:"-" inactive:"+" desc:"Ca gain factor for SynSpkCa learning rule, to compensate for the effect of SynTau, which increases Ca as it gets larger.  is 1 for SynTau = 30 -- todo: eliminate this at some point!"`
 
+	// time constants for integrating CaSpk across M, P and D cascading levels -- these are typically the same as in CaLrn and Prjn level for synaptic integration, except for the M factor.
 	Dt kinase.CaDtParams `view:"inline" desc:"time constants for integrating CaSpk across M, P and D cascading levels -- these are typically the same as in CaLrn and Prjn level for synaptic integration, except for the M factor."`
 }
 
@@ -117,15 +138,28 @@ func (np *CaSpkParams) CaFmSpike(nrn *Neuron) {
 // Target value is adapted by neuron-wise error and difference in actual vs. target.
 // drives synaptic scaling at a slow timescale (Network.SlowInterval).
 type TrgAvgActParams struct {
-	On           slbool.Bool `desc:"whether to use target average activity mechanism to scale synaptic weights"`
-	ErrLRate     float32     `viewif:"On" def:"0.02" desc:"learning rate for adjustments to Trg value based on unit-level error signal.  Population TrgAvg values are renormalized to fixed overall average in TrgRange. Generally, deviating from the default doesn't make much difference."`
-	SynScaleRate float32     `viewif:"On" def:"0.005,0.0002" desc:"rate parameter for how much to scale synaptic weights in proportion to the AvgDif between target and actual proportion activity -- this determines the effective strength of the constraint, and larger models may need more than the weaker default value."`
-	SubMean      float32     `viewif:"On" def:"0,1" desc:"amount of mean trg change to subtract -- 1 = full zero sum.  1 works best in general -- but in some cases it may be better to start with 0 and then increase using network SetSubMean method at a later point."`
-	Permute      slbool.Bool `viewif:"On" def:"true" desc:"permute the order of TrgAvg values within layer -- otherwise they are just assigned in order from highest to lowest for easy visualization -- generally must be true if any topographic weights are being used"`
-	Pool         slbool.Bool `viewif:"On" desc:"use pool-level target values if pool-level inhibition and 4D pooled layers are present -- if pool sizes are relatively small, then may not be useful to distribute targets just within pool"`
+
+	// whether to use target average activity mechanism to scale synaptic weights
+	On slbool.Bool `desc:"whether to use target average activity mechanism to scale synaptic weights"`
+
+	// learning rate for adjustments to Trg value based on unit-level error signal.  Population TrgAvg values are renormalized to fixed overall average in TrgRange. Generally, deviating from the default doesn't make much difference.
+	ErrLRate float32 `viewif:"On" def:"0.02" desc:"learning rate for adjustments to Trg value based on unit-level error signal.  Population TrgAvg values are renormalized to fixed overall average in TrgRange. Generally, deviating from the default doesn't make much difference."`
+
+	// rate parameter for how much to scale synaptic weights in proportion to the AvgDif between target and actual proportion activity -- this determines the effective strength of the constraint, and larger models may need more than the weaker default value.
+	SynScaleRate float32 `viewif:"On" def:"0.005,0.0002" desc:"rate parameter for how much to scale synaptic weights in proportion to the AvgDif between target and actual proportion activity -- this determines the effective strength of the constraint, and larger models may need more than the weaker default value."`
+
+	// amount of mean trg change to subtract -- 1 = full zero sum.  1 works best in general -- but in some cases it may be better to start with 0 and then increase using network SetSubMean method at a later point.
+	SubMean float32 `viewif:"On" def:"0,1" desc:"amount of mean trg change to subtract -- 1 = full zero sum.  1 works best in general -- but in some cases it may be better to start with 0 and then increase using network SetSubMean method at a later point."`
+
+	// permute the order of TrgAvg values within layer -- otherwise they are just assigned in order from highest to lowest for easy visualization -- generally must be true if any topographic weights are being used
+	Permute slbool.Bool `viewif:"On" def:"true" desc:"permute the order of TrgAvg values within layer -- otherwise they are just assigned in order from highest to lowest for easy visualization -- generally must be true if any topographic weights are being used"`
+
+	// use pool-level target values if pool-level inhibition and 4D pooled layers are present -- if pool sizes are relatively small, then may not be useful to distribute targets just within pool
+	Pool slbool.Bool `viewif:"On" desc:"use pool-level target values if pool-level inhibition and 4D pooled layers are present -- if pool sizes are relatively small, then may not be useful to distribute targets just within pool"`
 
 	pad, pad1 float32
 
+	// range of target normalized average activations -- individual neurons are assigned values within this range to TrgAvg, and clamped within this range.
 	TrgRange minmax.F32 `viewif:"On" def:"{0.5 2}" desc:"range of target normalized average activations -- individual neurons are assigned values within this range to TrgAvg, and clamped within this range."`
 }
 
@@ -150,12 +184,24 @@ func (ta *TrgAvgActParams) Defaults() {
 // Has two factors: the derivative of the sigmoid based on CaSpkD
 // activity levels, and based on the phase-wise differences in activity (Diff).
 type RLRateParams struct {
-	On         slbool.Bool `def:"true" desc:"use learning rate modulation"`
-	SigmoidMin float32     `def:"0.05,1" desc:"minimum learning rate multiplier for sigmoidal act (1-act) factor -- prevents lrate from going too low for extreme values.  Set to 1 to disable Sigmoid derivative factor, which is default for Target layers."`
-	Diff       slbool.Bool `desc:"modulate learning rate as a function of plus - minus differences"`
-	SpkThr     float32     `def:"0.1" desc:"threshold on Max(CaSpkP, CaSpkD) below which Min lrate applies -- must be > 0 to prevent div by zero"`
-	DiffThr    float32     `def:"0.02" desc:"threshold on recv neuron error delta, i.e., |CaSpkP - CaSpkD| below which lrate is at Min value"`
-	Min        float32     `def:"0.001" desc:"for Diff component, minimum learning rate value when below ActDiffThr"`
+
+	// use learning rate modulation
+	On slbool.Bool `def:"true" desc:"use learning rate modulation"`
+
+	// minimum learning rate multiplier for sigmoidal act (1-act) factor -- prevents lrate from going too low for extreme values.  Set to 1 to disable Sigmoid derivative factor, which is default for Target layers.
+	SigmoidMin float32 `def:"0.05,1" desc:"minimum learning rate multiplier for sigmoidal act (1-act) factor -- prevents lrate from going too low for extreme values.  Set to 1 to disable Sigmoid derivative factor, which is default for Target layers."`
+
+	// modulate learning rate as a function of plus - minus differences
+	Diff slbool.Bool `desc:"modulate learning rate as a function of plus - minus differences"`
+
+	// threshold on Max(CaSpkP, CaSpkD) below which Min lrate applies -- must be > 0 to prevent div by zero
+	SpkThr float32 `def:"0.1" desc:"threshold on Max(CaSpkP, CaSpkD) below which Min lrate applies -- must be > 0 to prevent div by zero"`
+
+	// threshold on recv neuron error delta, i.e., |CaSpkP - CaSpkD| below which lrate is at Min value
+	DiffThr float32 `def:"0.02" desc:"threshold on recv neuron error delta, i.e., |CaSpkP - CaSpkD| below which lrate is at Min value"`
+
+	// for Diff component, minimum learning rate value when below ActDiffThr
+	Min float32 `def:"0.001" desc:"for Diff component, minimum learning rate value when below ActDiffThr"`
 
 	pad, pad1 float32
 }
@@ -213,10 +259,18 @@ func (rl *RLRateParams) RLRateDiff(scap, scad float32) float32 {
 type LearnNeurParams struct {
 	CaLrn CaLrnParams `view:"inline" desc:"parameterizes the neuron-level calcium signals driving learning: CaLrn = NMDA + VGCC Ca sources, where VGCC can be simulated from spiking or use the more complex and dynamic VGCC channel directly.  CaLrn is then integrated in a cascading manner at multiple time scales:
 CaM (as in calmodulin), CaP (ltP, CaMKII, plus phase), CaD (ltD, DAPK1, minus phase)."`
-	CaSpk     CaSpkParams      `view:"inline" desc:"parameterizes the neuron-level spike-driven calcium signals, starting with CaSyn that is integrated at the neuron level, and drives synapse-level, pre * post Ca integration, which provides the Tr trace that multiplies error signals, and drives learning directly for Target layers. CaSpk* values are integrated separately at the Neuron level and used for UpdtThr and RLRate as a proxy for the activation (spiking) based learning signal."`
-	LrnNMDA   chans.NMDAParams `view:"inline" desc:"NMDA channel parameters used for learning, vs. the ones driving activation -- allows exploration of learning parameters independent of their effects on active maintenance contributions of NMDA, and may be supported by different receptor subtypes"`
-	TrgAvgAct TrgAvgActParams  `view:"inline" desc:"synaptic scaling parameters for regulating overall average activity compared to neuron's own target level"`
-	RLRate    RLRateParams     `view:"inline" desc:"recv neuron learning rate modulation params -- an additional error-based modulation of learning for receiver side: RLRate = |SpkCaP - SpkCaD| / Max(SpkCaP, SpkCaD)"`
+
+	// parameterizes the neuron-level spike-driven calcium signals, starting with CaSyn that is integrated at the neuron level, and drives synapse-level, pre * post Ca integration, which provides the Tr trace that multiplies error signals, and drives learning directly for Target layers. CaSpk* values are integrated separately at the Neuron level and used for UpdtThr and RLRate as a proxy for the activation (spiking) based learning signal.
+	CaSpk CaSpkParams `view:"inline" desc:"parameterizes the neuron-level spike-driven calcium signals, starting with CaSyn that is integrated at the neuron level, and drives synapse-level, pre * post Ca integration, which provides the Tr trace that multiplies error signals, and drives learning directly for Target layers. CaSpk* values are integrated separately at the Neuron level and used for UpdtThr and RLRate as a proxy for the activation (spiking) based learning signal."`
+
+	// NMDA channel parameters used for learning, vs. the ones driving activation -- allows exploration of learning parameters independent of their effects on active maintenance contributions of NMDA, and may be supported by different receptor subtypes
+	LrnNMDA chans.NMDAParams `view:"inline" desc:"NMDA channel parameters used for learning, vs. the ones driving activation -- allows exploration of learning parameters independent of their effects on active maintenance contributions of NMDA, and may be supported by different receptor subtypes"`
+
+	// synaptic scaling parameters for regulating overall average activity compared to neuron's own target level
+	TrgAvgAct TrgAvgActParams `view:"inline" desc:"synaptic scaling parameters for regulating overall average activity compared to neuron's own target level"`
+
+	// recv neuron learning rate modulation params -- an additional error-based modulation of learning for receiver side: RLRate = |SpkCaP - SpkCaD| / Max(SpkCaP, SpkCaD)
+	RLRate RLRateParams `view:"inline" desc:"recv neuron learning rate modulation params -- an additional error-based modulation of learning for receiver side: RLRate = |SpkCaP - SpkCaD| / Max(SpkCaP, SpkCaD)"`
 }
 
 func (ln *LearnNeurParams) Update() {

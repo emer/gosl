@@ -85,15 +85,27 @@ const (
 
 // DataStruct has the test data
 type DataStruct struct {
-	Raw   float32 `desc:"raw value"`
+
+	// raw value
+	Raw float32 `desc:"raw value"`
+
+	// integrated value
 	Integ float32 `desc:"integrated value"`
-	Exp   float32 `desc:"exp of integ"`
-	Pad2  float32 `desc:"must pad to multiple of 4 floats for arrays"`
+
+	// exp of integ
+	Exp float32 `desc:"exp of integ"`
+
+	// must pad to multiple of 4 floats for arrays
+	Pad2 float32 `desc:"must pad to multiple of 4 floats for arrays"`
 }
 
 // ParamStruct has the test params
 type ParamStruct struct {
-	Tau    float32     `desc:"rate constant in msec"`
+
+	// rate constant in msec
+	Tau float32 `desc:"rate constant in msec"`
+
+	// 1/Tau
 	Dt     float32     `desc:"1/Tau"`
 	Option slbool.Bool // note: standard bool doesn't work
 

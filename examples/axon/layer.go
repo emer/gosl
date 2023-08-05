@@ -14,7 +14,11 @@ import (
 // axon.Layer implements the basic Axon spiking activation function,
 // and manages learning in the projections.
 type Layer struct {
-	Act   ActParams       `view:"add-fields" desc:"Activation parameters and methods for computing activations"`
+
+	// Activation parameters and methods for computing activations
+	Act ActParams `view:"add-fields" desc:"Activation parameters and methods for computing activations"`
+
+	// Learning parameters and methods that operate at the neuron level
 	Learn LearnNeurParams `view:"add-fields" desc:"Learning parameters and methods that operate at the neuron level"`
 }
 
