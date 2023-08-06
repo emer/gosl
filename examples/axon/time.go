@@ -40,7 +40,7 @@ type Time struct {
 	// if true, the model is being run in a testing mode, so no weight changes or other associated computations are needed.  this flag should only affect learning-related behavior
 	Testing slbool.Bool `desc:"if true, the model is being run in a testing mode, so no weight changes or other associated computations are needed.  this flag should only affect learning-related behavior"`
 
-	// amount of time to increment per cycle
+	// [def: 0.001] amount of time to increment per cycle
 	TimePerCyc float32 `def:"0.001" desc:"amount of time to increment per cycle"`
 
 	// random counter

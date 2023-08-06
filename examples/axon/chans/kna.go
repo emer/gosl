@@ -18,16 +18,16 @@ type KNaParams struct {
 	// if On, use this component of K-Na adaptation
 	On slbool.Bool `desc:"if On, use this component of K-Na adaptation"`
 
-	// Rise rate of fast time-scale adaptation as function of Na concentration due to spiking -- directly multiplies -- 1/rise = tau for rise rate
+	// [viewif: On] Rise rate of fast time-scale adaptation as function of Na concentration due to spiking -- directly multiplies -- 1/rise = tau for rise rate
 	Rise float32 `viewif:"On" desc:"Rise rate of fast time-scale adaptation as function of Na concentration due to spiking -- directly multiplies -- 1/rise = tau for rise rate"`
 
-	// Maximum potential conductance of fast K channels -- divide nA biological value by 10 for the normalized units here
+	// [viewif: On] Maximum potential conductance of fast K channels -- divide nA biological value by 10 for the normalized units here
 	Max float32 `viewif:"On" desc:"Maximum potential conductance of fast K channels -- divide nA biological value by 10 for the normalized units here"`
 
-	// time constant in cycles for decay of adaptation, which should be milliseconds typically (tau is roughly how long it takes for value to change significantly -- 1.4x the half-life)
+	// [viewif: On] time constant in cycles for decay of adaptation, which should be milliseconds typically (tau is roughly how long it takes for value to change significantly -- 1.4x the half-life)
 	Tau float32 `viewif:"On" desc:"time constant in cycles for decay of adaptation, which should be milliseconds typically (tau is roughly how long it takes for value to change significantly -- 1.4x the half-life)"`
 
-	// 1/Tau rate constant
+	// [view: -] 1/Tau rate constant
 	Dt float32 `view:"-" desc:"1/Tau rate constant"`
 
 	pad, pad1, pad2 float32
@@ -68,10 +68,10 @@ type KNaMedSlow struct {
 
 	pad, pad1, pad2 float32
 
-	// medium time-scale adaptation
+	// [view: inline] medium time-scale adaptation
 	Med KNaParams `view:"inline" desc:"medium time-scale adaptation"`
 
-	// slow time-scale adaptation
+	// [view: inline] slow time-scale adaptation
 	Slow KNaParams `view:"inline" desc:"slow time-scale adaptation"`
 }
 

@@ -20,19 +20,19 @@ type MahpParams struct {
 	// strength of mAHP current
 	Gbar float32 `desc:"strength of mAHP current"`
 
-	// voltage offset (threshold) in biological units for infinite time N gating function -- where the gate is at 50% strength
+	// [def: -30] voltage offset (threshold) in biological units for infinite time N gating function -- where the gate is at 50% strength
 	Voff float32 `def:"-30" desc:"voltage offset (threshold) in biological units for infinite time N gating function -- where the gate is at 50% strength"`
 
-	// slope of the arget (infinite time) gating function
+	// [def: 9] slope of the arget (infinite time) gating function
 	Vslope float32 `def:"9" desc:"slope of the arget (infinite time) gating function"`
 
-	// maximum slow rate time constant in msec for activation / deactivation.  The effective Tau is much slower -- 1/20th in original temp, and 1/60th in standard 37 C temp
+	// [def: 1000] maximum slow rate time constant in msec for activation / deactivation.  The effective Tau is much slower -- 1/20th in original temp, and 1/60th in standard 37 C temp
 	TauMax float32 `def:"1000" desc:"maximum slow rate time constant in msec for activation / deactivation.  The effective Tau is much slower -- 1/20th in original temp, and 1/60th in standard 37 C temp"`
 
-	// temperature adjustment factor: assume temp = 37 C, whereas original units were at 23 C
+	// [view: -] temperature adjustment factor: assume temp = 37 C, whereas original units were at 23 C
 	Tadj float32 `view:"-" inactive:"+" desc:"temperature adjustment factor: assume temp = 37 C, whereas original units were at 23 C"`
 
-	// 1/Tau
+	// [view: -] 1/Tau
 	DtMax     float32 `view:"-" inactive:"+" desc:"1/Tau"`
 	pad, pad1 float32
 }
