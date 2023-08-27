@@ -1,4 +1,4 @@
-module github.com/goki/gosl
+module goki.dev/gosl
 
 go 1.18
 
@@ -32,6 +32,7 @@ require (
 	github.com/go-gl/mathgl v1.0.0 // indirect
 	github.com/goki/freetype v1.0.1 // indirect
 	github.com/goki/go-difflib v1.2.1 // indirect
+	github.com/goki/gosl v1.0.12 // indirect
 	github.com/goki/kigen v1.0.2 // indirect
 	github.com/goki/pi v1.0.27 // indirect
 	github.com/goki/prof v1.0.0 // indirect

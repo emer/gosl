@@ -3,8 +3,8 @@ package test
 import (
 	"math"
 
-	"github.com/goki/gosl/slbool"
 	"github.com/goki/mat32"
+	"goki.dev/gosl/slbool"
 )
 
 //gosl: nohlsl basic

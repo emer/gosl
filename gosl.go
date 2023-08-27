@@ -16,7 +16,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/goki/gosl/slprint"
+	"goki.dev/gosl/slprint"
 )
 
 // flags

@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/goki/gosl/diff"
+	"goki.dev/gosl/diff"
 )
 
 var update = flag.Bool("update", false, "update .golden files")

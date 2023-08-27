@@ -9,7 +9,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/goki/gosl/sltype"
+	"goki.dev/gosl/sltype"
 )
 
 // Known Answer Test for values from the DEShawREsearch reference impl

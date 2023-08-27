@@ -5,12 +5,12 @@
 package main
 
 import (
-	"github.com/goki/gosl/examples/axon/chans"
-	"github.com/goki/gosl/examples/axon/minmax"
-	"github.com/goki/gosl/slbool"
-	"github.com/goki/gosl/slrand"
-	"github.com/goki/gosl/sltype"
 	"github.com/goki/mat32"
+	"goki.dev/gosl/examples/axon/chans"
+	"goki.dev/gosl/examples/axon/minmax"
+	"goki.dev/gosl/slbool"
+	"goki.dev/gosl/slrand"
+	"goki.dev/gosl/sltype"
 )
 
 ///////////////////////////////////////////////////////////////////////

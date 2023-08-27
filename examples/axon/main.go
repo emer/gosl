@@ -10,11 +10,11 @@ import (
 	"unsafe"
 
 	"github.com/emer/emergent/timer"
-	"github.com/goki/gosl/sltype"
-	"github.com/goki/gosl/threading"
 	"github.com/goki/ki/ints"
 	"github.com/goki/mat32"
 	"github.com/goki/vgpu/vgpu"
+	"goki.dev/gosl/sltype"
+	"goki.dev/gosl/threading"
 )
 
 // DiffTol is tolerance on testing diff between cpu and gpu values

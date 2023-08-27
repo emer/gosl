@@ -22,8 +22,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/goki/gosl/alignsl"
-	"github.com/goki/gosl/slprint"
+	"goki.dev/gosl/alignsl"
+	"goki.dev/gosl/slprint"
 	"golang.org/x/tools/go/packages"
 )
 

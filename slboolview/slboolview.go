@@ -9,9 +9,9 @@ import (
 
 	"github.com/goki/gi/gi"
 	"github.com/goki/gi/giv"
-	"github.com/goki/gosl/slbool"
 	"github.com/goki/ki/ki"
 	"github.com/goki/ki/kit"
+	"goki.dev/gosl/slbool"
 )
 
 func init() {

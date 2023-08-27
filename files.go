@@ -140,7 +140,7 @@ func CopySlrand() error {
 	hdr := "slrand.hlsl"
 	tofn := filepath.Join(*outDir, hdr)
 
-	pnm := "github.com/goki/gosl/slrand"
+	pnm := "goki.dev/gosl/slrand"
 
 	pkgs, err := packages.Load(&packages.Config{Mode: packages.NeedName | packages.NeedFiles}, pnm)
 	if err != nil {
