@@ -4,7 +4,7 @@ import (
 	"math"
 
 	"github.com/goki/mat32"
-	"goki.dev/gosl/slbool"
+	"goki.dev/gosl/v2/slbool"
 )
 
 //gosl: nohlsl basic

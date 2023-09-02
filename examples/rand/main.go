@@ -12,7 +12,7 @@ import (
 	"github.com/emer/emergent/timer"
 	"github.com/goki/ki/ints"
 	"github.com/goki/vgpu/vgpu"
-	"goki.dev/gosl/sltype"
+	"goki.dev/gosl/v2/sltype"
 )
 
 // note: standard one to use is plain "gosl" which should be go install'd

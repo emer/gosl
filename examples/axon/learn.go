@@ -6,10 +6,10 @@ package main
 
 import (
 	"github.com/goki/mat32"
-	"goki.dev/gosl/examples/axon/chans"
-	"goki.dev/gosl/examples/axon/kinase"
-	"goki.dev/gosl/examples/axon/minmax"
-	"goki.dev/gosl/slbool"
+	"goki.dev/gosl/v2/examples/axon/chans"
+	"goki.dev/gosl/v2/examples/axon/kinase"
+	"goki.dev/gosl/v2/examples/axon/minmax"
+	"goki.dev/gosl/v2/slbool"
 )
 
 ///////////////////////////////////////////////////////////////////////

@@ -4,7 +4,7 @@
 
 package chans
 
-import "goki.dev/gosl/slbool"
+import "goki.dev/gosl/v2/slbool"
 
 //gosl: start axon
 

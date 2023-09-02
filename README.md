@@ -13,7 +13,7 @@ $ go install golang.org/x/tools/cmd/goimports@latest
 
 To install the `gosl` command, do:
 ```bash
-$ go install goki.dev/gosl@latest
+$ go install goki.dev/gosl/v2@latest
 ```
 
 In your Go code, use these comment directives:
@@ -91,7 +91,7 @@ In general shader code should be simple mathematical expressions and data types,
 
 ## Random numbers: slrand
 
-See [slrand](https://goki.dev/gosl/tree/main/slrand) for a shader-optimized random number generation package, which is supported by `gosl` -- it will convert `slrand` calls into appropriate HLSL named function calls.  `gosl` will also copy the `slrand.hlsl` file, which contains the full source code for the RNG, into the destination `shaders` directory, so it can be included with a simple local path:
+See [slrand](https://goki.dev/gosl/v2/tree/main/slrand) for a shader-optimized random number generation package, which is supported by `gosl` -- it will convert `slrand` calls into appropriate HLSL named function calls.  `gosl` will also copy the `slrand.hlsl` file, which contains the full source code for the RNG, into the destination `shaders` directory, so it can be included with a simple local path:
 
 ```Go
 //gosl: hlsl mycode

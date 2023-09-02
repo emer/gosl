@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/goki/mat32"
-	"goki.dev/gosl/slrand"
-	"goki.dev/gosl/sltype"
+	"goki.dev/gosl/v2/slrand"
+	"goki.dev/gosl/v2/sltype"
 )
 
 //gosl: hlsl rand

@@ -13,8 +13,8 @@ import (
 	"github.com/goki/ki/ints"
 	"github.com/goki/mat32"
 	"github.com/goki/vgpu/vgpu"
-	"goki.dev/gosl/sltype"
-	"goki.dev/gosl/threading"
+	"goki.dev/gosl/v2/sltype"
+	"goki.dev/gosl/v2/threading"
 )
 
 // DiffTol is tolerance on testing diff between cpu and gpu values

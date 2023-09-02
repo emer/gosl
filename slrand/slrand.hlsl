@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Original file is in Go package: goki.dev/gosl/slrand
+// Original file is in Go package: goki.dev/gosl/v2/slrand
 // See README.md there for documentation.
 
 // These random number generation (RNG) functions are optimized for

@@ -11,7 +11,7 @@ import (
 	"github.com/goki/gi/giv"
 	"github.com/goki/ki/ki"
 	"github.com/goki/ki/kit"
-	"goki.dev/gosl/slbool"
+	"goki.dev/gosl/v2/slbool"
 )
 
 func init() {

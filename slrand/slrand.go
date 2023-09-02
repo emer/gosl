@@ -8,7 +8,7 @@ import (
 	"math"
 
 	"github.com/goki/mat32"
-	"goki.dev/gosl/sltype"
+	"goki.dev/gosl/v2/sltype"
 )
 
 // These are Go versions of the same Philox2x32 based random number generator

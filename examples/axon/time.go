@@ -5,8 +5,8 @@
 package main
 
 import (
-	"goki.dev/gosl/slbool"
-	"goki.dev/gosl/slrand"
+	"goki.dev/gosl/v2/slbool"
+	"goki.dev/gosl/v2/slrand"
 )
 
 //gosl: hlsl axon
