@@ -10,9 +10,9 @@ import (
 	"unsafe"
 
 	"github.com/emer/emergent/timer"
+	"goki.dev/gosl/v2/sltype"
 	"goki.dev/ki/v2/ints"
 	"goki.dev/vgpu/v2/vgpu"
-	"goki.dev/gosl/v2/sltype"
 )
 
 // note: standard one to use is plain "gosl" which should be go install'd

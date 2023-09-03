@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
-	"goki.dev/mat32/v2"
 	"goki.dev/gosl/v2/slrand"
 	"goki.dev/gosl/v2/sltype"
+	"goki.dev/mat32/v2"
 )
 
 //gosl: hlsl rand
