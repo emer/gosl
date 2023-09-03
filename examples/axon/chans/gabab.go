@@ -5,7 +5,7 @@
 package chans
 
 import (
-	"github.com/goki/mat32"
+	"goki.dev/mat32/v2"
 )
 
 //gosl: start axon

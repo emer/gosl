@@ -14,7 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/goki/ki/ints"
+	"goki.dev/ki/v2/ints"
 	"golang.org/x/exp/slices"
 )
 

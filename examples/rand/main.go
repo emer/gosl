@@ -10,8 +10,8 @@ import (
 	"unsafe"
 
 	"github.com/emer/emergent/timer"
-	"github.com/goki/ki/ints"
-	"github.com/goki/vgpu/vgpu"
+	"goki.dev/ki/v2/ints"
+	"goki.dev/vgpu/v2/vgpu"
 	"goki.dev/gosl/v2/sltype"
 )
 

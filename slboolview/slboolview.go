@@ -7,11 +7,11 @@ package slboolview
 import (
 	"reflect"
 
-	"github.com/goki/gi/gi"
-	"github.com/goki/gi/giv"
-	"github.com/goki/ki/ki"
-	"github.com/goki/ki/kit"
+	"goki.dev/gi/v2/gi"
+	"goki.dev/gi/v2/giv"
 	"goki.dev/gosl/v2/slbool"
+	"goki.dev/ki/v2/ki"
+	"goki.dev/ki/v2/kit"
 )
 
 func init() {
@@ -31,7 +31,7 @@ type BoolValueView struct {
 var KiT_BoolValueView = kit.Types.AddType(&BoolValueView{}, nil)
 
 func (vv *BoolValueView) WidgetType() reflect.Type {
-	vv.WidgetTyp = gi.KiT_CheckBox
+	vv.WidgetTyp = gi.TypeCheckBox
 	return vv.WidgetTyp
 }
 
@@ -57,7 +57,7 @@ func (vv *BoolValueView) ConfigWidget(widg gi.Node2D) {
 	vv.StdConfigWidget(widg)
 	cb := vv.Widget.(*gi.CheckBox)
 	cb.Tooltip, _ = vv.Tag("desc")
-	cb.SetInactiveState(vv.This().(giv.ValueView).IsInactive())
+	cb.SetDisabledState(vv.This().(giv.ValueView).IsInactive())
 	cb.ButtonSig.ConnectOnly(vv.This(), func(recv, send ki.Ki, sig int64, data any) {
 		if sig == int64(gi.ButtonToggled) {
 			vvv, _ := recv.Embed(KiT_BoolValueView).(*BoolValueView)

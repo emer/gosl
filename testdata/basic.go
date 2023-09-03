@@ -3,7 +3,7 @@ package test
 import (
 	"math"
 
-	"github.com/goki/mat32"
+	"goki.dev/mat32/v2"
 	"goki.dev/gosl/v2/slbool"
 )
 

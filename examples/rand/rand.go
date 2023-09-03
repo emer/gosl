@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/goki/mat32"
+	"goki.dev/mat32/v2"
 	"goki.dev/gosl/v2/slrand"
 	"goki.dev/gosl/v2/sltype"
 )

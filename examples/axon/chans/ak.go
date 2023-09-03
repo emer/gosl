@@ -4,7 +4,7 @@
 
 package chans
 
-import "github.com/goki/mat32"
+import "goki.dev/mat32/v2"
 
 // AKParams control an A-type K channel, which is voltage gated with maximal
 // activation around -37 mV.  It has two state variables, M (v-gated opening)

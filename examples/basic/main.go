@@ -11,13 +11,13 @@ import (
 	"unsafe"
 
 	"github.com/emer/emergent/timer"
-	"github.com/goki/ki/ints"
-	"github.com/goki/vgpu/vgpu"
+	"goki.dev/ki/v2/ints"
+	"goki.dev/vgpu/v2/vgpu"
 )
 
 // note: standard one to use is plain "gosl" which should be go install'd
 
-//go:generate ../../gosl github.com/goki/mat32/fastexp.go compute.go
+//go:generate ../../gosl goki.dev/mat32/v2/fastexp.go compute.go
 
 func init() {
 	// must lock main thread for gpu!  this also means that vulkan must be used

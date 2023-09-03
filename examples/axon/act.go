@@ -5,7 +5,7 @@
 package main
 
 import (
-	"github.com/goki/mat32"
+	"goki.dev/mat32/v2"
 	"goki.dev/gosl/v2/examples/axon/chans"
 	"goki.dev/gosl/v2/examples/axon/minmax"
 	"goki.dev/gosl/v2/slbool"

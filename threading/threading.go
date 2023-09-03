@@ -4,7 +4,7 @@ import (
 	"math"
 	"sync"
 
-	"github.com/goki/ki/ints"
+	"goki.dev/ki/v2/ints"
 )
 
 // Maps the given function across the [0, total) range of items, using
