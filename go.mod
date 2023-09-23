@@ -3,13 +3,13 @@ module goki.dev/gosl/v2
 go 1.21.0
 
 require (
-	github.com/emer/emergent v1.3.49
+	github.com/emer/emergent v1.4.30
 	goki.dev/gi/v2 v2.0.0-dev0.0.1
 	goki.dev/ki/v2 v2.0.0-dev0.0.3
-	goki.dev/mat32/v2 v2.0.0-dev0.0.0
-	goki.dev/vgpu/v2 v2.0.0-dev0.0.2
-	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
-	golang.org/x/tools v0.12.1-0.20230818130535-1517d1a3ba60
+	goki.dev/mat32/v2 v2.0.0-dev0.0.5
+	goki.dev/vgpu/v2 v2.0.0-dev0.0.3
+	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
+	golang.org/x/tools v0.13.0
 )
 
 require (
@@ -19,9 +19,9 @@ require (
 	github.com/BurntSushi/xgbutil v0.0.0-20190907113008-ad855c713046 // indirect
 	github.com/Masterminds/vcs v1.13.3 // indirect
 	github.com/akutz/sortfold v0.2.1 // indirect
-	github.com/alecthomas/chroma/v2 v2.8.0 // indirect
+	github.com/alecthomas/chroma/v2 v2.9.1 // indirect
 	github.com/anthonynsimon/bild v0.13.0 // indirect
-	github.com/antonmedv/expr v1.15.0 // indirect
+	github.com/antonmedv/expr v1.15.3 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/c2h5oh/datasize v0.0.0-20220606134207-859f65c6625b // indirect
 	github.com/dlclark/regexp2 v1.10.0 // indirect
@@ -40,16 +40,20 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef // indirect
 	github.com/srwiley/scanx v0.0.0-20190309010443-e94503791388 // indirect
-	goki.dev/cam v0.9.10 // indirect
-	goki.dev/colors v0.8.7 // indirect
-	goki.dev/matcolor v0.9.5 // indirect
-	goki.dev/ordmap v0.5.0 // indirect
+	goki.dev/cam v0.9.12 // indirect
+	goki.dev/colors v0.8.8 // indirect
+	goki.dev/enums v0.9.14 // indirect
+	goki.dev/glop v0.1.1 // indirect
+	goki.dev/gti v0.1.0 // indirect
+	goki.dev/laser v0.1.1 // indirect
+	goki.dev/matcolor v0.9.6 // indirect
+	goki.dev/ordmap v0.5.4 // indirect
 	goki.dev/pi/v2 v2.0.0-dev0.0.1 // indirect
-	goki.dev/prof/v2 v2.0.0-dev0.0.2 // indirect
-	goki.dev/vci/v2 v2.0.0-dev0.0.0 // indirect
-	golang.org/x/image v0.11.0 // indirect
+	goki.dev/prof/v2 v2.0.0-dev0.0.3 // indirect
+	goki.dev/vci/v2 v2.0.0-dev0.0.1 // indirect
+	golang.org/x/image v0.12.0 // indirect
 	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/net v0.14.0 // indirect
+	golang.org/x/net v0.15.0 // indirect
 	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 )
