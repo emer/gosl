@@ -14,8 +14,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"slices"
+
 	"goki.dev/ki/v2/ints"
-	"golang.org/x/exp/slices"
 )
 
 func ReadFileLines(fn string) ([][]byte, error) {
