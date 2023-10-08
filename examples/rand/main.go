@@ -9,11 +9,12 @@ import (
 	"runtime"
 	"unsafe"
 
+	"log/slog"
+
 	"github.com/emer/emergent/timer"
 	"goki.dev/gosl/v2/sltype"
 	"goki.dev/ki/v2/ints"
 	"goki.dev/vgpu/v2/vgpu"
-	"golang.org/x/exp/slog"
 )
 
 // note: standard one to use is plain "gosl" which should be go install'd
