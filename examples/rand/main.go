@@ -13,6 +13,7 @@ import (
 	"goki.dev/gosl/v2/sltype"
 	"goki.dev/ki/v2/ints"
 	"goki.dev/vgpu/v2/vgpu"
+	"golang.org/x/exp/slog"
 )
 
 // note: standard one to use is plain "gosl" which should be go install'd
@@ -137,10 +138,10 @@ func main() {
 	fmt.Printf("\n")
 
 	if anyDiffEx {
-		fmt.Printf("ERROR: Differences between CPU and GPU detected at Exact level (excludes Gauss)\n\n")
+		slog.Error("Differences between CPU and GPU detected at Exact level (excludes Gauss)")
 	}
 	if anyDiffTol {
-		fmt.Printf("ERROR: Differences between CPU and GPU detected at Tolerance level of %g\n\n", Tol)
+		slog.Error("Differences between CPU and GPU detected at Tolerance level", "tolerance", Tol)
 	}
 
 	cpu := cpuTmr.TotalSecs()

@@ -15,6 +15,7 @@ import (
 	"goki.dev/ki/v2/ints"
 	"goki.dev/mat32/v2"
 	"goki.dev/vgpu/v2/vgpu"
+	"golang.org/x/exp/slog"
 )
 
 // DiffTol is tolerance on testing diff between cpu and gpu values
@@ -212,7 +213,7 @@ func main() {
 	}
 	fmt.Printf("\n")
 	if anyDiff {
-		fmt.Printf("ERROR: Differences between CPU and GPU detected -- see stars above\n\n")
+		slog.Error("Differences between CPU and GPU detected -- see stars above\n")
 	}
 
 	cpu := cpuTmr.TotalSecs()
