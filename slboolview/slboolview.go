@@ -39,7 +39,7 @@ func (vv *BoolValueView) UpdateWidget() {
 	if vv.Widget == nil {
 		return
 	}
-	cb := vv.Widget.(*gi.CheckBox)
+	cb := vv.Widget.(*gi.Switch)
 	npv := kit.NonPtrValue(vv.Value)
 	sb, ok := npv.Interface().(slbool.Bool)
 	if ok {
@@ -55,7 +55,7 @@ func (vv *BoolValueView) UpdateWidget() {
 func (vv *BoolValueView) ConfigWidget(widg gi.Node2D) {
 	vv.Widget = widg
 	vv.StdConfigWidget(widg)
-	cb := vv.Widget.(*gi.CheckBox)
+	cb := vv.Widget.(*gi.Switch)
 	cb.Tooltip, _ = vv.Tag("desc")
 	cb.SetDisabledState(vv.This().(giv.ValueView).IsInactive())
 	cb.ButtonSig.ConnectOnly(vv.This(), func(recv, send ki.Ki, sig int64, data any) {
