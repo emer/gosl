@@ -16,19 +16,19 @@ import "goki.dev/gosl/v2/slbool"
 type KNaParams struct {
 
 	// if On, use this component of K-Na adaptation
-	On slbool.Bool `desc:"if On, use this component of K-Na adaptation"`
+	On slbool.Bool
 
-	// [viewif: On] Rise rate of fast time-scale adaptation as function of Na concentration due to spiking -- directly multiplies -- 1/rise = tau for rise rate
-	Rise float32 `viewif:"On" desc:"Rise rate of fast time-scale adaptation as function of Na concentration due to spiking -- directly multiplies -- 1/rise = tau for rise rate"`
+	// Rise rate of fast time-scale adaptation as function of Na concentration due to spiking -- directly multiplies -- 1/rise = tau for rise rate
+	Rise float32 `viewif:"On"`
 
-	// [viewif: On] Maximum potential conductance of fast K channels -- divide nA biological value by 10 for the normalized units here
-	Max float32 `viewif:"On" desc:"Maximum potential conductance of fast K channels -- divide nA biological value by 10 for the normalized units here"`
+	// Maximum potential conductance of fast K channels -- divide nA biological value by 10 for the normalized units here
+	Max float32 `viewif:"On"`
 
-	// [viewif: On] time constant in cycles for decay of adaptation, which should be milliseconds typically (tau is roughly how long it takes for value to change significantly -- 1.4x the half-life)
-	Tau float32 `viewif:"On" desc:"time constant in cycles for decay of adaptation, which should be milliseconds typically (tau is roughly how long it takes for value to change significantly -- 1.4x the half-life)"`
+	// time constant in cycles for decay of adaptation, which should be milliseconds typically (tau is roughly how long it takes for value to change significantly -- 1.4x the half-life)
+	Tau float32 `viewif:"On"`
 
-	// [view: -] 1/Tau rate constant
-	Dt float32 `view:"-" desc:"1/Tau rate constant"`
+	// 1/Tau rate constant
+	Dt float32 `view:"-"`
 
 	pad, pad1, pad2 float32
 }
@@ -64,15 +64,15 @@ func (ka *KNaParams) GcFmSpike(gKNa *float32, spike bool) {
 type KNaMedSlow struct {
 
 	// if On, apply K-Na adaptation
-	On slbool.Bool `desc:"if On, apply K-Na adaptation"`
+	On slbool.Bool
 
 	pad, pad1, pad2 float32
 
-	// [view: inline] medium time-scale adaptation
-	Med KNaParams `view:"inline" desc:"medium time-scale adaptation"`
+	// medium time-scale adaptation
+	Med KNaParams `view:"inline"`
 
-	// [view: inline] slow time-scale adaptation
-	Slow KNaParams `view:"inline" desc:"slow time-scale adaptation"`
+	// slow time-scale adaptation
+	Slow KNaParams `view:"inline"`
 }
 
 func (ka *KNaMedSlow) Defaults() {

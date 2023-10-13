@@ -15,11 +15,11 @@ import (
 // and manages learning in the projections.
 type Layer struct {
 
-	// [view: add-fields] Activation parameters and methods for computing activations
-	Act ActParams `view:"add-fields" desc:"Activation parameters and methods for computing activations"`
+	// Activation parameters and methods for computing activations
+	Act ActParams `view:"add-fields"`
 
-	// [view: add-fields] Learning parameters and methods that operate at the neuron level
-	Learn LearnNeurParams `view:"add-fields" desc:"Learning parameters and methods that operate at the neuron level"`
+	// Learning parameters and methods that operate at the neuron level
+	Learn LearnNeurParams `view:"add-fields"`
 }
 
 func (ly *Layer) Defaults() {

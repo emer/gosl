@@ -243,13 +243,13 @@ func Uintn(counter *sltype.Uint2, key uint32, n uint32) uint32 {
 type Counter struct {
 
 	// lower 32 bits of counter, incremented first
-	Lo uint32 `desc:"lower 32 bits of counter, incremented first"`
+	Lo uint32
 
 	// higher 32 bits of counter, incremented only when Lo turns over
-	Hi uint32 `desc:"higher 32 bits of counter, incremented only when Lo turns over"`
+	Hi uint32
 
 	// last seed value set by Seed method, restored by Reset()
-	HiSeed uint32 `desc:"last seed value set by Seed method, restored by Reset()"`
+	HiSeed uint32
 
 	pad uint32
 }

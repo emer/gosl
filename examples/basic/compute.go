@@ -16,26 +16,26 @@ import "goki.dev/mat32/v2"
 type DataStruct struct {
 
 	// raw value
-	Raw float32 `desc:"raw value"`
+	Raw float32
 
 	// integrated value
-	Integ float32 `desc:"integrated value"`
+	Integ float32
 
 	// exp of integ
-	Exp float32 `desc:"exp of integ"`
+	Exp float32
 
 	// must pad to multiple of 4 floats for arrays
-	Pad2 float32 `desc:"must pad to multiple of 4 floats for arrays"`
+	Pad2 float32
 }
 
 // ParamStruct has the test params
 type ParamStruct struct {
 
 	// rate constant in msec
-	Tau float32 `desc:"rate constant in msec"`
+	Tau float32
 
 	// 1/Tau
-	Dt float32 `desc:"1/Tau"`
+	Dt float32
 
 	pad, pad1 float32
 }

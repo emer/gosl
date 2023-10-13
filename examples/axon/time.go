@@ -20,31 +20,31 @@ import (
 type Time struct {
 
 	// phase counter: typicaly 0-1 for minus-plus but can be more phases for other algorithms
-	Phase int32 `desc:"phase counter: typicaly 0-1 for minus-plus but can be more phases for other algorithms"`
+	Phase int32
 
 	// true if this is the plus phase, when the outcome / bursting is occurring, driving positive learning -- else minus phase
-	PlusPhase slbool.Bool `desc:"true if this is the plus phase, when the outcome / bursting is occurring, driving positive learning -- else minus phase"`
+	PlusPhase slbool.Bool
 
 	// cycle within current phase -- minus or plus
-	PhaseCycle int32 `desc:"cycle within current phase -- minus or plus"`
+	PhaseCycle int32
 
 	// cycle counter: number of iterations of activation updating (settling) on the current state -- this counts time sequentially until reset with NewState
-	Cycle int32 `desc:"cycle counter: number of iterations of activation updating (settling) on the current state -- this counts time sequentially until reset with NewState"`
+	Cycle int32
 
 	// total cycle count -- this increments continuously from whenever it was last reset -- typically this is number of milliseconds in simulation time
-	CycleTot int32 `desc:"total cycle count -- this increments continuously from whenever it was last reset -- typically this is number of milliseconds in simulation time"`
+	CycleTot int32
 
 	// accumulated amount of time the network has been running, in simulation-time (not real world time), in seconds
-	Time float32 `desc:"accumulated amount of time the network has been running, in simulation-time (not real world time), in seconds"`
+	Time float32
 
 	// if true, the model is being run in a testing mode, so no weight changes or other associated computations are needed.  this flag should only affect learning-related behavior
-	Testing slbool.Bool `desc:"if true, the model is being run in a testing mode, so no weight changes or other associated computations are needed.  this flag should only affect learning-related behavior"`
+	Testing slbool.Bool
 
-	// [def: 0.001] amount of time to increment per cycle
-	TimePerCyc float32 `def:"0.001" desc:"amount of time to increment per cycle"`
+	// amount of time to increment per cycle
+	TimePerCyc float32 `def:"0.001"`
 
 	// random counter
-	RandCtr slrand.Counter `desc:"random counter"`
+	RandCtr slrand.Counter
 }
 
 // Defaults sets default values
