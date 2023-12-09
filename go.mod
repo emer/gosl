@@ -8,7 +8,6 @@ require (
 	goki.dev/ki/v2 v2.0.0-dev0.0.3
 	goki.dev/mat32/v2 v2.0.0-dev0.0.5
 	goki.dev/vgpu/v2 v2.0.0-dev0.0.3
-	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
 	golang.org/x/tools v0.13.0
 )
 
@@ -21,7 +20,7 @@ require (
 	github.com/akutz/sortfold v0.2.1 // indirect
 	github.com/alecthomas/chroma/v2 v2.9.1 // indirect
 	github.com/anthonynsimon/bild v0.13.0 // indirect
-	github.com/antonmedv/expr v1.15.3 // indirect
+	github.com/antonmedv/expr v1.15.0 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/c2h5oh/datasize v0.0.0-20220606134207-859f65c6625b // indirect
 	github.com/dlclark/regexp2 v1.10.0 // indirect
@@ -51,6 +50,7 @@ require (
 	goki.dev/pi/v2 v2.0.0-dev0.0.1 // indirect
 	goki.dev/prof/v2 v2.0.0-dev0.0.3 // indirect
 	goki.dev/vci/v2 v2.0.0-dev0.0.1 // indirect
+	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/image v0.12.0 // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.15.0 // indirect
