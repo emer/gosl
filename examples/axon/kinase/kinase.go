@@ -21,13 +21,13 @@ type CaDtParams struct {
 	DTau float32 `def:"40" min:"1"`
 
 	// rate = 1 / tau
-	MDt float32 `view:"-" json:"-" xml:"-" inactive:"+"`
+	MDt float32 `view:"-" json:"-" xml:"-" edit:"-"`
 
 	// rate = 1 / tau
-	PDt float32 `view:"-" json:"-" xml:"-" inactive:"+"`
+	PDt float32 `view:"-" json:"-" xml:"-" edit:"-"`
 
 	// rate = 1 / tau
-	DDt float32 `view:"-" json:"-" xml:"-" inactive:"+"`
+	DDt float32 `view:"-" json:"-" xml:"-" edit:"-"`
 
 	pad, pad1 float32
 }

@@ -30,7 +30,7 @@ type GABABParams struct {
 	GiSpike float32 `def:"10"`
 
 	// time offset when peak conductance occurs, in msec, computed from RiseTau and DecayTau
-	MaxTime float32 `inactive:"+"`
+	MaxTime float32 `edit:"-"`
 
 	// time constant factor used in integration: (Decay / Rise) ^ (Rise / (Decay - Rise))
 	TauFact float32 `view:"-"`

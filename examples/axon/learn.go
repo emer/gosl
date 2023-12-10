@@ -40,10 +40,10 @@ type CaLrnParams struct {
 	Dt kinase.CaDtParams `view:"inline"`
 
 	// rate = 1 / tau
-	VgccDt float32 `view:"-" json:"-" xml:"-" inactive:"+"`
+	VgccDt float32 `view:"-" json:"-" xml:"-" edit:"-"`
 
 	// = 1 / Norm
-	NormInv float32 `view:"-" json:"-" xml:"-" inactive:"+"`
+	NormInv float32 `view:"-" json:"-" xml:"-" edit:"-"`
 
 	pad, pad1 float32
 }
@@ -100,10 +100,10 @@ type CaSpkParams struct {
 	SynTau float32 `def:"30" min:"1"`
 
 	// rate = 1 / tau
-	SynDt float32 `view:"-" json:"-" xml:"-" inactive:"+"`
+	SynDt float32 `view:"-" json:"-" xml:"-" edit:"-"`
 
 	// Ca gain factor for SynSpkCa learning rule, to compensate for the effect of SynTau, which increases Ca as it gets larger.  is 1 for SynTau = 30 -- todo: eliminate this at some point!
-	SynSpkG float32 `view:"+" json:"-" xml:"-" inactive:"+"`
+	SynSpkG float32 `view:"+" json:"-" xml:"-" edit:"-"`
 
 	// time constants for integrating CaSpk across M, P and D cascading levels -- these are typically the same as in CaLrn and Prjn level for synaptic integration, except for the M factor.
 	Dt kinase.CaDtParams `view:"inline"`

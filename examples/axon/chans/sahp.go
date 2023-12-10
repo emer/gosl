@@ -34,10 +34,10 @@ type SahpParams struct {
 	TauMax float32 `def:"1"`
 
 	// 1/Tau
-	CaDt float32 `view:"-" inactive:"+"`
+	CaDt float32 `view:"-" edit:"-"`
 
 	// 1/Tau
-	DtMax float32 `view:"-" inactive:"+"`
+	DtMax float32 `view:"-" edit:"-"`
 	pad   float32
 }
 

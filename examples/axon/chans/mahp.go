@@ -30,10 +30,10 @@ type MahpParams struct {
 	TauMax float32 `def:"1000"`
 
 	// temperature adjustment factor: assume temp = 37 C, whereas original units were at 23 C
-	Tadj float32 `view:"-" inactive:"+"`
+	Tadj float32 `view:"-" edit:"-"`
 
 	// 1/Tau
-	DtMax     float32 `view:"-" inactive:"+"`
+	DtMax     float32 `view:"-" edit:"-"`
 	pad, pad1 float32
 }
 
