@@ -1,6 +1,6 @@
 module goki.dev/gosl/v2
 
-go 1.21.0
+go 1.21
 
 require (
 	github.com/emer/emergent v1.4.30
