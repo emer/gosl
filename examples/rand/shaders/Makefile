@@ -3,5 +3,5 @@
 all: rand.spv
 
 %.spv : %.hlsl
-	glslc -fshader-stage=compute -o $@ $<
+	dxc -spirv -O3 -T cs_6_0 -E main -Fo $@ $<
 	

@@ -269,7 +269,7 @@ type Neuron struct {
 }
 
 func (nrn *Neuron) HasFlag(flag NeuronFlags) bool {
-	return nrn.Flags&flag != 0
+	return (nrn.Flags & flag) != 0
 }
 
 func (nrn *Neuron) SetFlag(flag NeuronFlags) {

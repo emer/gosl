@@ -3,8 +3,6 @@ package threading
 import (
 	"math"
 	"sync"
-
-	"goki.dev/ki/v2/ints"
 )
 
 // Maps the given function across the [0, total) range of items, using
@@ -14,7 +12,7 @@ func ParallelRun(fun func(st, ed int), total int, nThreads int) {
 	waitGroup := sync.WaitGroup{}
 	for start := 0; start < total; start += itemsPerThr {
 		start := start // be extra sure with closure
-		end := ints.MinInt(start+itemsPerThr, total)
+		end := min(start+itemsPerThr, total)
 		waitGroup.Add(1) // todo: move out of loop
 		go func() {
 			fun(start, end)

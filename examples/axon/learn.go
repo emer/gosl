@@ -243,13 +243,13 @@ func (rl *RLRateParams) RLRateDiff(scap, scad float32) float32 {
 	if slbool.IsFalse(rl.On) || slbool.IsFalse(rl.Diff) {
 		return 1.0
 	}
-	max := mat32.Max(scap, scad)
-	if max > rl.SpkThr { // avoid div by 0
+	mx := mat32.Max(scap, scad)
+	if mx > rl.SpkThr { // avoid div by 0
 		dif := mat32.Abs(scap - scad)
 		if dif < rl.DiffThr {
 			return rl.Min
 		}
-		return (dif / max)
+		return (dif / mx)
 	}
 	return rl.Min
 }

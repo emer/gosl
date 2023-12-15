@@ -11,10 +11,9 @@ import (
 
 	"log/slog"
 
-	"github.com/emer/emergent/timer"
+	"github.com/emer/emergent/v2/timer"
 	"goki.dev/gosl/v2/sltype"
 	"goki.dev/gosl/v2/threading"
-	"goki.dev/ki/v2/ints"
 	"goki.dev/mat32/v2"
 	"goki.dev/vgpu/v2/vgpu"
 )
@@ -50,7 +49,7 @@ func main() {
 	// AMD is 64, NVIDIA, M1 are 32
 	gpuThreads := 64
 	cpuThreads := 10
-	nInt := ints.IntMultiple(n, gpuThreads)
+	nInt := int(mat32.IntMultiple(float32(n), float32(gpuThreads)))
 	n = nInt                  // enforce optimal n's -- otherwise requires range checking
 	nGps := nInt / gpuThreads // dispatch n
 
@@ -134,7 +133,7 @@ func main() {
 	// Storage however *does* appear to work with only 32 or 16 byte values!
 	// all of this is on mac
 
-	layv := setl.AddStruct("Layers", int(unsafe.Sizeof(Layer{})), nLays, vgpu.Uniform, vgpu.ComputeShader)
+	layv := setl.AddStruct("Layers", int(unsafe.Sizeof(Layer{})), nLays, vgpu.Storage, vgpu.ComputeShader)
 	timev := sett.AddStruct("Time", int(unsafe.Sizeof(Time{})), 1, vgpu.Storage, vgpu.ComputeShader)
 	neurv := setn.AddStruct("Neurons", int(unsafe.Sizeof(Neuron{})), n, vgpu.Storage, vgpu.ComputeShader)
 	// var ui sltype.Uint2
@@ -169,7 +168,8 @@ func main() {
 	vars.BindDynValIdx(2, "Neurons", 0)
 	// vars.BindDynValIdx(3, "Idxs", 0)
 
-	sy.CmdResetBindVars(sy.CmdPool.Buff, 0)
+	cmd := sy.ComputeCmdBuff()
+	sy.CmdResetBindVars(cmd, 0)
 
 	// gpuFullTmr := timer.Time{}
 	// gpuFullTmr.Start()
@@ -178,13 +178,9 @@ func main() {
 	gpuTmr.Start()
 
 	// note: it is 2x faster to run the for loop within the shader entirely
-	pl.ComputeCommand(nGps, 1, 1)
-	sy.ComputeSubmitWait() // technically should wait, but results are same..
-	// if validation mode is on, it complains..
-	for cy := 1; cy < maxCycles; cy++ {
-		sy.ComputeSubmitWait() // waiting every time is 10x for 100k
-	}
-	// sy.ComputeWait() // waiting only at end is 13x for 100k
+	pl.ComputeDispatch(cmd, nGps, 1, 1)
+	sy.ComputeCmdEnd(cmd)
+	sy.ComputeSubmitWait(cmd) // technically should wait, but results are same..
 
 	gpuTmr.Stop()
 
@@ -193,7 +189,7 @@ func main() {
 
 	gpuFullTmr.Stop()
 
-	mx := ints.MinInt(n, 1)
+	mx := min(n, 1)
 	_ = mx
 	anyDiff := false
 	// for i := n - 1; i < n; i++ {

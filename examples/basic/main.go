@@ -10,8 +10,8 @@ import (
 	"runtime"
 	"unsafe"
 
-	"github.com/emer/emergent/timer"
-	"goki.dev/ki/v2/ints"
+	"github.com/emer/emergent/v2/timer"
+	"goki.dev/mat32/v2"
 	"goki.dev/vgpu/v2/vgpu"
 )
 
@@ -38,7 +38,7 @@ func main() {
 
 	n := 100000000 // get 80x with 100m, 50x with 10m
 	threads := 64
-	nInt := ints.IntMultiple(n, threads)
+	nInt := int(mat32.IntMultiple(float32(n), float32(threads)))
 	n = nInt               // enforce optimal n's -- otherwise requires range checking
 	nGps := nInt / threads // dispatch n
 
@@ -68,7 +68,7 @@ func main() {
 	setp := vars.AddSet()
 	setd := vars.AddSet()
 
-	parsv := setp.AddStruct("Params", int(unsafe.Sizeof(ParamStruct{})), 1, vgpu.Uniform, vgpu.ComputeShader)
+	parsv := setp.AddStruct("Params", int(unsafe.Sizeof(ParamStruct{})), 1, vgpu.Storage, vgpu.ComputeShader)
 	datav := setd.AddStruct("Data", int(unsafe.Sizeof(DataStruct{})), n, vgpu.Storage, vgpu.ComputeShader)
 
 	setp.ConfigVals(1) // one val per var
@@ -92,7 +92,8 @@ func main() {
 	vars.BindDynValIdx(0, "Params", 0)
 	vars.BindDynValIdx(1, "Data", 0)
 
-	sy.CmdResetBindVars(sy.CmdPool.Buff, 0)
+	cmd := sy.ComputeCmdBuff()
+	sy.CmdResetBindVars(cmd, 0)
 
 	// gpuFullTmr := timer.Time{}
 	// gpuFullTmr.Start()
@@ -100,8 +101,9 @@ func main() {
 	gpuTmr := timer.Time{}
 	gpuTmr.Start()
 
-	pl.ComputeCommand(nGps, 1, 1)
-	sy.ComputeSubmitWait()
+	pl.ComputeDispatch(cmd, nGps, 1, 1)
+	sy.ComputeCmdEnd(cmd)
+	sy.ComputeSubmitWait(cmd)
 
 	gpuTmr.Stop()
 
@@ -110,7 +112,7 @@ func main() {
 
 	gpuFullTmr.Stop()
 
-	mx := ints.MinInt(n, 5)
+	mx := min(n, 5)
 	for i := 0; i < mx; i++ {
 		d := &data[i]
 		fmt.Printf("%d\tRaw: %g\tInteg: %g\tExp: %g\n", i, d.Raw, d.Integ, d.Exp)

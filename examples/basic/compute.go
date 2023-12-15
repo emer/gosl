@@ -62,13 +62,13 @@ func (ps *ParamStruct) Update() {
 //gosl: hlsl basic
 /*
 // // note: double-commented lines required here -- binding is var, set
-[[vk::binding(0, 0)]] uniform ParamStruct Params;
+[[vk::binding(0, 0)]] RWStructuredBuffer<ParamStruct> Params;
 [[vk::binding(0, 1)]] RWStructuredBuffer<DataStruct> Data;
 
 [numthreads(64, 1, 1)]
 
 void main(uint3 idx : SV_DispatchThreadID) {
-    Params.IntegFmRaw(Data[idx.x]);
+    Params[0].IntegFmRaw(Data[idx.x]);
 }
 */
 //gosl: end basic

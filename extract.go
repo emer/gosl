@@ -15,8 +15,6 @@ import (
 	"strings"
 
 	"slices"
-
-	"goki.dev/ki/v2/ints"
 )
 
 func ReadFileLines(fn string) ([][]byte, error) {
@@ -141,7 +139,7 @@ func ExtractHLSL(buf []byte) ([]byte, bool) {
 
 	lines := bytes.Split(buf, nl)
 
-	mx := ints.MinInt(10, len(lines))
+	mx := min(10, len(lines))
 	stln := 0
 	gotImp := false
 	for li := 0; li < mx; li++ {

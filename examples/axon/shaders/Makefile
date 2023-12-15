@@ -3,6 +3,5 @@
 all: axon.spv
 
 %.spv : %.hlsl
-	glslc -fshader-stage=compute -o $@ $<
-	# glslc --target-env=vulkan1.2 --target-spv=spv1.3 -fshader-stage=compute -o $@ $<
+	dxc -spirv -O3 -T cs_6_0 -E main -Fo $@ $<
 	

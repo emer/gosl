@@ -9,63 +9,56 @@ import (
 
 	"goki.dev/gi/v2/gi"
 	"goki.dev/gi/v2/giv"
+	"goki.dev/goosi/events"
 	"goki.dev/gosl/v2/slbool"
-	"goki.dev/ki/v2/ki"
-	"goki.dev/ki/v2/kit"
+	"goki.dev/gti"
+	"goki.dev/laser"
 )
 
 func init() {
 	var bi slbool.Bool
-	giv.ValueViewMapAdd(kit.LongTypeName(reflect.TypeOf(bi)), func() giv.ValueView {
-		vv := &BoolValueView{}
-		ki.InitNode(vv)
-		return vv
+	giv.ValueMapAdd(laser.LongTypeName(reflect.TypeOf(bi)), func() giv.Value {
+		return &BoolValue{}
 	})
 }
 
-// BoolValueView presents a checkbox for a boolean
-type BoolValueView struct {
-	giv.ValueViewBase
+// BoolValue presents a checkbox for a boolean
+type BoolValue struct {
+	giv.ValueBase
 }
 
-var KiT_BoolValueView = kit.Types.AddType(&BoolValueView{}, nil)
-
-func (vv *BoolValueView) WidgetType() reflect.Type {
-	vv.WidgetTyp = gi.TypeCheckBox
+func (vv *BoolValue) WidgetType() *gti.Type {
+	vv.WidgetTyp = gi.SwitchType
 	return vv.WidgetTyp
 }
 
-func (vv *BoolValueView) UpdateWidget() {
+func (vv *BoolValue) UpdateWidget() {
 	if vv.Widget == nil {
 		return
 	}
-	cb := vv.Widget.(*gi.Switch)
-	npv := kit.NonPtrValue(vv.Value)
+	sw := vv.Widget.(*gi.Switch)
+	npv := laser.NonPtrValue(vv.Value)
 	sb, ok := npv.Interface().(slbool.Bool)
 	if ok {
-		cb.SetChecked(sb.IsTrue())
+		sw.SetChecked(sb.IsTrue())
 	} else {
 		sb, ok := npv.Interface().(*slbool.Bool)
 		if ok {
-			cb.SetChecked(sb.IsTrue())
+			sw.SetChecked(sb.IsTrue())
 		}
 	}
 }
 
-func (vv *BoolValueView) ConfigWidget(widg gi.Node2D) {
-	vv.Widget = widg
-	vv.StdConfigWidget(widg)
-	cb := vv.Widget.(*gi.Switch)
-	cb.Tooltip, _ = vv.Tag("desc")
-	cb.SetDisabledState(vv.This().(giv.ValueView).IsInactive())
-	cb.ButtonSig.ConnectOnly(vv.This(), func(recv, send ki.Ki, sig int64, data any) {
-		if sig == int64(gi.ButtonToggled) {
-			vvv, _ := recv.Embed(KiT_BoolValueView).(*BoolValueView)
-			cbb := vvv.Widget.(*gi.CheckBox)
-			if vvv.SetValue(cbb.IsChecked()) {
-				vvv.UpdateWidget() // always update after setting value..
-			}
-		}
+func (vv *BoolValue) ConfigWidget(w gi.Widget) {
+	if vv.Widget == w {
+		vv.UpdateWidget()
+		return
+	}
+	vv.Widget = w
+	vv.StdConfigWidget(w)
+	sw := vv.Widget.(*gi.Switch)
+	sw.OnLast(events.Change, func(e events.Event) {
+		vv.SetValue(sw.IsChecked())
 	})
 	vv.UpdateWidget()
 }

@@ -6,7 +6,7 @@
 // };
 
 // note: binding is var, set
-[[vk::binding(0, 0)]] uniform Layer Layers[];
+[[vk::binding(0, 0)]] RWStructuredBuffer<Layer> Layers;
 [[vk::binding(0, 1)]] RWStructuredBuffer<Time> time;
 [[vk::binding(0, 2)]] RWStructuredBuffer<Neuron> Neurons;
 // [[vk::binding(0, 3)]] StructuredBuffer<Idx> Idxs;
