@@ -48,7 +48,7 @@ gopath-update:
 	go get -u ./...
 	
 # NOTE: MUST update version number here prior to running 'make release' and edit this file! 
-VERS=v2.0.0-dev0.0.1
+VERS=v2.0.0-dev0.0.2
 PACKAGE=main
 GIT_COMMIT=`git rev-parse --short HEAD`
 VERS_DATE=`date -u +%Y-%m-%d\ %H:%M`
