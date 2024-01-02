@@ -5,8 +5,6 @@
 package slboolview
 
 import (
-	"reflect"
-
 	"goki.dev/gi/v2/gi"
 	"goki.dev/gi/v2/giv"
 	"goki.dev/goosi/events"
@@ -16,8 +14,7 @@ import (
 )
 
 func init() {
-	var bi slbool.Bool
-	giv.ValueMapAdd(laser.LongTypeName(reflect.TypeOf(bi)), func() giv.Value {
+	giv.ValueMapAdd(slbool.Bool(0), func() giv.Value {
 		return &BoolValue{}
 	})
 }
