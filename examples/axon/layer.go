@@ -5,8 +5,8 @@
 package main
 
 import (
-	"goki.dev/gosl/v2/slbool"
-	"goki.dev/gosl/v2/sltype"
+	"github.com/emer/gosl/v2/slbool"
+	"github.com/emer/gosl/v2/sltype"
 )
 
 //gosl: start axon

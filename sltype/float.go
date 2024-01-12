@@ -4,7 +4,7 @@
 
 package sltype
 
-import "goki.dev/mat32/v2"
+import "goki.dev/mat32"
 
 // Float is identical to a float32
 type Float = float32

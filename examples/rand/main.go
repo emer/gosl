@@ -12,9 +12,9 @@ import (
 	"log/slog"
 
 	"github.com/emer/emergent/v2/timer"
-	"goki.dev/gosl/v2/sltype"
-	"goki.dev/mat32/v2"
-	"goki.dev/vgpu/v2/vgpu"
+	"github.com/emer/gosl/v2/sltype"
+	"goki.dev/mat32"
+	"goki.dev/vgpu"
 )
 
 // note: standard one to use is plain "gosl" which should be go install'd

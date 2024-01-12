@@ -6,7 +6,7 @@ Type = "Library"
 [Build]
   Package = "."
   Output = ""
-  ID = "com.org.todo.gosl"
+  ID = "com.emer.gosl"
   Debug = false
   Rebuild = false
   Install = false

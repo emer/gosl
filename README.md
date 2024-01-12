@@ -4,7 +4,7 @@
 
 Thus, `gosl` enables the same CPU-based Go code to also be run on the GPU.  The relevant subsets of Go code to use are specifically marked using `//gosl:` comment directives, and this code must only use basic expressions and concrete types that will compile correctly in a shader (see [Restrictions](#restrictions) below).  Method functions and pass-by-reference pointer arguments to `struct` types are supported and incur no additional compute cost due to inlining (see notes below for more detail).
 
-See `examples/basic` and `examples/axon` examples (simple and much more complicated, respectively), using the [vgpu](https://goki.dev/vgpu/v2) Vulkan-based GPU compute shader system.
+See `examples/basic` and `examples/axon` examples (simple and much more complicated, respectively), using the [vgpu](https://goki.dev/vgpu) Vulkan-based GPU compute shader system.
 
 You must also install `goimports` which is used on the extracted subset of Go code:
 ```bash
@@ -13,7 +13,7 @@ $ go install golang.org/x/tools/cmd/goimports@latest
 
 To install the `gosl` command, do:
 ```bash
-$ go install goki.dev/gosl/v2@latest
+$ go install github.com/emer/gosl/v2@latest
 ```
 
 In your Go code, use these comment directives:
@@ -57,7 +57,7 @@ The flags are:
 
 Note: any existing `.go` files in the output directory will be removed prior to processing, because the entire directory is built to establish all the types, which might be distributed across multiple files.  Any existing `.hlsl` files with the same filenames as those extracted from the `.go` files will be overwritten.  Otherwise, you can maintain other custom `.hlsl` files in the `shaders` directory, although it is recommended to treat the entire directory as automatically generated, to avoid any issues.
     
-`gosl` path args can include filenames, directory names, or Go package paths (e.g., `goki.dev/mat32/v2/fastexp.go` loads just that file from the given package) -- files without any `//gosl:` comment directives will be skipped up front before any expensive processing, so it is not a problem to specify entire directories where only some files are relevant.  Also, you can specify a particular file from a directory, then the entire directory, to ensure that a particular file from that directory appears first -- otherwise alphabetical order is used.  `gosl` ensures that only one copy of each file is included.
+`gosl` path args can include filenames, directory names, or Go package paths (e.g., `goki.dev/mat32/fastexp.go` loads just that file from the given package) -- files without any `//gosl:` comment directives will be skipped up front before any expensive processing, so it is not a problem to specify entire directories where only some files are relevant.  Also, you can specify a particular file from a directory, then the entire directory, to ensure that a particular file from that directory appears first -- otherwise alphabetical order is used.  `gosl` ensures that only one copy of each file is included.
   
 Any `struct` types encountered will be checked for 16-byte alignment of sub-types and overall sizes as an even multiple of 16 bytes (4 `float32` or `int32` values), which is the alignment used in HLSL and glsl shader languages, and the underlying GPU hardware presumably.  Look for error messages on the output from the gosl run.  This ensures that direct byte-wise copies of data between CPU and GPU will be successful.  The fact that `gosl` operates directly on the original CPU-side Go code uniquely enables it to perform these alignment checks, which are otherwise a major source of difficult-to-diagnose bugs.
 
@@ -91,7 +91,7 @@ In general shader code should be simple mathematical expressions and data types,
 
 ## Random numbers: slrand
 
-See [slrand](https://goki.dev/gosl/v2/tree/main/slrand) for a shader-optimized random number generation package, which is supported by `gosl` -- it will convert `slrand` calls into appropriate HLSL named function calls.  `gosl` will also copy the `slrand.hlsl` file, which contains the full source code for the RNG, into the destination `shaders` directory, so it can be included with a simple local path:
+See [slrand](https://github.com/emer/gosl/v2/tree/main/slrand) for a shader-optimized random number generation package, which is supported by `gosl` -- it will convert `slrand` calls into appropriate HLSL named function calls.  `gosl` will also copy the `slrand.hlsl` file, which contains the full source code for the RNG, into the destination `shaders` directory, so it can be included with a simple local path:
 
 ```Go
 //gosl: hlsl mycode

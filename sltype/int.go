@@ -4,7 +4,7 @@
 
 package sltype
 
-import "goki.dev/mat32/v2"
+import "goki.dev/mat32"
 
 // Int is identical to an int32
 type Int = int32

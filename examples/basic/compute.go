@@ -4,7 +4,7 @@
 
 package main
 
-import "goki.dev/mat32/v2"
+import "goki.dev/mat32"
 
 //gosl: hlsl basic
 // #include "fastexp.hlsl"

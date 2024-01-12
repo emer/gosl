@@ -5,10 +5,10 @@
 package slboolview
 
 import (
-	"goki.dev/gi/v2/gi"
-	"goki.dev/gi/v2/giv"
-	"goki.dev/goosi/events"
-	"goki.dev/gosl/v2/slbool"
+	"github.com/emer/gosl/v2/slbool"
+	"goki.dev/events"
+	"goki.dev/gi"
+	"goki.dev/giv"
 	"goki.dev/gti"
 	"goki.dev/laser"
 )
