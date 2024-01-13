@@ -1,7 +1,7 @@
 Name = "gosl"
 ID = "com.gosl.v2"
 Desc = ""
-Version = "v2.0.0-dev0.0.7"
+Version = "v2.0.0-dev0.0.8"
 Type = "Library"
 
 [Build]
