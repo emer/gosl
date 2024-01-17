@@ -5,12 +5,12 @@
 package slboolview
 
 import (
+	"cogentcore.org/core/events"
+	"cogentcore.org/core/gi"
+	"cogentcore.org/core/giv"
+	"cogentcore.org/core/gti"
+	"cogentcore.org/core/laser"
 	"github.com/emer/gosl/v2/slbool"
-	"goki.dev/events"
-	"goki.dev/gi"
-	"goki.dev/giv"
-	"goki.dev/gti"
-	"goki.dev/laser"
 )
 
 func init() {

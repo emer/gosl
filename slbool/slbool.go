@@ -59,11 +59,11 @@ func (b *Bool) FromString(s string) {
 
 }
 
-// MarshalJSON implements the [encoding/json.Marshaler] interface
-func (b Bool) MarshalJSON() ([]byte, error) { return []byte(b.String()), nil }
+// MarshalText implements the [encoding/text.Marshaler] interface
+func (b Bool) MarshalText() ([]byte, error) { return []byte(b.String()), nil }
 
-// UnmarshalJSON implements the [encoding/json.Unmarshaler] interface
-func (b *Bool) UnmarshalJSON(s []byte) error { b.FromString(string(s)); return nil }
+// UnmarshalText implements the [encoding/text.Unmarshaler] interface
+func (b *Bool) UnmarshalText(s []byte) error { b.FromString(string(s)); return nil }
 
 // IsTrue returns whether the given bool is true
 func IsTrue(b Bool) bool {
