@@ -10,14 +10,14 @@ import (
 	"runtime"
 	"unsafe"
 
+	"cogentcore.org/core/mat32"
+	"cogentcore.org/core/vgpu"
 	"github.com/emer/emergent/v2/timer"
-	"goki.dev/mat32"
-	"goki.dev/vgpu"
 )
 
 // note: standard one to use is plain "gosl" which should be go install'd
 
-//go:generate ../../gosl goki.dev/mat32/fastexp.go compute.go
+//go:generate ../../gosl cogentcore.org/core/mat32/fastexp.go compute.go
 
 func init() {
 	// must lock main thread for gpu!  this also means that vulkan must be used

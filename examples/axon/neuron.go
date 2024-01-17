@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"unsafe"
 
-	"goki.dev/mat32"
+	"cogentcore.org/core/mat32"
 )
 
 //gosl: start axon

@@ -11,10 +11,10 @@ import (
 
 	"log/slog"
 
+	"cogentcore.org/core/mat32"
+	"cogentcore.org/core/vgpu"
 	"github.com/emer/emergent/v2/timer"
 	"github.com/emer/gosl/v2/sltype"
-	"goki.dev/mat32"
-	"goki.dev/vgpu"
 )
 
 // note: standard one to use is plain "gosl" which should be go install'd

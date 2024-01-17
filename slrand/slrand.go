@@ -7,8 +7,8 @@ package slrand
 import (
 	"math"
 
+	"cogentcore.org/core/mat32"
 	"github.com/emer/gosl/v2/sltype"
-	"goki.dev/mat32"
 )
 
 // These are Go versions of the same Philox2x32 based random number generator

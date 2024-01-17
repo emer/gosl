@@ -4,7 +4,7 @@
 
 package main
 
-import "goki.dev/mat32"
+import "cogentcore.org/core/mat32"
 
 //gosl: hlsl basic
 // #include "fastexp.hlsl"

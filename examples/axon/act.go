@@ -5,12 +5,12 @@
 package main
 
 import (
+	"cogentcore.org/core/mat32"
 	"github.com/emer/gosl/v2/examples/axon/chans"
 	"github.com/emer/gosl/v2/examples/axon/minmax"
 	"github.com/emer/gosl/v2/slbool"
 	"github.com/emer/gosl/v2/slrand"
 	"github.com/emer/gosl/v2/sltype"
-	"goki.dev/mat32"
 )
 
 ///////////////////////////////////////////////////////////////////////

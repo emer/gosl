@@ -11,11 +11,11 @@ import (
 
 	"log/slog"
 
+	"cogentcore.org/core/mat32"
+	"cogentcore.org/core/vgpu"
 	"github.com/emer/emergent/v2/timer"
 	"github.com/emer/gosl/v2/sltype"
 	"github.com/emer/gosl/v2/threading"
-	"goki.dev/mat32"
-	"goki.dev/vgpu"
 )
 
 // DiffTol is tolerance on testing diff between cpu and gpu values
@@ -23,7 +23,7 @@ const DiffTol = 1.0e-3
 
 // note: standard one to use is plain "gosl" which should be go install'd
 
-//go:generate ../../gosl -exclude=Update,UpdateParams,Defaults -keep goki.dev/mat32/fastexp.go minmax chans/chans.go chans kinase time.go neuron.go act.go learn.go layer.go axon.hlsl
+//go:generate ../../gosl -exclude=Update,UpdateParams,Defaults -keep cogentcore.org/core/mat32/fastexp.go minmax chans/chans.go chans kinase time.go neuron.go act.go learn.go layer.go axon.hlsl
 
 func init() {
 	// must lock main thread for gpu!  this also means that vulkan must be used

@@ -5,7 +5,6 @@ go 1.21
 require (
 	cogentcore.org/core v0.0.2
 	github.com/emer/emergent/v2 v2.0.0-dev0.0.5
-	goki.dev v0.0.1
 	golang.org/x/tools v0.17.0
 )
 
@@ -37,6 +36,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.1.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
+	goki.dev v0.0.1 // indirect
 	golang.org/x/image v0.15.0 // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.20.0 // indirect

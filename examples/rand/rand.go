@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
+	"cogentcore.org/core/mat32"
 	"github.com/emer/gosl/v2/slrand"
 	"github.com/emer/gosl/v2/sltype"
-	"goki.dev/mat32"
 )
 
 //gosl: hlsl rand
