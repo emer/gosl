@@ -3,6 +3,3 @@ Name = 'gosl'
 Type = 'Library'
 Version = 'v2.0.0-dev0.0.9'
 
-[Generate]
-  [Generate.Enumgen]
-    AcceptLower = true
