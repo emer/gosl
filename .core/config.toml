@@ -1,16 +1,8 @@
-Name = "gosl"
-ID = "com.emer.gosl.v2"
-Version = "v2.0.0-dev0.0.8"
-Type = "Library"
-
-[Release]
-  VersionFile = "version.go"
-  Package = "main"
+ID = 'com.emer.gosl.v2'
+Name = 'gosl'
+Type = 'Library'
+Version = 'v2.0.0-dev0.0.9'
 
 [Generate]
   [Generate.Enumgen]
-    LineComment = false
     AcceptLower = true
-  [Generate.Gtigen]
-    AddTypes = false
-
