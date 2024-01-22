@@ -12,13 +12,13 @@ package kinase
 type CaDtParams struct {
 
 	// CaM (calmodulin) time constant in cycles (msec) -- for synaptic-level integration this integrates on top of Ca signal from send->CaSyn * recv->CaSyn, each of which are typically integrated with a 30 msec Tau.
-	MTau float32 `def:"2,5" min:"1"`
+	MTau float32 `default:"2,5" min:"1"`
 
 	// LTP spike-driven Ca factor (CaP) time constant in cycles (msec), simulating CaMKII in the Kinase framework, with 40 on top of MTau roughly tracking the biophysical rise time.  Computationally, CaP represents the plus phase learning signal that reflects the most recent past information.
-	PTau float32 `def:"40" min:"1"`
+	PTau float32 `default:"40" min:"1"`
 
 	// LTD spike-driven Ca factor (CaD) time constant in cycles (msec), simulating DAPK1 in Kinase framework.  Computationally, CaD represents the minus phase learning signal that reflects the expectation representation prior to experiencing the outcome (in addition to the outcome).
-	DTau float32 `def:"40" min:"1"`
+	DTau float32 `default:"40" min:"1"`
 
 	// rate = 1 / tau
 	MDt float32 `view:"-" json:"-" xml:"-" edit:"-"`
@@ -51,13 +51,13 @@ func (kp *CaDtParams) Update() {
 type CaParams struct {
 
 	// spiking gain factor for SynSpk learning rule variants.  This alters the overall range of values, keeping them in roughly the unit scale, and affects effective learning rate.
-	SpikeG float32 `def:"12"`
+	SpikeG float32 `default:"12"`
 
 	// IMPORTANT: only used for SynSpkTheta learning mode: threshold on Act value for updating synapse-level Ca values -- this is purely a performance optimization that excludes random infrequent spikes -- 0.05 works well on larger networks but not smaller, which require the .01 default.
-	UpdtThr float32 `def:"0.01,0.02,0.5"`
+	UpdtThr float32 `default:"0.01,0.02,0.5"`
 
 	// maximum ISI for integrating in Opt mode -- above that just set to 0
-	MaxISI int32 `def:"100"`
+	MaxISI int32 `default:"100"`
 
 	pad float32
 

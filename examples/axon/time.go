@@ -41,7 +41,7 @@ type Time struct {
 	Testing slbool.Bool
 
 	// amount of time to increment per cycle
-	TimePerCyc float32 `def:"0.001"`
+	TimePerCyc float32 `default:"0.001"`
 
 	// random counter
 	RandCtr slrand.Counter

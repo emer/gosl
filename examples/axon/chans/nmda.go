@@ -16,19 +16,19 @@ import "cogentcore.org/core/mat32"
 type NMDAParams struct {
 
 	// overall multiplier for strength of NMDA current -- multiplies GnmdaSyn to get net conductance.  0.15 standard for SnmdaDeplete = false, 1.4 when on.
-	Gbar float32 `def:"0,0.15,0.25,0.3,1.4"`
+	Gbar float32 `default:"0,0.15,0.25,0.3,1.4"`
 
 	// decay time constant for NMDA channel activation  -- rise time is 2 msec and not worth extra effort for biexponential.  30 fits the Urakubo et al (2008) model with ITau = 100, but 100 works better in practice is small networks so far.
-	Tau float32 `def:"30,50,100,200,300"`
+	Tau float32 `default:"30,50,100,200,300"`
 
 	// decay time constant for NMDA channel inhibition, which captures the Urakubo et al (2008) allosteric dynamics (100 fits their model well) -- set to 1 to eliminate that mechanism.
-	ITau float32 `def:"1,100"`
+	ITau float32 `default:"1,100"`
 
 	// magnesium ion concentration: Brunel & Wang (2001) and Sanders et al (2013) use 1 mM, based on Jahr & Stevens (1990). Urakubo et al (2008) use 1.5 mM. 1.4 with Voff = 5 works best so far in large models, 1.2, Voff = 0 best in smaller nets.
-	MgC float32 `def:"1:1.5"`
+	MgC float32 `default:"1:1.5"`
 
 	// offset in membrane potential in biological units for voltage-dependent functions.  5 corresponds to the -65 mV rest, -45 threshold of the Urakubo et al (2008) model.  0 is best in small models
-	Voff float32 `def:"0,5"`
+	Voff float32 `default:"0,5"`
 
 	// rate = 1 / tau
 	Dt float32 `view:"-" json:"-" xml:"-"`
