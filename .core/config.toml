@@ -1,5 +1,4 @@
 ID = 'com.emer.gosl.v2'
 Name = 'gosl'
 Type = 'Library'
-Version = 'v2.0.0-dev0.0.9'
-
+Version = 'v2.0.0-dev0.0.10'
