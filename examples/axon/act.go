@@ -42,10 +42,10 @@ type SpikeParams struct {
 	Exp slbool.Bool `default:"true"`
 
 	// slope in Vm (2 mV = .02 in normalized units) for extra exponential excitatory current that drives Vm rapidly upward for spiking as it gets past its nominal firing threshold (Thr) -- nicely captures the Hodgkin Huxley dynamics of Na and K channels -- uses Brette & Gurstner 2005 AdEx formulation
-	ExpSlope float32 `viewif:"Exp" default:"0.02"`
+	ExpSlope float32 `default:"0.02"`
 
 	// membrane potential threshold for actually triggering a spike when using the exponential mechanism
-	ExpThr float32 `viewif:"Exp" default:"0.9"`
+	ExpThr float32 `default:"0.9"`
 
 	// for translating spiking interval (rate) into rate-code activation equivalent, what is the maximum firing rate associated with a maximum activation value of 1
 	MaxHz float32 `default:"180" min:"1"`

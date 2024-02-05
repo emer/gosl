@@ -19,13 +19,13 @@ type KNaParams struct {
 	On slbool.Bool
 
 	// Rise rate of fast time-scale adaptation as function of Na concentration due to spiking -- directly multiplies -- 1/rise = tau for rise rate
-	Rise float32 `viewif:"On"`
+	Rise float32
 
 	// Maximum potential conductance of fast K channels -- divide nA biological value by 10 for the normalized units here
-	Max float32 `viewif:"On"`
+	Max float32
 
 	// time constant in cycles for decay of adaptation, which should be milliseconds typically (tau is roughly how long it takes for value to change significantly -- 1.4x the half-life)
-	Tau float32 `viewif:"On"`
+	Tau float32
 
 	// 1/Tau rate constant
 	Dt float32 `view:"-"`

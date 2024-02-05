@@ -143,24 +143,24 @@ type TrgAvgActParams struct {
 	On slbool.Bool
 
 	// learning rate for adjustments to Trg value based on unit-level error signal.  Population TrgAvg values are renormalized to fixed overall average in TrgRange. Generally, deviating from the default doesn't make much difference.
-	ErrLRate float32 `viewif:"On" default:"0.02"`
+	ErrLRate float32 `default:"0.02"`
 
 	// rate parameter for how much to scale synaptic weights in proportion to the AvgDif between target and actual proportion activity -- this determines the effective strength of the constraint, and larger models may need more than the weaker default value.
-	SynScaleRate float32 `viewif:"On" default:"0.005,0.0002"`
+	SynScaleRate float32 `default:"0.005,0.0002"`
 
 	// amount of mean trg change to subtract -- 1 = full zero sum.  1 works best in general -- but in some cases it may be better to start with 0 and then increase using network SetSubMean method at a later point.
-	SubMean float32 `viewif:"On" default:"0,1"`
+	SubMean float32 `default:"0,1"`
 
 	// permute the order of TrgAvg values within layer -- otherwise they are just assigned in order from highest to lowest for easy visualization -- generally must be true if any topographic weights are being used
-	Permute slbool.Bool `viewif:"On" default:"true"`
+	Permute slbool.Bool `default:"true"`
 
 	// use pool-level target values if pool-level inhibition and 4D pooled layers are present -- if pool sizes are relatively small, then may not be useful to distribute targets just within pool
-	Pool slbool.Bool `viewif:"On"`
+	Pool slbool.Bool
 
 	pad, pad1 float32
 
 	// range of target normalized average activations -- individual neurons are assigned values within this range to TrgAvg, and clamped within this range.
-	TrgRange minmax.F32 `viewif:"On" default:"{0.5 2}"`
+	TrgRange minmax.F32 `default:"{0.5 2}"`
 }
 
 func (ta *TrgAvgActParams) Update() {
