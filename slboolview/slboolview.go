@@ -46,13 +46,13 @@ func (vv *BoolValue) UpdateWidget() {
 	}
 }
 
-func (vv *BoolValue) ConfigWidget(w gi.Widget) {
+func (vv *BoolValue) Config(w gi.Widget) {
 	if vv.Widget == w {
 		vv.UpdateWidget()
 		return
 	}
 	vv.Widget = w
-	vv.StdConfigWidget(w)
+	vv.StdConfig(w)
 	sw := vv.Widget.(*gi.Switch)
 	sw.OnFinal(events.Change, func(e events.Event) {
 		vv.SetValue(sw.IsChecked())
