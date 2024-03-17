@@ -8,54 +8,36 @@ import (
 	"cogentcore.org/core/events"
 	"cogentcore.org/core/gi"
 	"cogentcore.org/core/giv"
-	"cogentcore.org/core/gti"
 	"cogentcore.org/core/laser"
 	"github.com/emer/gosl/v2/slbool"
 )
 
 func init() {
-	giv.ValueMapAdd(slbool.Bool(0), func() giv.Value {
+	giv.AddValue(slbool.Bool(0), func() giv.Value {
 		return &BoolValue{}
 	})
 }
 
 // BoolValue presents a checkbox for a boolean
 type BoolValue struct {
-	giv.ValueBase
+	giv.ValueBase[*gi.Switch]
 }
 
-func (vv *BoolValue) WidgetType() *gti.Type {
-	vv.WidgetTyp = gi.SwitchType
-	return vv.WidgetTyp
+func (v *BoolValue) Config() {
+	v.Widget.OnFinal(events.Change, func(e events.Event) {
+		v.SetValue(v.Widget.IsChecked())
+	})
 }
 
-func (vv *BoolValue) UpdateWidget() {
-	if vv.Widget == nil {
-		return
-	}
-	sw := vv.Widget.(*gi.Switch)
-	npv := laser.NonPtrValue(vv.Value)
+func (v *BoolValue) Update() {
+	npv := laser.NonPtrValue(v.Value)
 	sb, ok := npv.Interface().(slbool.Bool)
 	if ok {
-		sw.SetChecked(sb.IsTrue())
+		v.Widget.SetChecked(sb.IsTrue())
 	} else {
 		sb, ok := npv.Interface().(*slbool.Bool)
 		if ok {
-			sw.SetChecked(sb.IsTrue())
+			v.Widget.SetChecked(sb.IsTrue())
 		}
 	}
-}
-
-func (vv *BoolValue) Config(w gi.Widget) {
-	if vv.Widget == w {
-		vv.UpdateWidget()
-		return
-	}
-	vv.Widget = w
-	vv.StdConfig(w)
-	sw := vv.Widget.(*gi.Switch)
-	sw.OnFinal(events.Change, func(e events.Event) {
-		vv.SetValue(sw.IsChecked())
-	})
-	vv.UpdateWidget()
 }
