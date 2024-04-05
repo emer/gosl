@@ -54,7 +54,7 @@ type CaParams struct {
 	SpikeG float32 `default:"12"`
 
 	// IMPORTANT: only used for SynSpkTheta learning mode: threshold on Act value for updating synapse-level Ca values -- this is purely a performance optimization that excludes random infrequent spikes -- 0.05 works well on larger networks but not smaller, which require the .01 default.
-	UpdtThr float32 `default:"0.01,0.02,0.5"`
+	UpdateThr float32 `default:"0.01,0.02,0.5"`
 
 	// maximum ISI for integrating in Opt mode -- above that just set to 0
 	MaxISI int32 `default:"100"`
@@ -67,7 +67,7 @@ type CaParams struct {
 
 func (kp *CaParams) Defaults() {
 	kp.SpikeG = 12
-	kp.UpdtThr = 0.01
+	kp.UpdateThr = 0.01
 	kp.MaxISI = 100
 	kp.Dt.Defaults()
 	kp.Update()

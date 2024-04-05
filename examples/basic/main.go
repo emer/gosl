@@ -71,17 +71,17 @@ func main() {
 	parsv := setp.AddStruct("Params", int(unsafe.Sizeof(ParamStruct{})), 1, vgpu.Storage, vgpu.ComputeShader)
 	datav := setd.AddStruct("Data", int(unsafe.Sizeof(DataStruct{})), n, vgpu.Storage, vgpu.ComputeShader)
 
-	setp.ConfigVals(1) // one val per var
-	setd.ConfigVals(1) // one val per var
-	sy.Config()        // configures vars, allocates vals, configs pipelines..
+	setp.ConfigValues(1) // one val per var
+	setd.ConfigValues(1) // one val per var
+	sy.Config()          // configures vars, allocates vals, configs pipelines..
 
 	gpuFullTmr := timer.Time{}
 	gpuFullTmr.Start()
 
 	// this copy is pretty fast -- most of time is below
-	pvl, _ := parsv.Vals.ValByIdxTry(0)
+	pvl, _ := parsv.Values.ValueByIndexTry(0)
 	pvl.CopyFromBytes(unsafe.Pointer(pars))
-	dvl, _ := datav.Vals.ValByIdxTry(0)
+	dvl, _ := datav.Values.ValueByIndexTry(0)
 	dvl.CopyFromBytes(unsafe.Pointer(&data[0]))
 
 	// gpuFullTmr := timer.Time{}
@@ -89,8 +89,8 @@ func main() {
 
 	sy.Mem.SyncToGPU()
 
-	vars.BindDynValIdx(0, "Params", 0)
-	vars.BindDynValIdx(1, "Data", 0)
+	vars.BindDynamicValueIndex(0, "Params", 0)
+	vars.BindDynamicValueIndex(1, "Data", 0)
 
 	cmd := sy.ComputeCmdBuff()
 	sy.CmdResetBindVars(cmd, 0)
@@ -107,7 +107,7 @@ func main() {
 
 	gpuTmr.Stop()
 
-	sy.Mem.SyncValIdxFmGPU(1, "Data", 0) // this is about same as SyncToGPU
+	sy.Mem.SyncValueIndexFromGPU(1, "Data", 0) // this is about same as SyncToGPU
 	dvl.CopyToBytes(unsafe.Pointer(&data[0]))
 
 	gpuFullTmr.Stop()

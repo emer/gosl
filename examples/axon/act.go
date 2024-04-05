@@ -314,8 +314,8 @@ func (dp *DtParams) GiSynFmRawSteady(giRaw float32) float32 {
 	return giRaw * dp.GiTau
 }
 
-// AvgVarUpdt updates the average and variance from current value, using LongAvgDt
-func (dp *DtParams) AvgVarUpdt(avg, vr *float32, val float32) {
+// AvgVarUpdate updates the average and variance from current value, using LongAvgDt
+func (dp *DtParams) AvgVarUpdate(avg, vr *float32, val float32) {
 	if *avg == 0 { // first time -- set
 		*avg = val
 		*vr = 0
@@ -451,7 +451,7 @@ func (at *AttnParams) Update() {
 }
 
 // ModVal returns the attn-modulated value -- attn must be between 1-0
-func (at *AttnParams) ModVal(val float32, attn float32) float32 {
+func (at *AttnParams) ModValue(val float32, attn float32) float32 {
 	if val < 0 {
 		val = 0
 	}
@@ -788,7 +788,7 @@ func (ac *ActParams) GeFmSyn(ni int, nrn *Neuron, geSyn, geExt float32, randctr 
 		nrn.GeExt = nrn.Ext * ac.Clamp.Ge
 		geSyn += nrn.GeExt
 	}
-	geSyn = ac.Attn.ModVal(geSyn, nrn.Attn)
+	geSyn = ac.Attn.ModValue(geSyn, nrn.Attn)
 
 	if ac.Clamp.Add.IsTrue() && nrn.HasFlag(NeuronHasExt) {
 		geSyn = nrn.Ext * ac.Clamp.Ge
@@ -846,7 +846,7 @@ func (ac *ActParams) InetFmG(vm, ge, gl, gi, gk float32) float32 {
 
 // VmFmInet computes new Vm value from inet, clamping range
 func (ac *ActParams) VmFmInet(vm, dt, inet float32) float32 {
-	return ac.VmRange.ClipVal(vm + dt*inet)
+	return ac.VmRange.ClipValue(vm + dt*inet)
 }
 
 // VmInteg integrates Vm over VmSteps to obtain a more stable value

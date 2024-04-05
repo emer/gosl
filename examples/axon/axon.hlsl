@@ -1,6 +1,6 @@
 
 // note: on Mac can get away with 16 byte idx
-// struct Idx {
+// struct Index {
 // 	uint X;
 // 	uint Y;
 // };
@@ -9,19 +9,19 @@
 [[vk::binding(0, 0)]] RWStructuredBuffer<Layer> Layers;
 [[vk::binding(0, 1)]] RWStructuredBuffer<Time> time;
 [[vk::binding(0, 2)]] RWStructuredBuffer<Neuron> Neurons;
-// [[vk::binding(0, 3)]] StructuredBuffer<Idx> Idxs;
-// note: uniform declaration for Idxs doesn't work
+// [[vk::binding(0, 3)]] StructuredBuffer<Index> Indexes;
+// note: uniform declaration for Indexes doesn't work
 
 // note: the only way to get a local var to struct is via a function call param
 void CycleNeuron(int ni, inout Neuron nrn, inout Time ctime) {
-	Layers[nrn.LayIdx].CycleNeuron(ni, nrn, ctime);
+	Layers[nrn.LayIndex].CycleNeuron(ni, nrn, ctime);
 	if(ni == 0) {
-		Layers[nrn.LayIdx].CycleTimeInc(ctime);
+		Layers[nrn.LayIndex].CycleTimeInc(ctime);
 		// updating time completely within this loop does NOT work
 		// because the memory update is not shared!
 	}
-	// nrn.SpkSt1 = float(Idxs[ni].X); // debugging
-	// nrn.SpkSt2 = float(nrn.LayIdx);
+	// nrn.SpkSt1 = float(Indexes[ni].X); // debugging
+	// nrn.SpkSt2 = float(nrn.LayIndex);
 }
 
 // important: this must be right before main, and 64 is typical default 

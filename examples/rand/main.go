@@ -70,17 +70,17 @@ func main() {
 	ctrv := setc.AddStruct("Counter", int(unsafe.Sizeof(seed)), 1, vgpu.Storage, vgpu.ComputeShader)
 	datav := setd.AddStruct("Data", int(unsafe.Sizeof(Rnds{})), n, vgpu.Storage, vgpu.ComputeShader)
 
-	setc.ConfigVals(1) // one val per var
-	setd.ConfigVals(1) // one val per var
-	sy.Config()        // configures vars, allocates vals, configs pipelines..
+	setc.ConfigValues(1) // one val per var
+	setd.ConfigValues(1) // one val per var
+	sy.Config()          // configures vars, allocates vals, configs pipelines..
 
 	gpuFullTmr := timer.Time{}
 	gpuFullTmr.Start()
 
 	// this copy is pretty fast -- most of time is below
-	cvl, _ := ctrv.Vals.ValByIdxTry(0)
+	cvl, _ := ctrv.Values.ValueByIndexTry(0)
 	cvl.CopyFromBytes(unsafe.Pointer(&seed))
-	dvl, _ := datav.Vals.ValByIdxTry(0)
+	dvl, _ := datav.Values.ValueByIndexTry(0)
 	dvl.CopyFromBytes(unsafe.Pointer(&dataG[0]))
 
 	// gpuFullTmr := timer.Time{}
@@ -88,8 +88,8 @@ func main() {
 
 	sy.Mem.SyncToGPU()
 
-	vars.BindDynValIdx(0, "Counter", 0)
-	vars.BindDynValIdx(1, "Data", 0)
+	vars.BindDynamicValueIndex(0, "Counter", 0)
+	vars.BindDynamicValueIndex(1, "Data", 0)
 
 	cmd := sy.ComputeCmdBuff()
 	sy.CmdResetBindVars(cmd, 0)
@@ -106,7 +106,7 @@ func main() {
 
 	gpuTmr.Stop()
 
-	sy.Mem.SyncValIdxFmGPU(1, "Data", 0) // this is about same as SyncToGPU
+	sy.Mem.SyncValueIndexFromGPU(1, "Data", 0) // this is about same as SyncToGPU
 	dvl.CopyToBytes(unsafe.Pointer(&dataG[0]))
 
 	gpuFullTmr.Stop()
@@ -114,7 +114,7 @@ func main() {
 	anyDiffEx := false
 	anyDiffTol := false
 	mx := min(n, 5)
-	fmt.Printf("Idx\tDif(Ex,Tol)\t   CPU   \t  then GPU\n")
+	fmt.Printf("Index\tDif(Ex,Tol)\t   CPU   \t  then GPU\n")
 	for i := 0; i < n; i++ {
 		dc := &dataC[i]
 		dg := &dataG[i]

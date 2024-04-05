@@ -71,9 +71,9 @@ func main() {
 	for i := range neur1 {
 		nrn := &neur1[i]
 		if i > nfirst {
-			nrn.LayIdx = 1
+			nrn.LayIndex = 1
 		}
-		ly := &lays[nrn.LayIdx]
+		ly := &lays[nrn.LayIndex]
 		ly.Act.InitActs(nrn)
 		nrn.GeBase = 0.4
 	}
@@ -81,9 +81,9 @@ func main() {
 	for i := range neur2 {
 		nrn := &neur2[i]
 		if i > nfirst {
-			nrn.LayIdx = 1
+			nrn.LayIndex = 1
 		}
-		ly := &lays[nrn.LayIdx]
+		ly := &lays[nrn.LayIndex]
 		ly.Act.InitActs(nrn)
 		nrn.GeBase = 0.4
 	}
@@ -105,7 +105,7 @@ func main() {
 		threading.ParallelRun(func(st, ed int) {
 			for ni := st; ni < ed; ni++ {
 				nrn := &neur1[ni]
-				ly := &lays[nrn.LayIdx]
+				ly := &lays[nrn.LayIndex]
 				ly.CycleNeuron(ni, nrn, time)
 			}
 		}, len(neur1), cpuThreads)
@@ -137,25 +137,25 @@ func main() {
 	timev := sett.AddStruct("Time", int(unsafe.Sizeof(Time{})), 1, vgpu.Storage, vgpu.ComputeShader)
 	neurv := setn.AddStruct("Neurons", int(unsafe.Sizeof(Neuron{})), n, vgpu.Storage, vgpu.ComputeShader)
 	// var ui sltype.Uint2
-	// idxv := seti.AddStruct("Idxs", int(unsafe.Sizeof(ui)), n, vgpu.Storage, vgpu.ComputeShader)
+	// idxv := seti.AddStruct("Indexes", int(unsafe.Sizeof(ui)), n, vgpu.Storage, vgpu.ComputeShader)
 
-	setl.ConfigVals(1) // one val per var
-	sett.ConfigVals(1) // one val per var
-	setn.ConfigVals(1) // one val per var
-	// seti.ConfigVals(1) // one val per var
+	setl.ConfigValues(1) // one val per var
+	sett.ConfigValues(1) // one val per var
+	setn.ConfigValues(1) // one val per var
+	// seti.ConfigValues(1) // one val per var
 	sy.Config() // configures vars, allocates vals, configs pipelines..
 
 	gpuFullTmr := timer.Time{}
 	gpuFullTmr.Start()
 
 	// this copy is pretty fast -- most of time is below
-	lvl, _ := layv.Vals.ValByIdxTry(0)
+	lvl, _ := layv.Values.ValueByIndexTry(0)
 	lvl.CopyFromBytes(unsafe.Pointer(&lays[0]))
-	tvl, _ := timev.Vals.ValByIdxTry(0)
+	tvl, _ := timev.Values.ValueByIndexTry(0)
 	tvl.CopyFromBytes(unsafe.Pointer(time))
-	nvl, _ := neurv.Vals.ValByIdxTry(0)
+	nvl, _ := neurv.Values.ValueByIndexTry(0)
 	nvl.CopyFromBytes(unsafe.Pointer(&neur2[0]))
-	// ivl, _ := idxv.Vals.ValByIdxTry(0)
+	// ivl, _ := idxv.Values.ValueByIndexTry(0)
 	// ivl.CopyFromBytes(unsafe.Pointer(&idxs[0]))
 
 	// gpuFullTmr := timer.Time{}
@@ -163,10 +163,10 @@ func main() {
 
 	sy.Mem.SyncToGPU()
 
-	vars.BindDynValIdx(0, "Layers", 0)
-	vars.BindDynValIdx(1, "Time", 0)
-	vars.BindDynValIdx(2, "Neurons", 0)
-	// vars.BindDynValIdx(3, "Idxs", 0)
+	vars.BindDynamicValueIndex(0, "Layers", 0)
+	vars.BindDynamicValueIndex(1, "Time", 0)
+	vars.BindDynamicValueIndex(2, "Neurons", 0)
+	// vars.BindDynamicValueIndex(3, "Indexes", 0)
 
 	cmd := sy.ComputeCmdBuff()
 	sy.CmdResetBindVars(cmd, 0)
@@ -184,7 +184,7 @@ func main() {
 
 	gpuTmr.Stop()
 
-	sy.Mem.SyncValIdxFmGPU(2, "Neurons", 0) // this is about same as SyncToGPU
+	sy.Mem.SyncValueIndexFromGPU(2, "Neurons", 0) // this is about same as SyncToGPU
 	nvl.CopyToBytes(unsafe.Pointer(&neur2[0]))
 
 	gpuFullTmr.Stop()

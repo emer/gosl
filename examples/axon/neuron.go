@@ -43,7 +43,7 @@ type Neuron struct {
 	Flags NeuronFlags
 
 	// index of the layer that this neuron belongs to -- needed for neuron-level parallel code.
-	LayIdx uint32
+	LayIndex uint32
 
 	// index of the sub-level inhibitory pool that this neuron is in (only for 4D shapes, the pool (unit-group / hypercolumn) structure level) -- indicies start at 1 -- 0 is layer-level pool (is 0 if no sub-pools).
 	SubPool int32
@@ -334,12 +334,12 @@ func init() {
 	NeuronVarsMap = make(map[string]int, len(NeuronVars))
 	typ := reflect.TypeOf((*Neuron)(nil)).Elem()
 	nf := typ.NumField()
-	startIdx := NeuronVarStart
-	for i := startIdx; i < nf; i++ {
+	startIndex := NeuronVarStart
+	for i := startIndex; i < nf; i++ {
 		fs := typ.FieldByIndex([]int{i})
 		v := fs.Name
 		NeuronVars = append(NeuronVars, v)
-		NeuronVarsMap[v] = i - startIdx
+		NeuronVarsMap[v] = i - startIndex
 		pstr := NeuronVarProps[v]
 		if fld, has := typ.FieldByName(v); has {
 			if desc, ok := fld.Tag.Lookup("desc"); ok {
@@ -354,8 +354,8 @@ func (nrn *Neuron) VarNames() []string {
 	return NeuronVars
 }
 
-// NeuronVarIdxByName returns the index of the variable in the Neuron, or error
-func NeuronVarIdxByName(varNm string) (int, error) {
+// NeuronVarIndexByName returns the index of the variable in the Neuron, or error
+func NeuronVarIndexByName(varNm string) (int, error) {
 	i, ok := NeuronVarsMap[varNm]
 	if !ok {
 		return -1, fmt.Errorf("Neuron VarByName: variable name: %v not valid", varNm)
@@ -371,7 +371,7 @@ func (nrn *Neuron) VarByIndex(idx int) float32 {
 
 // VarByName returns variable by name, or error
 func (nrn *Neuron) VarByName(varNm string) (float32, error) {
-	i, err := NeuronVarIdxByName(varNm)
+	i, err := NeuronVarIndexByName(varNm)
 	if err != nil {
 		return mat32.NaN(), err
 	}

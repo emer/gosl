@@ -73,18 +73,18 @@ func (mr *F32) Midpoint() float32 {
 
 // NormVal normalizes value to 0-1 unit range relative to current Min / Max range
 // Clips the value within Min-Max range first.
-func (mr *F32) NormVal(val float32) float32 {
-	return (mr.ClipVal(val) - mr.Min) * mr.Scale()
+func (mr *F32) NormValue(val float32) float32 {
+	return (mr.ClipValue(val) - mr.Min) * mr.Scale()
 }
 
 // ProjVal projects a 0-1 normalized unit value into current Min / Max range (inverse of NormVal)
-func (mr *F32) ProjVal(val float32) float32 {
+func (mr *F32) ProjValue(val float32) float32 {
 	return mr.Min + (val * mr.Range())
 }
 
 // ClipVal clips given value within Min / Max range
 // Note: a NaN will remain as a NaN
-func (mr *F32) ClipVal(val float32) float32 {
+func (mr *F32) ClipValue(val float32) float32 {
 	if val < mr.Min {
 		return mr.Min
 	}
@@ -96,14 +96,14 @@ func (mr *F32) ClipVal(val float32) float32 {
 
 // ClipNormVal clips then normalizes given value within 0-1
 // Note: a NaN will remain as a NaN
-func (mr *F32) ClipNormVal(val float32) float32 {
+func (mr *F32) ClipNormValue(val float32) float32 {
 	if val < mr.Min {
 		return 0
 	}
 	if val > mr.Max {
 		return 1
 	}
-	return mr.NormVal(val)
+	return mr.NormValue(val)
 }
 
 // FitValInRange adjusts our Min, Max to fit given value within Min, Max range
