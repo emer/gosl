@@ -122,8 +122,8 @@ func (np *CaSpkParams) Update() {
 	np.SynSpkG = mat32.Sqrt(30) / mat32.Sqrt(np.SynTau)
 }
 
-// CaFmSpike computes CaSpk* and CaSyn calcium signals based on current spike.
-func (np *CaSpkParams) CaFmSpike(nrn *Neuron) {
+// CaFromSpike computes CaSpk* and CaSyn calcium signals based on current spike.
+func (np *CaSpkParams) CaFromSpike(nrn *Neuron) {
 	nsp := np.SpikeG * nrn.Spike
 	nrn.CaSyn += np.SynDt * (nsp - nrn.CaSyn)
 	nrn.CaSpkM += np.Dt.MDt * (nsp - nrn.CaSpkM)
@@ -343,24 +343,24 @@ func (ln *LearnNeurParams) DecayCaLrnSpk(nrn *Neuron, decay float32) {
 	nrn.CaD -= decay * nrn.CaD
 }
 
-// LrnNMDAFmRaw updates the separate NMDA conductance and calcium values
+// LrnNMDAFromRaw updates the separate NMDA conductance and calcium values
 // based on GeTot = GeRaw + external ge conductance.  These are the variables
 // that drive learning -- can be the same as activation but also can be different
 // for testing learning Ca effects independent of activation effects.
-func (ln *LearnNeurParams) LrnNMDAFmRaw(nrn *Neuron, geTot float32) {
+func (ln *LearnNeurParams) LrnNMDAFromRaw(nrn *Neuron, geTot float32) {
 	if geTot < 0 {
 		geTot = 0
 	}
 	nrn.GnmdaLrn = ln.LrnNMDA.NMDASyn(nrn.GnmdaLrn, geTot)
 	gnmda := ln.LrnNMDA.Gnmda(nrn.GnmdaLrn, nrn.VmDend)
-	nrn.NmdaCa = gnmda * ln.LrnNMDA.CaFmV(nrn.VmDend)
-	ln.LrnNMDA.SnmdaFmSpike(nrn.Spike, &nrn.SnmdaO, &nrn.SnmdaI)
+	nrn.NmdaCa = gnmda * ln.LrnNMDA.CaFromV(nrn.VmDend)
+	ln.LrnNMDA.SnmdaFromSpike(nrn.Spike, &nrn.SnmdaO, &nrn.SnmdaI)
 }
 
-// CaFmSpike updates all spike-driven calcium variables, including CaLrn and CaSpk.
+// CaFromSpike updates all spike-driven calcium variables, including CaLrn and CaSpk.
 // Computed after new activation for current cycle is updated.
-func (ln *LearnNeurParams) CaFmSpike(nrn *Neuron) {
-	ln.CaSpk.CaFmSpike(nrn)
+func (ln *LearnNeurParams) CaFromSpike(nrn *Neuron) {
+	ln.CaSpk.CaFromSpike(nrn)
 	ln.CaLrn.CaLrn(nrn)
 }
 

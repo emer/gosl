@@ -47,15 +47,15 @@ func (ly *Layer) UpdateParams() {
 func (ly *Layer) GiInteg(ni int, nrn *Neuron, ctime *Time) {
 	nrn.Gi = nrn.GiSyn + nrn.GiNoise
 	nrn.SSGiDend = ly.Act.Dend.SSGi
-	nrn.GABAB = ly.Act.GABAB.GFmGX(nrn.GABAB, nrn.GABABx)
-	nrn.GABABx = ly.Act.GABAB.XFmGiX(nrn.GABABx, nrn.Gi)
+	nrn.GABAB = ly.Act.GABAB.GFromGX(nrn.GABAB, nrn.GABABx)
+	nrn.GABABx = ly.Act.GABAB.XFromGiX(nrn.GABABx, nrn.Gi)
 	nrn.GgabaB = ly.Act.GABAB.GgabaB(nrn.GABAB, nrn.VmDend)
 	nrn.Gk += nrn.GgabaB // Gk was already init
 }
 
-// GFmSpikeRaw integrates G*Raw and G*Syn values for given neuron
+// GFromSpikeRaw integrates G*Raw and G*Syn values for given neuron
 // from the Prjn-level GSyn integrated values.
-func (ly *Layer) GFmSpikeRaw(ni int, nrn *Neuron, ctime *Time) {
+func (ly *Layer) GFromSpikeRaw(ni int, nrn *Neuron, ctime *Time) {
 	nrn.GeRaw = 0.4
 	nrn.GiRaw = 0
 	nrn.GeSyn = nrn.GeBase
@@ -63,35 +63,35 @@ func (ly *Layer) GFmSpikeRaw(ni int, nrn *Neuron, ctime *Time) {
 	nrn.GeSyn = nrn.GeRaw
 }
 
-// GFmRawSyn computes overall Ge and GiSyn conductances for neuron
+// GFromRawSyn computes overall Ge and GiSyn conductances for neuron
 // from GeRaw and GeSyn values, including NMDA, VGCC, AMPA, and GABA-A channels.
-func (ly *Layer) GFmRawSyn(ni int, nrn *Neuron, ctime *Time, randctr *sltype.Uint2) {
-	ly.Act.NMDAFmRaw(nrn, nrn.GeRaw)
-	ly.Learn.LrnNMDAFmRaw(nrn, nrn.GeRaw)
-	ly.Act.GvgccFmVm(nrn)
-	ly.Act.GeFmSyn(ni, nrn, nrn.GeSyn, nrn.Gnmda+nrn.Gvgcc, randctr) // sets nrn.GeExt too
-	ly.Act.GkFmVm(nrn)
-	nrn.GiSyn = ly.Act.GiFmSyn(ni, nrn, nrn.GiSyn, randctr)
+func (ly *Layer) GFromRawSyn(ni int, nrn *Neuron, ctime *Time, randctr *sltype.Uint2) {
+	ly.Act.NMDAFromRaw(nrn, nrn.GeRaw)
+	ly.Learn.LrnNMDAFromRaw(nrn, nrn.GeRaw)
+	ly.Act.GvgccFromVm(nrn)
+	ly.Act.GeFromSyn(ni, nrn, nrn.GeSyn, nrn.Gnmda+nrn.Gvgcc, randctr) // sets nrn.GeExt too
+	ly.Act.GkFromVm(nrn)
+	nrn.GiSyn = ly.Act.GiFromSyn(ni, nrn, nrn.GiSyn, randctr)
 }
 
 // GInteg integrates conductances G over time (Ge, NMDA, etc).
 // reads pool Gi values
 func (ly *Layer) GInteg(ni int, nrn *Neuron, ctime *Time, randctr *sltype.Uint2) {
-	ly.GFmSpikeRaw(ni, nrn, ctime)
+	ly.GFromSpikeRaw(ni, nrn, ctime)
 	// note: can add extra values to GeRaw and GeSyn here
-	ly.GFmRawSyn(ni, nrn, ctime, randctr)
+	ly.GFromRawSyn(ni, nrn, ctime, randctr)
 	ly.GiInteg(ni, nrn, ctime)
 }
 
-// SpikeFmG computes Vm from Ge, Gi, Gl conductances and then Spike from that
-func (ly *Layer) SpikeFmG(ni int, nrn *Neuron, ctime *Time) {
+// SpikeFromG computes Vm from Ge, Gi, Gl conductances and then Spike from that
+func (ly *Layer) SpikeFromG(ni int, nrn *Neuron, ctime *Time) {
 	intdt := ly.Act.Dt.IntDt
 	if slbool.IsTrue(ctime.PlusPhase) {
 		intdt *= 3.0
 	}
-	ly.Act.VmFmG(nrn)
-	ly.Act.SpikeFmVm(nrn)
-	ly.Learn.CaFmSpike(nrn)
+	ly.Act.VmFromG(nrn)
+	ly.Act.SpikeFromVm(nrn)
+	ly.Learn.CaFromSpike(nrn)
 	if ctime.Cycle >= ly.Act.Dt.MaxCycStart {
 		nrn.SpkMaxCa += ly.Learn.CaSpk.Dt.PDt * (nrn.CaSpkM - nrn.SpkMaxCa)
 		if nrn.SpkMaxCa > nrn.SpkMax {
@@ -109,7 +109,7 @@ func (ly *Layer) SpikeFmG(ni int, nrn *Neuron, ctime *Time) {
 func (ly *Layer) CycleNeuron(ni int, nrn *Neuron, ctime *Time) {
 	randctr := ctime.RandCtr.Uint2() // use local var
 	ly.GInteg(ni, nrn, ctime, &randctr)
-	ly.SpikeFmG(ni, nrn, ctime)
+	ly.SpikeFromG(ni, nrn, ctime)
 }
 
 func (ly *Layer) CycleTimeInc(ctime *Time) {

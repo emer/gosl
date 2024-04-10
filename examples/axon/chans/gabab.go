@@ -52,8 +52,8 @@ func (gp *GABABParams) Update() {
 	gp.MaxTime = ((gp.RiseTau * gp.DecayTau) / (gp.DecayTau - gp.RiseTau)) * mat32.Log(gp.DecayTau/gp.RiseTau)
 }
 
-// GFmV returns the GABA-B conductance as a function of normalized membrane potential
-func (gp *GABABParams) GFmV(v float32) float32 {
+// GFromV returns the GABA-B conductance as a function of normalized membrane potential
+func (gp *GABABParams) GFromV(v float32) float32 {
 	var vbio float32
 	vbio = VToBio(v)
 	if vbio < -90 {
@@ -62,9 +62,9 @@ func (gp *GABABParams) GFmV(v float32) float32 {
 	return 1.0 / (1.0 + mat32.FastExp(0.1*((vbio+90)+10)))
 }
 
-// GFmS returns the GABA-B conductance as a function of GABA spiking rate,
+// GFromS returns the GABA-B conductance as a function of GABA spiking rate,
 // based on normalized spiking factor (i.e., Gi from FFFB etc)
-func (gp *GABABParams) GFmS(s float32) float32 {
+func (gp *GABABParams) GFromS(s float32) float32 {
 	var ss float32
 	ss = s * gp.GiSpike
 	if ss > 10 {
@@ -83,22 +83,22 @@ func (gp *GABABParams) DX(x float32) float32 {
 	return -x / gp.DecayTau
 }
 
-// GFmGX returns the updated GABA-B / GIRK conductance
+// GFromGX returns the updated GABA-B / GIRK conductance
 // based on current values and gi inhibitory conductance (proxy for GABA spikes)
-func (gp *GABABParams) GFmGX(gabaB, gabaBx float32) float32 {
+func (gp *GABABParams) GFromGX(gabaB, gabaBx float32) float32 {
 	return gabaB + gp.DG(gabaB, gabaBx)
 }
 
-// XFmGiX returns the updated GABA-B x value
+// XFromGiX returns the updated GABA-B x value
 // based on current values and gi inhibitory conductance (proxy for GABA spikes)
-func (gp *GABABParams) XFmGiX(gabaBx, gi float32) float32 {
-	return gabaBx + gp.GFmS(gi) + gp.DX(gabaBx)
+func (gp *GABABParams) XFromGiX(gabaBx, gi float32) float32 {
+	return gabaBx + gp.GFromS(gi) + gp.DX(gabaBx)
 }
 
 // GgabaB returns the overall net GABAB / GIRK conductance including
 // Gbar, Gbase, and voltage-gating
 func (gp *GABABParams) GgabaB(gabaB, vm float32) float32 {
-	return gp.Gbar * gp.GFmV(vm) * (gabaB + gp.Gbase)
+	return gp.Gbar * gp.GFromV(vm) * (gabaB + gp.Gbase)
 }
 
 //gosl: end axon

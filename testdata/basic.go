@@ -112,7 +112,7 @@ type ParamStruct struct {
 	pad float32 // comment this out to trigger alignment warning
 }
 
-func (ps *ParamStruct) IntegFmRaw(ds *DataStruct, modArg *float32) {
+func (ps *ParamStruct) IntegFromRaw(ds *DataStruct, modArg *float32) {
 	// note: the following are just to test basic control structures
 	newVal := ps.Dt*(ds.Raw-ds.Integ) + *modArg
 	if newVal < -10 || ps.Option.IsTrue() {
@@ -162,7 +162,7 @@ func (ps *ParamStruct) Update() {
 [[vk::binding(0, 1)]] RWStructuredBuffer<DataStruct> Data;
 [numthreads(1, 1, 1)]
 void main(uint3 idx : SV_DispatchThreadID) {
-    Params[0].IntegFmRaw(Data[idx.x], Data[idx.x].Pad2);
+    Params[0].IntegFromRaw(Data[idx.x], Data[idx.x].Pad2);
 }
 */
 //gosl: end basic

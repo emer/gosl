@@ -56,7 +56,7 @@ func main() {
 	cpuTmr.Start()
 	for i := range data {
 		d := &data[i]
-		pars.IntegFmRaw(d)
+		pars.IntegFromRaw(d)
 	}
 	cpuTmr.Stop()
 

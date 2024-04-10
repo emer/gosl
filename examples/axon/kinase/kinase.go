@@ -77,27 +77,27 @@ func (kp *CaParams) Update() {
 	kp.Dt.Update()
 }
 
-// FmSpike computes updates to CaM, CaP, CaD from current spike value.
+// FromSpike computes updates to CaM, CaP, CaD from current spike value.
 // The SpikeG factor determines strength of increase to CaM.
-func (kp *CaParams) FmSpike(spike float32, caM, caP, caD *float32) {
+func (kp *CaParams) FromSpike(spike float32, caM, caP, caD *float32) {
 	*caM += kp.Dt.MDt * (kp.SpikeG*spike - *caM)
 	*caP += kp.Dt.PDt * (*caM - *caP)
 	*caD += kp.Dt.DDt * (*caP - *caD)
 }
 
-// FmCa computes updates to CaM, CaP, CaD from current calcium level.
+// FromCa computes updates to CaM, CaP, CaD from current calcium level.
 // The SpikeG factor is NOT applied to Ca and should be pre-applied
 // as appropriate.
-func (kp *CaParams) FmCa(ca float32, caM, caP, caD *float32) {
+func (kp *CaParams) FromCa(ca float32, caM, caP, caD *float32) {
 	*caM += kp.Dt.MDt * (ca - *caM)
 	*caP += kp.Dt.PDt * (*caM - *caP)
 	*caD += kp.Dt.DDt * (*caP - *caD)
 }
 
-// IntFmTime returns the interval from current time
+// IntFromTime returns the interval from current time
 // and last update time, which is -1 if never updated
 // (in which case return is -1)
-func (kp *CaParams) IntFmTime(ctime, utime int32) int32 {
+func (kp *CaParams) IntFromTime(ctime, utime int32) int32 {
 	if utime < 0 {
 		return -1
 	}
@@ -108,7 +108,7 @@ func (kp *CaParams) IntFmTime(ctime, utime int32) int32 {
 // optimized spike-time update versions.
 // ctime is current time in msec, and utime is last update time (-1 if never)
 func (kp *CaParams) CurCa(ctime, utime int32, caM, caP, caD *float32) {
-	isi := kp.IntFmTime(ctime, utime)
+	isi := kp.IntFromTime(ctime, utime)
 	if isi <= 0 {
 		return
 	}
@@ -119,7 +119,7 @@ func (kp *CaParams) CurCa(ctime, utime int32, caM, caP, caD *float32) {
 		return
 	}
 	for i := int32(0); i < isi; i++ {
-		kp.FmCa(0, caM, caP, caD) // just decay to 0
+		kp.FromCa(0, caM, caP, caD) // just decay to 0
 	}
 }
 

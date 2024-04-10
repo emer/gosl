@@ -40,8 +40,8 @@ type ParamStruct struct {
 	pad, pad1 float32
 }
 
-// IntegFmRaw computes integrated value from current raw value
-func (ps *ParamStruct) IntegFmRaw(ds *DataStruct) {
+// IntegFromRaw computes integrated value from current raw value
+func (ps *ParamStruct) IntegFromRaw(ds *DataStruct) {
 	ds.Integ += ps.Dt * (ds.Raw - ds.Integ)
 	ds.Exp = mat32.FastExp(-ds.Integ)
 }
@@ -68,7 +68,7 @@ func (ps *ParamStruct) Update() {
 [numthreads(64, 1, 1)]
 
 void main(uint3 idx : SV_DispatchThreadID) {
-    Params[0].IntegFmRaw(Data[idx.x]);
+    Params[0].IntegFromRaw(Data[idx.x]);
 }
 */
 //gosl: end basic
