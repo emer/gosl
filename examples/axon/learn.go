@@ -5,7 +5,7 @@
 package main
 
 import (
-	"cogentcore.org/core/mat32"
+	"cogentcore.org/core/math32"
 	"github.com/emer/gosl/v2/examples/axon/chans"
 	"github.com/emer/gosl/v2/examples/axon/kinase"
 	"github.com/emer/gosl/v2/examples/axon/minmax"
@@ -119,7 +119,7 @@ func (np *CaSpkParams) Defaults() {
 func (np *CaSpkParams) Update() {
 	np.Dt.Update()
 	np.SynDt = 1 / np.SynTau
-	np.SynSpkG = mat32.Sqrt(30) / mat32.Sqrt(np.SynTau)
+	np.SynSpkG = math32.Sqrt(30) / math32.Sqrt(np.SynTau)
 }
 
 // CaFromSpike computes CaSpk* and CaSyn calcium signals based on current spike.
@@ -243,9 +243,9 @@ func (rl *RLRateParams) RLRateDiff(scap, scad float32) float32 {
 	if slbool.IsFalse(rl.On) || slbool.IsFalse(rl.Diff) {
 		return 1.0
 	}
-	mx := mat32.Max(scap, scad)
+	mx := math32.Max(scap, scad)
 	if mx > rl.SpkThr { // avoid div by 0
-		dif := mat32.Abs(scap - scad)
+		dif := math32.Abs(scap - scad)
 		if dif < rl.DiffThr {
 			return rl.Min
 		}

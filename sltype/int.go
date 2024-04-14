@@ -4,16 +4,16 @@
 
 package sltype
 
-import "cogentcore.org/core/mat32"
+import "cogentcore.org/core/math32"
 
 // Int is identical to an int32
 type Int = int32
 
 // Int2 is a length 2 vector of int32
-type Int2 = mat32.Vec2i
+type Int2 = math32.Vec2i
 
 // Int3 is a length 3 vector of int32
-type Int3 = mat32.Vec3i
+type Int3 = math32.Vec3i
 
 // Int4 is a length 4 vector of int32
 type Int4 struct {

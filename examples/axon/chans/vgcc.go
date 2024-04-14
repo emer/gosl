@@ -5,7 +5,7 @@
 package chans
 
 import (
-	"cogentcore.org/core/mat32"
+	"cogentcore.org/core/math32"
 )
 
 //gosl: start axon
@@ -37,7 +37,7 @@ func (np *VGCCParams) GFromV(v float32) float32 {
 	if vbio > -0.1 && vbio < 0.1 {
 		return 1.0 / (0.0756 + 0.5*vbio)
 	}
-	return -vbio / (1.0 - mat32.FastExp(0.0756*vbio))
+	return -vbio / (1.0 - math32.FastExp(0.0756*vbio))
 }
 
 // MFromV returns the M gate function from vbio (not normalized, must not exceed 0)
@@ -48,7 +48,7 @@ func (np *VGCCParams) MFromV(vbio float32) float32 {
 	if vbio > -10 {
 		return 1
 	}
-	return 1.0 / (1.0 + mat32.FastExp(-(vbio + 37)))
+	return 1.0 / (1.0 + math32.FastExp(-(vbio + 37)))
 }
 
 // HFromV returns the H gate function from vbio (not normalized, must not exceed 0)
@@ -59,7 +59,7 @@ func (np *VGCCParams) HFromV(vbio float32) float32 {
 	if vbio > -10 {
 		return 0
 	}
-	return 1.0 / (1.0 + mat32.FastExp((vbio+41)*2))
+	return 1.0 / (1.0 + math32.FastExp((vbio+41)*2))
 }
 
 // DMHFromV returns the change at msec update scale in M, H factors

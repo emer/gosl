@@ -7,7 +7,7 @@ package slrand
 import (
 	"math"
 
-	"cogentcore.org/core/mat32"
+	"cogentcore.org/core/math32"
 	"github.com/emer/gosl/v2/sltype"
 )
 
@@ -204,7 +204,7 @@ func BoolP(counter *sltype.Uint2, key uint32, p float32) bool {
 
 func SincosPi(x float32) (s, c float32) {
 	const PIf = 3.1415926535897932
-	s, c = mat32.Sincos(PIf * x)
+	s, c = math32.Sincos(PIf * x)
 	return
 }
 
@@ -217,7 +217,7 @@ func NormFloat2(counter *sltype.Uint2, key uint32) sltype.Float2 {
 	ur := Uint2(counter, key)
 	var f sltype.Float2
 	f.X, f.Y = SincosPi(Uint32ToFloat11(ur.X))
-	r := mat32.Sqrt(-2. * mat32.Log(Uint32ToFloat(ur.Y))) // guaranteed to avoid 0
+	r := math32.Sqrt(-2. * math32.Log(Uint32ToFloat(ur.Y))) // guaranteed to avoid 0
 	f.X *= r
 	f.Y *= r
 	return f

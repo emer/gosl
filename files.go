@@ -48,7 +48,7 @@ func AddFile(fn string, fls []string, procd map[string]bool) []string {
 		if pd != "" {
 			dir = sd
 		}
-		if !(dir == "mat32") {
+		if !(dir == "math32") {
 			if _, has := LoadedPackageNames[dir]; !has {
 				LoadedPackageNames[dir] = true
 				// fmt.Printf("package: %s\n", dir)

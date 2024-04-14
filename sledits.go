@@ -142,8 +142,8 @@ var Replaces = []Replace{
 	{[]byte("uint32"), []byte("uint")},
 	{[]byte("int32"), []byte("int")},
 	{[]byte("int64"), []byte("int64_t")},
-	{[]byte("mat32.FastExp("), []byte("FastExp(")}, // FastExp about same speed, numerically identical
-	// {[]byte("mat32.FastExp("), []byte("exp(")}, // exp is slightly faster it seems
+	{[]byte("math32.FastExp("), []byte("FastExp(")}, // FastExp about same speed, numerically identical
+	// {[]byte("math32.FastExp("), []byte("exp(")}, // exp is slightly faster it seems
 	{[]byte("math.Float32frombits("), []byte("asfloat(")},
 	{[]byte("math.Float32bits("), []byte("asuint(")},
 	{[]byte("shaders."), []byte("")},
@@ -198,7 +198,7 @@ func MathReplaceAll(mat, ln []byte) []byte {
 // returns true if has slrand. -- auto include that header file
 // if so.
 func SlEditsReplace(lines [][]byte) bool {
-	mt32 := []byte("mat32.")
+	mt32 := []byte("math32.")
 	mth := []byte("math.")
 	slr := []byte("slrand.")
 	include := []byte("#include")

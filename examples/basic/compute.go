@@ -4,7 +4,7 @@
 
 package main
 
-import "cogentcore.org/core/mat32"
+import "cogentcore.org/core/math32"
 
 //gosl: hlsl basic
 // #include "fastexp.hlsl"
@@ -43,7 +43,7 @@ type ParamStruct struct {
 // IntegFromRaw computes integrated value from current raw value
 func (ps *ParamStruct) IntegFromRaw(ds *DataStruct) {
 	ds.Integ += ps.Dt * (ds.Raw - ds.Integ)
-	ds.Exp = mat32.FastExp(-ds.Integ)
+	ds.Exp = math32.FastExp(-ds.Integ)
 }
 
 //gosl: end basic

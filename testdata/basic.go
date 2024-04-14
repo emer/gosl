@@ -3,7 +3,7 @@ package test
 import (
 	"math"
 
-	"cogentcore.org/core/mat32"
+	"cogentcore.org/core/math32"
 	"github.com/emer/gosl/v2/slbool"
 )
 
@@ -119,7 +119,7 @@ func (ps *ParamStruct) IntegFromRaw(ds *DataStruct, modArg *float32) {
 		newVal = -10
 	}
 	ds.Integ += newVal
-	ds.Exp = mat32.Exp(-ds.Integ)
+	ds.Exp = math32.Exp(-ds.Integ)
 }
 
 // AnotherMeth does more computation

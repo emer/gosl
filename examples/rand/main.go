@@ -11,7 +11,7 @@ import (
 
 	"log/slog"
 
-	"cogentcore.org/core/mat32"
+	"cogentcore.org/core/math32"
 	"cogentcore.org/core/vgpu"
 	"github.com/emer/emergent/v2/timer"
 	"github.com/emer/gosl/v2/sltype"
@@ -41,7 +41,7 @@ func main() {
 	// n := 10
 	n := 10000000
 	threads := 64
-	nInt := int(mat32.IntMultiple(float32(n), float32(threads)))
+	nInt := int(math32.IntMultiple(float32(n), float32(threads)))
 	n = nInt               // enforce optimal n's -- otherwise requires range checking
 	nGps := nInt / threads // dispatch n
 

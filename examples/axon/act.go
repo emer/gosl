@@ -5,7 +5,7 @@
 package main
 
 import (
-	"cogentcore.org/core/mat32"
+	"cogentcore.org/core/math32"
 	"github.com/emer/gosl/v2/examples/axon/chans"
 	"github.com/emer/gosl/v2/examples/axon/minmax"
 	"github.com/emer/gosl/v2/slbool"
@@ -365,8 +365,8 @@ type SpikeNoiseParams struct {
 }
 
 func (an *SpikeNoiseParams) Update() {
-	an.GeExpInt = mat32.Exp(-1000.0 / an.GeHz)
-	an.GiExpInt = mat32.Exp(-1000.0 / an.GiHz)
+	an.GeExpInt = math32.Exp(-1000.0 / an.GeHz)
+	an.GiExpInt = math32.Exp(-1000.0 / an.GiHz)
 }
 
 func (an *SpikeNoiseParams) Defaults() {
@@ -878,7 +878,7 @@ func (ac *ActParams) VmFromG(nrn *Neuron) {
 		if updtVm && slbool.IsTrue(ac.Spike.Exp) { // add spike current if relevant
 			exVm = 0.5 * (nvm + nrn.Vm) // midpoint for this
 			expi = ac.Gbar.L * ac.Spike.ExpSlope *
-				mat32.FastExp((exVm-ac.Spike.Thr)/ac.Spike.ExpSlope)
+				math32.FastExp((exVm-ac.Spike.Thr)/ac.Spike.ExpSlope)
 			if expi > ac.Dt.VmTau {
 				expi = ac.Dt.VmTau
 			}

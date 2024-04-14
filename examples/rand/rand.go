@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"cogentcore.org/core/mat32"
+	"cogentcore.org/core/math32"
 	"github.com/emer/gosl/v2/slrand"
 	"github.com/emer/gosl/v2/sltype"
 )
@@ -45,7 +45,7 @@ const Tol = 1.0e-4 // fails at lower tol eventually -- -6 works for many
 
 func FloatSame(f1, f2 float32) (exact, tol bool) {
 	exact = f1 == f2
-	tol = mat32.Abs(f1-f2) < Tol
+	tol = math32.Abs(f1-f2) < Tol
 	return
 }
 

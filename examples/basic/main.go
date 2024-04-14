@@ -10,14 +10,14 @@ import (
 	"runtime"
 	"unsafe"
 
-	"cogentcore.org/core/mat32"
+	"cogentcore.org/core/math32"
 	"cogentcore.org/core/vgpu"
 	"github.com/emer/emergent/v2/timer"
 )
 
 // note: standard one to use is plain "gosl" which should be go install'd
 
-//go:generate ../../gosl cogentcore.org/core/mat32/fastexp.go compute.go
+//go:generate ../../gosl cogentcore.org/core/math32/fastexp.go compute.go
 
 func init() {
 	// must lock main thread for gpu!  this also means that vulkan must be used
@@ -38,7 +38,7 @@ func main() {
 
 	n := 100000000 // get 80x with 100m, 50x with 10m
 	threads := 64
-	nInt := int(mat32.IntMultiple(float32(n), float32(threads)))
+	nInt := int(math32.IntMultiple(float32(n), float32(threads)))
 	n = nInt               // enforce optimal n's -- otherwise requires range checking
 	nGps := nInt / threads // dispatch n
 

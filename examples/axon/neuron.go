@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"unsafe"
 
-	"cogentcore.org/core/mat32"
+	"cogentcore.org/core/math32"
 )
 
 //gosl: start axon
@@ -373,7 +373,7 @@ func (nrn *Neuron) VarByIndex(idx int) float32 {
 func (nrn *Neuron) VarByName(varNm string) (float32, error) {
 	i, err := NeuronVarIndexByName(varNm)
 	if err != nil {
-		return mat32.NaN(), err
+		return math32.NaN(), err
 	}
 	return nrn.VarByIndex(i), nil
 }

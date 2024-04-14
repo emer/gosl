@@ -5,7 +5,7 @@
 package chans
 
 import (
-	"cogentcore.org/core/mat32"
+	"cogentcore.org/core/math32"
 )
 
 //gosl: start axon
@@ -48,8 +48,8 @@ func (gp *GABABParams) Defaults() {
 }
 
 func (gp *GABABParams) Update() {
-	gp.TauFact = mat32.Pow(gp.DecayTau/gp.RiseTau, gp.RiseTau/(gp.DecayTau-gp.RiseTau))
-	gp.MaxTime = ((gp.RiseTau * gp.DecayTau) / (gp.DecayTau - gp.RiseTau)) * mat32.Log(gp.DecayTau/gp.RiseTau)
+	gp.TauFact = math32.Pow(gp.DecayTau/gp.RiseTau, gp.RiseTau/(gp.DecayTau-gp.RiseTau))
+	gp.MaxTime = ((gp.RiseTau * gp.DecayTau) / (gp.DecayTau - gp.RiseTau)) * math32.Log(gp.DecayTau/gp.RiseTau)
 }
 
 // GFromV returns the GABA-B conductance as a function of normalized membrane potential
@@ -59,7 +59,7 @@ func (gp *GABABParams) GFromV(v float32) float32 {
 	if vbio < -90 {
 		vbio = -90
 	}
-	return 1.0 / (1.0 + mat32.FastExp(0.1*((vbio+90)+10)))
+	return 1.0 / (1.0 + math32.FastExp(0.1*((vbio+90)+10)))
 }
 
 // GFromS returns the GABA-B conductance as a function of GABA spiking rate,
@@ -70,7 +70,7 @@ func (gp *GABABParams) GFromS(s float32) float32 {
 	if ss > 10 {
 		ss = 10
 	}
-	return 1.0 / (1.0 + mat32.FastExp(-(ss-7.1)/1.4))
+	return 1.0 / (1.0 + math32.FastExp(-(ss-7.1)/1.4))
 }
 
 // DG returns dG delta for g

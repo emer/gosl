@@ -11,7 +11,7 @@ import (
 
 	"log/slog"
 
-	"cogentcore.org/core/mat32"
+	"cogentcore.org/core/math32"
 	"cogentcore.org/core/vgpu"
 	"github.com/emer/emergent/v2/timer"
 	"github.com/emer/gosl/v2/sltype"
@@ -23,7 +23,7 @@ const DiffTol = 1.0e-3
 
 // note: standard one to use is plain "gosl" which should be go install'd
 
-//go:generate ../../gosl -exclude=Update,UpdateParams,Defaults -keep cogentcore.org/core/mat32/fastexp.go minmax chans/chans.go chans kinase time.go neuron.go act.go learn.go layer.go axon.hlsl
+//go:generate ../../gosl -exclude=Update,UpdateParams,Defaults -keep cogentcore.org/core/math32/fastexp.go minmax chans/chans.go chans kinase time.go neuron.go act.go learn.go layer.go axon.hlsl
 
 func init() {
 	// must lock main thread for gpu!  this also means that vulkan must be used
@@ -49,7 +49,7 @@ func main() {
 	// AMD is 64, NVIDIA, M1 are 32
 	gpuThreads := 64
 	cpuThreads := 10
-	nInt := int(mat32.IntMultiple(float32(n), float32(gpuThreads)))
+	nInt := int(math32.IntMultiple(float32(n), float32(gpuThreads)))
 	n = nInt                  // enforce optimal n's -- otherwise requires range checking
 	nGps := nInt / gpuThreads // dispatch n
 
@@ -201,7 +201,7 @@ func main() {
 			v1 := d1.VarByIndex(vi)
 			v2 := d2.VarByIndex(vi)
 			diff := ""
-			if mat32.Abs(v1-v2) > DiffTol {
+			if math32.Abs(v1-v2) > DiffTol {
 				diff = "*"
 				anyDiff = true
 			}
