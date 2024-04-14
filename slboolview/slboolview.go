@@ -5,22 +5,22 @@
 package slboolview
 
 import (
+	"cogentcore.org/core/core"
 	"cogentcore.org/core/events"
-	"cogentcore.org/core/gi"
-	"cogentcore.org/core/giv"
-	"cogentcore.org/core/laser"
+	"cogentcore.org/core/reflectx"
+	"cogentcore.org/core/views"
 	"github.com/emer/gosl/v2/slbool"
 )
 
 func init() {
-	giv.AddValue(slbool.Bool(0), func() giv.Value {
+	views.AddValue(slbool.Bool(0), func() views.Value {
 		return &BoolValue{}
 	})
 }
 
 // BoolValue presents a checkbox for a boolean
 type BoolValue struct {
-	giv.ValueBase[*gi.Switch]
+	views.ValueBase[*core.Switch]
 }
 
 func (v *BoolValue) Config() {
@@ -30,7 +30,7 @@ func (v *BoolValue) Config() {
 }
 
 func (v *BoolValue) Update() {
-	npv := laser.NonPtrValue(v.Value)
+	npv := reflectx.NonPtrValue(v.Value)
 	sb, ok := npv.Interface().(slbool.Bool)
 	if ok {
 		v.Widget.SetChecked(sb.IsTrue())
