@@ -150,7 +150,7 @@ var Replaces = []Replace{
 	{[]byte("slrand."), []byte("Rand")},
 	{[]byte("sltype.U"), []byte("u")},
 	{[]byte("sltype.F"), []byte("f")},
-	{[]byte(".SetFromVec2("), []byte("=(")},
+	{[]byte(".SetFromVector2("), []byte("=(")},
 	{[]byte(".SetFrom2("), []byte("=(")},
 	{[]byte(".IsTrue()"), []byte("==1")},
 	{[]byte(".IsFalse()"), []byte("==0")},

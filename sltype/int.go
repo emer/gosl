@@ -10,10 +10,10 @@ import "cogentcore.org/core/math32"
 type Int = int32
 
 // Int2 is a length 2 vector of int32
-type Int2 = math32.Vec2i
+type Int2 = math32.Vector2i
 
 // Int3 is a length 3 vector of int32
-type Int3 = math32.Vec3i
+type Int3 = math32.Vector3i
 
 // Int4 is a length 4 vector of int32
 type Int4 struct {

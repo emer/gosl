@@ -10,10 +10,10 @@ import "cogentcore.org/core/math32"
 type Float = float32
 
 // Float2 is a length 2 vector of float32
-type Float2 = math32.Vec2
+type Float2 = math32.Vector2
 
 // Float3 is a length 3 vector of float32
-type Float3 = math32.Vec3
+type Float3 = math32.Vector3
 
 // Float4 is a length 4 vector of float32
-type Float4 = math32.Vec4
+type Float4 = math32.Vector4

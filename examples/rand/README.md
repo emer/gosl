@@ -8,5 +8,5 @@ There is a `//go:generate` comment directive in `main.go` that calls `gosl` on t
 
 The generated files go into the `shaders/` subdirectory.
 
-Ignore the type alignment checking errors about Uint2 and Vec2 not being an even multiple of 16 bytes -- we have put in the necessary padding.
+Ignore the type alignment checking errors about Uint2 and Vector2 not being an even multiple of 16 bytes -- we have put in the necessary padding.
 

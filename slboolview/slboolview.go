@@ -30,7 +30,7 @@ func (v *BoolValue) Config() {
 }
 
 func (v *BoolValue) Update() {
-	npv := reflectx.NonPtrValue(v.Value)
+	npv := reflectx.NonPointerValue(v.Value)
 	sb, ok := npv.Interface().(slbool.Bool)
 	if ok {
 		v.Widget.SetChecked(sb.IsTrue())
