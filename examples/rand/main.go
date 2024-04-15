@@ -13,8 +13,8 @@ import (
 
 	"cogentcore.org/core/math32"
 	"cogentcore.org/core/vgpu"
-	"github.com/emer/emergent/v2/timer"
 	"github.com/emer/gosl/v2/sltype"
+	"github.com/emer/gosl/v2/timer"
 )
 
 // note: standard one to use is plain "gosl" which should be go install'd

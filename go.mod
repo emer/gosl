@@ -3,8 +3,7 @@ module github.com/emer/gosl/v2
 go 1.22
 
 require (
-	cogentcore.org/core v0.0.9
-	github.com/emer/emergent/v2 v2.0.0-dev0.0.11
+	cogentcore.org/core v0.1.0
 	golang.org/x/tools v0.19.0
 )
 
