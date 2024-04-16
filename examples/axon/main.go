@@ -13,9 +13,9 @@ import (
 
 	"cogentcore.org/core/math32"
 	"cogentcore.org/core/vgpu"
-	"github.com/emer/emergent/v2/timer"
 	"github.com/emer/gosl/v2/sltype"
 	"github.com/emer/gosl/v2/threading"
+	"github.com/emer/gosl/v2/timer"
 )
 
 // DiffTol is tolerance on testing diff between cpu and gpu values
@@ -114,7 +114,7 @@ func main() {
 		// fmt.Printf("%d\ttime.RandCtr: %v\n", cy, time.RandCtr.Uint2())
 	}
 
-	cpuTmr.Stop()
+	// cpuTmr.Stop()
 
 	time.Reset()
 
@@ -145,9 +145,6 @@ func main() {
 	// seti.ConfigValues(1) // one val per var
 	sy.Config() // configures vars, allocates vals, configs pipelines..
 
-	gpuFullTmr := timer.Time{}
-	gpuFullTmr.Start()
-
 	// this copy is pretty fast -- most of time is below
 	lvl, _ := layv.Values.ValueByIndexTry(0)
 	lvl.CopyFromBytes(unsafe.Pointer(&lays[0]))
@@ -157,9 +154,6 @@ func main() {
 	nvl.CopyFromBytes(unsafe.Pointer(&neur2[0]))
 	// ivl, _ := idxv.Values.ValueByIndexTry(0)
 	// ivl.CopyFromBytes(unsafe.Pointer(&idxs[0]))
-
-	// gpuFullTmr := timer.Time{}
-	// gpuFullTmr.Start()
 
 	sy.Mem.SyncToGPU()
 
@@ -171,8 +165,8 @@ func main() {
 	cmd := sy.ComputeCmdBuff()
 	sy.CmdResetBindVars(cmd, 0)
 
-	// gpuFullTmr := timer.Time{}
-	// gpuFullTmr.Start()
+	gpuFullTmr := timer.Time{}
+	gpuFullTmr.Start()
 
 	gpuTmr := timer.Time{}
 	gpuTmr.Start()
