@@ -154,7 +154,7 @@ void CounterAdd(inout uint2 counter, uint inc) {
 //   with more readable names, mapping onto the Go rand methods.
 //   These are what should be called by end-user code.
 
-// RandUint2 returns two uniformly-distributed 32 unsigned integers,
+// RandUint2 returns two uniformly distributed 32 unsigned integers,
 // based on given counter and key.
 // The counter is incremented by 1 (in a 64-bit equivalent manner)
 // as a result of this call, ensuring that the next call will produce
@@ -166,7 +166,7 @@ uint2 RandUint2(inout uint2 counter, uint key) {
 	return res;
 }
 
-// RandUint returns a uniformly-distributed 32 unsigned integer,
+// RandUint returns a uniformly distributed 32 unsigned integer,
 // based on given counter and key.
 // The counter is incremented by 1 (in a 64-bit equivalent manner)
 // as a result of this call, ensuring that the next call will produce
@@ -178,7 +178,7 @@ uint RandUint(inout uint2 counter, uint key) {
 	return res.x;
 }
 
-// RandFloat2 returns two uniformly-distributed 32 floats
+// RandFloat2 returns two uniformly distributed 32 floats
 // in range (0,1) based on given counter and key.
 // The counter is incremented by 1 (in a 64-bit equivalent manner)
 // as a result of this call, ensuring that the next call will produce
@@ -188,7 +188,7 @@ float2 RandFloat2(inout uint2 counter, uint key) {
 	return Uint2ToFloat(RandUint2(counter, key));
 }
 
-// RandFloat returns a uniformly-distributed 32 float
+// RandFloat returns a uniformly distributed 32 float
 // in range (0,1) based on given counter and key.
 // The counter is incremented by 1 (in a 64-bit equivalent manner)
 // as a result of this call, ensuring that the next call will produce
@@ -198,7 +198,7 @@ float RandFloat(inout uint2 counter, uint key) {
 	return UintToFloat(RandUint(counter, key));
 }
 
-// RandFloat112 returns two uniformly-distributed 32 floats
+// RandFloat112 returns two uniformly distributed 32 floats
 // in range [-1,1] based on given counter and key.
 // The counter is incremented by 1 (in a 64-bit equivalent manner)
 // as a result of this call, ensuring that the next call will produce
@@ -208,7 +208,7 @@ float2 RandFloat112(inout uint2 counter, uint key) {
 	return Uint2ToFloat11(RandUint2(counter, key));
 }
 
-// RandFloat11 returns a uniformly-distributed 32 float
+// RandFloat11 returns a uniformly distributed 32 float
 // in range [-1..1] based on given counter and key.
 // The counter is incremented by 1 (in a 64-bit equivalent manner)
 // as a result of this call, ensuring that the next call will produce

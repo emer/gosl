@@ -133,7 +133,7 @@ func CounterAdd(counter *sltype.Uint2, inc uint32) {
 //   with more readable names, mapping onto the Go rand methods.
 //   These are what should be called by end-user code.
 
-// Uint2 returns two uniformly-distributed 32 unsigned integers,
+// Uint2 returns two uniformly distributed 32 unsigned integers,
 // based on given counter and key.
 // The counter is incremented by 1 (in a 64-bit equivalent manner)
 // as a result of this call, ensuring that the next call will produce
@@ -145,7 +145,7 @@ func Uint2(counter *sltype.Uint2, key uint32) sltype.Uint2 {
 	return res
 }
 
-// Uint32 returns a uniformly-distributed 32 unsigned integer,
+// Uint32 returns a uniformly distributed 32 unsigned integer,
 // based on given counter and key.
 // The counter is incremented by 1 (in a 64-bit equivalent manner)
 // as a result of this call, ensuring that the next call will produce
@@ -157,7 +157,7 @@ func Uint32(counter *sltype.Uint2, key uint32) uint32 {
 	return res.X
 }
 
-// Float2 returns two uniformly-distributed 32 floats
+// Float2 returns two uniformly distributed 32 floats
 // in range (0,1) based on given counter and key.
 // The counter is incremented by 1 (in a 64-bit equivalent manner)
 // as a result of this call, ensuring that the next call will produce
@@ -167,7 +167,7 @@ func Float2(counter *sltype.Uint2, key uint32) sltype.Float2 {
 	return Uint2ToFloat(Uint2(counter, key))
 }
 
-// Float returns a uniformly-distributed 32 float
+// Float returns a uniformly distributed 32 float
 // in range (0,1) based on given counter and key.
 // The counter is incremented by 1 (in a 64-bit equivalent manner)
 // as a result of this call, ensuring that the next call will produce
@@ -177,7 +177,7 @@ func Float(counter *sltype.Uint2, key uint32) float32 {
 	return Uint32ToFloat(Uint32(counter, key))
 }
 
-// Float112 returns two uniformly-distributed 32 floats
+// Float112 returns two uniformly distributed 32 floats
 // in range [-1,1] based on given counter and key.
 // The counter is incremented by 1 (in a 64-bit equivalent manner)
 // as a result of this call, ensuring that the next call will produce
@@ -187,7 +187,7 @@ func Float112(counter *sltype.Uint2, key uint32) sltype.Float2 {
 	return Uint2ToFloat11(Uint2(counter, key))
 }
 
-// Float11 returns a uniformly-distributed 32 float
+// Float11 returns a uniformly distributed 32 float
 // in range [-1,1] based on given counter and key.
 // The counter is incremented by 1 (in a 64-bit equivalent manner)
 // as a result of this call, ensuring that the next call will produce
