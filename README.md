@@ -1,6 +1,6 @@
 # gosl
 
-**IMPORTANT UPDATE:** [Cogent Core](https://github.com/cogentcore/core) now has an improved version of gosl in its [vgpu/gosl](https://github.com/cogentcore/core/tree/main/vgpu/gosl) package and associated sub-packages.  This version will not be further maintained or developed.  The v1 version is still needed for the v1 version of emergent.
+**IMPORTANT UPDATE:** [Cogent Core](https://github.com/cogentcore/core) now has an improved version of gosl in its [gpu/gosl](https://github.com/cogentcore/core/tree/main/gpu/gosl) package and associated sub-packages.  This version will not be further maintained or developed.  The v1 version is still needed for the v1 version of emergent.
 
 `gosl` implements Go as a shader language for GPU compute shaders: converts Go code to HLSL, and then uses the [glslc](https://github.com/google/shaderc) compiler (e.g., from a vulkan package) to compile into an `.spv` SPIR-V file that can be loaded into a vulkan compute shader.  `glslc` must be [installed](https://askubuntu.com/questions/1252585/how-to-install-glslc-on-ubuntu-20-04)!
 
